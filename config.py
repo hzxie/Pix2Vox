@@ -25,10 +25,11 @@ __C.CONST.BATCH_SIZE                = 20
 # Directories
 #
 __C.DIR = edict()
+__C.DIR.DATASET                     = 'ShapeNet'
 __C.DIR.DATASET_TAXONOMY_FILE_PATH  = './datasets/ShapeNet.json'
-__C.DIR.DATASET_QUERY_PATH          = './datasets/ShapeNet/ShapeNetVox64/'
-__C.DIR.VOXEL_PATH                  = './datasets/ShapeNet/ShapeNetVox64/%s/%s/model.binvox'
-__C.DIR.RENDERING_PATH              = './datasets/ShapeNet/ShapeNetRendering/%s/%s/rendering'
+__C.DIR.DATASET_QUERY_PATH          = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering'
+__C.DIR.VOXEL_PATH                  = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetVox64/%s/%s.mat'
+__C.DIR.RENDERING_PATH              = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering/%s/%s/rendering'
 __C.DIR.OUT_PATH                    = './output'
 
 #
@@ -39,13 +40,13 @@ __C.TRAIN.RESUME_TRAIN              = False
 __C.TRAIN.INITIAL_ITERATION         = 0         # when the training resumes, set the iteration number
 __C.TRAIN.DATASET_PORTION           = [0, .8]
 ## Data worker
-__C.TRAIN.NUM_WORKER                = 1         # number of data workers
+__C.TRAIN.NUM_WORKER                = 4         # number of data workers
 __C.TRAIN.NUM_ITERATION             = 60000     # maximum number of training iterations
 __C.TRAIN.NUM_RENDERING             = 24
 __C.TRAIN.NUM_VALIDATION_ITERATIONS = 24
 __C.TRAIN.VALIDATION_FREQ           = 500
 __C.TRAIN.NAN_CHECK_FREQ            = 1000
-__C.TRAIN.RANDOM_NUM_VIEWS          = False      # feed in random # views if n_views > 1
+__C.TRAIN.RANDOM_NUM_VIEWS          = False     # feed in random # views if n_views > 1
 __C.TRAIN.QUEUE_SIZE                = 15        # maximum number of minibatches that can be put in a data queue
 ## Data augmentation
 __C.TRAIN.RANDOM_CROP               = True
