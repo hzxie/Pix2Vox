@@ -1,0 +1,54 @@
+[
+    {
+        "taxonomy_id": "04256520",
+        "taxonomy_name": "sofa"
+    },
+    {
+        "taxonomy_id": "02691156",
+        "taxonomy_name": "airplane"
+    },
+    {
+        "taxonomy_id": "03636649",
+        "taxonomy_name": "lamp"
+    },
+    {
+        "taxonomy_id": "04401088",
+        "taxonomy_name": "telephone"
+    },
+    {
+        "taxonomy_id": "04530566",
+        "taxonomy_name": "watercraft"
+    },
+    {
+        "taxonomy_id": "03691459",
+        "taxonomy_name": "speaker"
+    },
+    {
+        "taxonomy_id": "03001627",
+        "taxonomy_name": "chair"
+    },
+    {
+        "taxonomy_id": "02933112",
+        "taxonomy_name": "cabinet"
+    },
+    {
+        "taxonomy_id": "04379243",
+        "taxonomy_name": "table"
+    },
+    {
+        "taxonomy_id": "03211117",
+        "taxonomy_name": "display"
+    },
+    {
+        "taxonomy_id": "02958343",
+        "taxonomy_name": "car"
+    },
+    {
+        "taxonomy_id": "02828884",
+        "taxonomy_name": "bench"
+    },
+    {
+        "taxonomy_id": "04090263",
+        "taxonomy_name": "rifle"
+    }
+]
