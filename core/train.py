@@ -16,16 +16,15 @@ DATASET_LOADER_MAPPING = {
 }
 
 def train_net(cfg):
-    dataset_getter = DATASET_LOADER_MAPPING[cfg.DIR.DATASET](cfg)
+    dataset_loader = DATASET_LOADER_MAPPING[cfg.DIR.DATASET](cfg)
     n_views        = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
     transforms     = None   # TODO
 
     train_data_loader = torch.utils.data.DataLoader(
-        dataset=dataset_getter.get_dataset(cfg.TRAIN.DATASET_PORTION, n_views),
+        dataset=dataset_loader.get_dataset(cfg.TRAIN.DATASET_PORTION, n_views),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=False)
     val_data_loader = torch.utils.data.DataLoader(
-        dataset=dataset_getter.get_dataset(cfg.TEST.DATASET_PORTION, n_views),
+        dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=False)
-
