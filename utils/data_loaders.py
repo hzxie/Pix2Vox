@@ -4,7 +4,6 @@
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import json
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import scipy.io
@@ -17,9 +16,9 @@ from datetime import datetime as dt
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     ''' ShapeNetDataset class used for PyTorch DataLoader
     '''
-    def __init__(self, file_list_with_metadata, transform=None):
+    def __init__(self, file_list_with_metadata, transforms=None):
         self.file_list = file_list_with_metadata
-        self.transform = transform
+        self.transforms = transforms
 
     def __len__(self):
         return len(self.file_list)
@@ -27,8 +26,8 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     def __getitem__(self, idx):
         rendering_images, voxel = self.get_datum(idx)
 
-        if self.transform:
-            rendering_images, voxel = self.transform(rendering_images, voxel)
+        if self.transforms:
+            rendering_images, voxel = self.transforms(rendering_images, voxel)
         
         return rendering_images, voxel
 
@@ -45,8 +44,6 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
                 sys.exit(-2)
 
             rendering_images.append(rendering_image)
-            # For Debug
-            plt.show(rendering_image)
 
         # Get data of voxel
         voxel = scipy.io.loadmat(voxel_path)
@@ -57,7 +54,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         voxel = voxel['Volume']
         return np.asarray(rendering_images), voxel
 
-# //////////////////////////////// = End of ShapeNetDataset Class Definition = //////////////////////////////// #
+# //////////////////////////////// = End of ShapeNetDataset Class Definition = ///////////////////////////////// #
 
 class ShapeNetDataLoader:
     def __init__(self, cfg):
@@ -65,12 +62,13 @@ class ShapeNetDataLoader:
         self.dataset_query_path = cfg.DIR.DATASET_QUERY_PATH
         self.rendering_image_path_template = cfg.DIR.RENDERING_PATH
         self.voxel_path_template = cfg.DIR.VOXEL_PATH
+        self.n_rendering_images = cfg.TRAIN.NUM_RENDERING
 
         # Load all taxonomies of the dataset
         with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def get_dataset(self, dataset_portion, n_views, transform=None):
+    def get_dataset(self, dataset_portion, n_views, transforms=None):
         files = []
         
         # Load data for each category
@@ -80,7 +78,7 @@ class ShapeNetDataLoader:
             files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, dataset_portion, n_views))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
-        return ShapeNetDataset(files, transform)
+        return ShapeNetDataset(files, transforms)
 
     def get_files_of_taxonomy(self, taxonomy_folder_name, dataset_portion, n_views):
         files_of_taxonomy = []
@@ -103,8 +101,8 @@ class ShapeNetDataLoader:
                             'index': line_idx
                         })
             
-            if not len(rendering_positions) == 24:
-                print('[WARN] There are less than 24 rendering images for this 3D object: %s' % rendering_images_folder)
+            if not len(rendering_positions) == self.n_rendering_images: # 24 for ShapeNet
+                print('[WARN] %s There are less than %d rendering images for this 3D object: %s' % (dt.now(), self.n_rendering_images, rendering_images_folder))
             # Sort list of rendering images by positions
             rendering_positions.sort(key=lambda x: x['position'])
 
@@ -139,4 +137,4 @@ class ShapeNetDataLoader:
 
         return samples[int(n_samples * dataset_portion[0]):int(n_samples * dataset_portion[1])]
 
-# //////////////////////////////// = End of ShapeNetDataGetter Class Definition = //////////////////////////////// #
+# /////////////////////////////// = End of ShapeNetDataGetter Class Definition = /////////////////////////////// #
