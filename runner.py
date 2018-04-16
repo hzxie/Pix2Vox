@@ -35,19 +35,19 @@ def get_args_from_command_line():
         default=cfg.CONST.BATCH_SIZE,
         type=int)
     parser.add_argument(
-        '--iter',
-        dest='iter',
-        help='number of iterations',
-        default=cfg.TRAIN.NUM_ITERATION,
+        '--epoch',
+        dest='epoch',
+        help='number of epoches',
+        default=cfg.TRAIN.NUM_EPOCHES,
         type=int)
     parser.add_argument(
         '--weights', dest='weights', help='Initialize network from the weights file', default=None)
     parser.add_argument('--out', dest='out_path', help='Set output path', default=cfg.DIR.OUT_PATH)
     parser.add_argument(
-        '--init-iter',
-        dest='init_iter',
-        help='Start from the specified iteration',
-        default=cfg.TRAIN.INITIAL_ITERATION)
+        '--init-epoch',
+        dest='epoch',
+        help='Start from the specified epoch',
+        default=cfg.TRAIN.INITIAL_EPOCH)
     args = parser.parse_args()
     return args
 
@@ -61,14 +61,14 @@ def main():
         np.random.seed(cfg.CONST.RNG_SEED)
     if args.batch_size is not None:
         cfg.CONST.BATCH_SIZE = args.batch_size
-    if args.iter is not None:
-        cfg.TRAIN.NUM_ITERATION = args.iter
+    if args.epoch is not None:
+        cfg.TRAIN.NUM_EPOCHES = args.epoch
     if args.out_path is not None:
         cfg.DIR.OUT_PATH = args.out_path
     if args.weights is not None:
         cfg.CONST.WEIGHTS = args.weights
         cfg.TRAIN.RESUME_TRAIN = True
-        cfg.TRAIN.INITIAL_ITERATION = int(args.init_iter)
+        cfg.TRAIN.INITIAL_EPOCH = int(args.init_epoch)
 
     # Print config
     print('Use config:')
@@ -86,7 +86,7 @@ def main():
 if __name__ == '__main__':
     # Check python version
     if sys.version_info < (3, 0):
-        raise Exception("Please follow the installation instruction on 'https://github.com/hzxie/TBD'")
+        raise Exception("Please follow the installation instruction on 'https://github.com/hzxie/Rec2Net'")
 
     # Setup logger
     mp.log_to_stderr()
