@@ -19,7 +19,7 @@ __C.CONST.IMG_H                         = 200       # Image height after croppin
 __C.CONST.IMG_C                         = 4         # Image channels before (/after) cropping
 __C.CONST.N_VOX                         = 64
 __C.CONST.N_VIEWS                       = 1
-__C.CONST.BATCH_SIZE                    = 100
+__C.CONST.BATCH_SIZE                    = 75
 __C.CONST.Z_SIZE                        = 200
 
 #
@@ -66,6 +66,7 @@ __C.TRAIN.GENERATOR_LEARNING_RATE       = .0025     # for SGD use 0.1, for ADAM,
 __C.TRAIN.DISCRIMINATOR_LEARNING_RATE   = .001      # for SGD use 0.1, for ADAM, use 1e-5
 __C.TRAIN.GENERATOR_LR_MILESTONES       = []
 __C.TRAIN.DISCRIMINATOR_LR_MILESTONES   = []
+__C.TRAIN.DISCRIMINATOR_ACC_THRESHOLD   = .8
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.WEIGHT_DECAY                  = 5e-10
