@@ -87,16 +87,22 @@ class ShapeNetDataLoader:
         n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
+            # Get file path of voxels
+            voxel_file_path = self.voxel_path_template % (taxonomy_folder_name, sample_name)
+            if not os.path.exists(voxel_file_path):
+                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_folder_name, sample_name))
+                continue
+
             # Get file list of rendering images
             selected_rendering_image_indexes = random.sample(range(self.n_rendering_images), n_views)
-            selected_rendering_images = []
+            rendering_images_file_path = []
             for image_idx in selected_rendering_image_indexes:
-                selected_rendering_images.append(self.rendering_image_path_template % (taxonomy_folder_name, sample_name, image_idx))
+                rendering_images_file_path.append(self.rendering_image_path_template % (taxonomy_folder_name, sample_name, image_idx))
 
             # Append to the list of rendering images
             files_of_taxonomy.append({
-                'rendering_images': selected_rendering_images,
-                'voxel': self.voxel_path_template % (taxonomy_folder_name, sample_name)
+                'rendering_images': rendering_images_file_path,
+                'voxel': voxel_file_path
             })
 
             # Report the progress of reading dataset

@@ -50,8 +50,9 @@ def train_net(cfg):
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
 
     # Summary writer for TensorBoard
-    train_writer = SummaryWriter(os.path.join(cfg.DIR.OUT_PATH, 'train'))
-    val_writer   = SummaryWriter(os.path.join(cfg.DIR.OUT_PATH, 'test'))
+    log_dir      = os.path.join(cfg.DIR.OUT_PATH, 'logs', dt.now().isoformat())
+    train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
+    val_writer   = SummaryWriter(os.path.join(log_dir, 'test'))
 
     # Set up networks
     generator            = Generator(cfg)
@@ -89,6 +90,12 @@ def train_net(cfg):
 
     # Training loop
     for epoch_idx in range(cfg.TRAIN.INITIAL_EPOCH, cfg.TRAIN.NUM_EPOCHES):
+        n_batches = len(train_data_loader)
+        # Average meterics
+        batch_generator_loss        = []
+        batch_discriminator_loss    = []
+        batch_discriminator_acuracy = []
+        
         # Tick / tock
         epoch_start_time = time()
 
@@ -124,31 +131,51 @@ def train_net(cfg):
             discriminator_acuracy_real  = torch.ge(pred_labels_real.squeeze(), .5).float()
             discriminator_acuracy       = torch.mean(torch.cat((discriminator_acuracy_fake, discriminator_acuracy_real)), 0)
 
-            discriminator_solver.zero_grad()
+            # Balance the learning speed of discriminator and generator
+            discriminator.zero_grad()
             discriminator_loss.backward()
-            discriminator_solver.step()
+            if discriminator_acuracy <= cfg.TRAIN.DISCRIMINATOR_ACC_THRESHOLD:
+                discriminator_solver.step()
 
             # Train the generator
             z = torch.Tensor(cfg.CONST.BATCH_SIZE, cfg.CONST.Z_SIZE).normal_(0, .33)
             if torch.cuda.is_available():
-                z               = z.cuda()
+                z = z.cuda()
             
             generated_voxels    = generator(z, None)
             pred_labels_fake    = discriminator(generated_voxels, None)
             generator_loss      = bce_loss(pred_labels_fake, labels_fake)
 
-            generator_solver.zero_grad()
+            discriminator.zero_grad()
+            generator.zero_grad()
             generator_loss.backward()
             generator_solver.step()
 
             # Tick / tock
             batch_end_time = time()
-            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.2f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f GAccuracy = %.4f' % \
-                (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, batch_idx, len(train_data_loader), batch_end_time - batch_start_time, discriminator_loss, discriminator_acuracy, generator_loss, 0))
+            # Append loss and accuracy to average metrics
+            batch_generator_loss.append(generator_loss)
+            batch_discriminator_loss.append(discriminator_loss)
+            batch_discriminator_acuracy.append(discriminator_acuracy)
+            # Append loss and accuracy to TensorBoard
+            n_itr = epoch_idx * n_batches + batch_idx
+            train_writer.add_scalar('%s/GLoss' % cfg.DIR.DATASET, generator_loss, n_itr)
+            train_writer.add_scalar('%s/DLoss' % cfg.DIR.DATASET, discriminator_loss, n_itr)
+            train_writer.add_scalar('%s/DAccuracy' % cfg.DIR.DATASET, discriminator_acuracy, n_itr)
+
+            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f' % \
+                (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, batch_idx, n_batches, batch_end_time - batch_start_time, \
+                    discriminator_loss, discriminator_acuracy, generator_loss))
 
         # Tick / tock
         epoch_end_time = time()
-        print('[INFO] %s Epoch [%d/%d] Total Time = %d (s) DLoss = %.4f' % (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, 0))
+        print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f' % 
+            (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, np.mean(batch_discriminator_loss), \
+                np.mean(batch_discriminator_acuracy), np.mean(batch_generator_loss)))
 
         # Validate the training models
+        # TODO
 
+    # Close SummaryWriter for TensorBoard
+    train_writer.close()
+    val_writer.close()
