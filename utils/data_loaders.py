@@ -6,6 +6,7 @@
 import json
 import numpy as np
 import os
+import random
 import scipy.io
 import scipy.ndimage
 import sys
@@ -51,7 +52,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             print('[FATAL] %s Failed to get voxel data from file %s' % (dt.now(), voxel_path))
             sys.exit(-2)
 
-        voxel = voxel['Volume']
+        voxel = voxel['Volume'].astype(np.float32)
         return np.asarray(rendering_images), voxel
 
 # //////////////////////////////// = End of ShapeNetDataset Class Definition = ///////////////////////////////// #
@@ -86,44 +87,21 @@ class ShapeNetDataLoader:
         n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
-            rendering_images_folder = self.rendering_image_path_template % (taxonomy_folder_name, sample_name)
-
-            # Get meta data of rendering images
-            rendering_positions = []
-            with open(os.path.join(rendering_images_folder, 'rendering_metadata.txt'), encoding='utf-8') as file:
-                rendering_metadata = file.readlines()
-
-                for line_idx, line in enumerate(rendering_metadata):
-                    values = line.split(' ')
-                    if len(values) == 5:
-                        rendering_positions.append({
-                            'position': float(values[0]),
-                            'index': line_idx
-                        })
-            
-            if not len(rendering_positions) == self.n_rendering_images: # 24 for ShapeNet
-                print('[WARN] %s There are less than %d rendering images for this 3D object: %s' % (dt.now(), self.n_rendering_images, rendering_images_folder))
-            # Sort list of rendering images by positions
-            rendering_positions.sort(key=lambda x: x['position'])
-
             # Get file list of rendering images
-            selected_rendering_image_indexes = [int(x) for x in np.linspace(0, len(rendering_positions) - 1, num=n_views)]
+            selected_rendering_image_indexes = random.sample(range(self.n_rendering_images), n_views)
             selected_rendering_images = []
-            selected_rendering_image_positions = []
             for image_idx in selected_rendering_image_indexes:
-                selected_rendering_images.append(os.path.join(rendering_images_folder, '%02d.png' % image_idx))
-                selected_rendering_image_positions.append(rendering_positions[image_idx])
+                selected_rendering_images.append(self.rendering_image_path_template % (taxonomy_folder_name, sample_name, image_idx))
 
             # Append to the list of rendering images
             files_of_taxonomy.append({
                 'rendering_images': selected_rendering_images,
-                'rendering_positions': selected_rendering_image_positions,
                 'voxel': self.voxel_path_template % (taxonomy_folder_name, sample_name)
             })
 
             # Report the progress of reading dataset
-            if sample_idx % 500 == 499 or sample_idx == n_samples - 1:
-                print('[INFO] %s Collecting %d of %d' % (dt.now(), sample_idx + 1, n_samples))
+            # if sample_idx % 500 == 499 or sample_idx == n_samples - 1:
+            #     print('[INFO] %s Collecting %d of %d' % (dt.now(), sample_idx + 1, n_samples))
 
         return files_of_taxonomy
 
