@@ -9,6 +9,7 @@ import os
 import torch.backends.cudnn
 import torch.utils.data
 
+import utils.binvox_visualization
 import utils.data_loaders
 import utils.data_transforms
 
@@ -22,6 +23,12 @@ from models.generator import Generator
 DATASET_LOADER_MAPPING = {
     'ShapeNet': utils.data_loaders.ShapeNetDataLoader,
 }
+
+def var_or_cuda(x):
+    if torch.cuda.is_available():
+        x = x.cuda()
+    
+    return x
 
 def train_net(cfg):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
@@ -50,13 +57,14 @@ def train_net(cfg):
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
 
     # Summary writer for TensorBoard
-    log_dir      = os.path.join(cfg.DIR.OUT_PATH, 'logs', dt.now().isoformat())
-    train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
-    val_writer   = SummaryWriter(os.path.join(log_dir, 'test'))
+    output_dir   = os.path.join(cfg.DIR.OUT_PATH, dt.now().isoformat())
+    train_writer = SummaryWriter(os.path.join(output_dir, 'logs', 'train'))
+    val_writer   = SummaryWriter(os.path.join(output_dir, 'logs', 'test'))
 
     # Set up networks
     generator            = Generator(cfg)
     discriminator        = Discriminator(cfg)
+
     # Set up solver
     generator_solver     = None
     discriminator_solver = None
@@ -73,6 +81,10 @@ def train_net(cfg):
     generator_lr_scheduler     = torch.optim.lr_scheduler.MultiStepLR(generator_solver, milestones=cfg.TRAIN.GENERATOR_LR_MILESTONES, gamma=0.1)
     discriminator_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(discriminator_solver, milestones=cfg.TRAIN.DISCRIMINATOR_LR_MILESTONES, gamma=0.1)
 
+    if torch.cuda.is_available():
+        discriminator.cuda()
+        generator.cuda()
+
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()
 
@@ -80,7 +92,6 @@ def train_net(cfg):
     if torch.cuda.is_available():
         generator.cuda()
         discriminator.cuda()
-        bce_loss.cuda()
 
     # Load pretrained model if exists
     network_params = None
@@ -104,47 +115,38 @@ def train_net(cfg):
             batch_start_time = time()
 
             # Generate Gaussian noise
-            z = torch.Tensor(cfg.CONST.BATCH_SIZE, cfg.CONST.Z_SIZE).normal_(0, .33)
+            n_samples   = len(voxels)
+            voxels      = var_or_cuda(voxels)
+            z           = var_or_cuda(torch.Tensor(n_samples, cfg.CONST.Z_SIZE).normal_(0, .33))
 
             # Use soft labels
-            labels_real = torch.Tensor(cfg.CONST.BATCH_SIZE).uniform_(.7, 1.2)
-            labels_fake = torch.Tensor(cfg.CONST.BATCH_SIZE).uniform_(0, .3)
-
-            # Use CUDA if it is available
-            if torch.cuda.is_available():
-                rendering_images = rendering_images.cuda()
-                voxels           = voxels.cuda()
-                z                = z.cuda()
-                labels_real      = labels_real.cuda()
-                labels_fake      = labels_fake.cuda()
+            labels_real = var_or_cuda(torch.Tensor(n_samples).uniform_(0.7, 1.2))
+            labels_fake = var_or_cuda(torch.Tensor(n_samples).uniform_(0, 0.3))
 
             # Train the discriminator
             generated_voxels            = generator(z, None)
-            pred_labels_fake            = discriminator(generated_voxels, None)
             pred_labels_real            = discriminator(voxels, None)
+            pred_labels_fake            = discriminator(generated_voxels, None)
 
-            discriminator_loss_fake     = bce_loss(pred_labels_fake, labels_fake)
             discriminator_loss_real     = bce_loss(pred_labels_real, labels_real)
-            discriminator_loss          = discriminator_loss_fake + discriminator_loss_real
+            discriminator_loss_fake     = bce_loss(pred_labels_fake, labels_fake)
+            discriminator_loss          = discriminator_loss_real + discriminator_loss_fake
 
-            discriminator_acuracy_fake  = torch.le(pred_labels_fake.squeeze(), .5).float()
-            discriminator_acuracy_real  = torch.ge(pred_labels_real.squeeze(), .5).float()
-            discriminator_acuracy       = torch.mean(torch.cat((discriminator_acuracy_fake, discriminator_acuracy_real)), 0)
+            discriminator_acuracy_real  = torch.ge(pred_labels_real.squeeze(), 0.5).float()
+            discriminator_acuracy_fake  = torch.le(pred_labels_fake.squeeze(), 0.5).float()
+            discriminator_acuracy       = torch.mean(torch.cat((discriminator_acuracy_real, discriminator_acuracy_fake),0))
 
             # Balance the learning speed of discriminator and generator
-            discriminator.zero_grad()
-            discriminator_loss.backward()
             if discriminator_acuracy <= cfg.TRAIN.DISCRIMINATOR_ACC_THRESHOLD:
+                discriminator.zero_grad()
+                discriminator_loss.backward()
                 discriminator_solver.step()
 
             # Train the generator
-            z = torch.Tensor(cfg.CONST.BATCH_SIZE, cfg.CONST.Z_SIZE).normal_(0, .33)
-            if torch.cuda.is_available():
-                z = z.cuda()
-            
+            z                   = var_or_cuda(torch.Tensor(n_samples, cfg.CONST.Z_SIZE).normal_(0, .33))
             generated_voxels    = generator(z, None)
             pred_labels_fake    = discriminator(generated_voxels, None)
-            generator_loss      = bce_loss(pred_labels_fake, labels_fake)
+            generator_loss      = bce_loss(pred_labels_fake, labels_real)
 
             discriminator.zero_grad()
             generator.zero_grad()
@@ -175,6 +177,11 @@ def train_net(cfg):
 
         # Validate the training models
         # TODO
+
+        # Save weights to file
+        # TODO
+        if batch_idx % cfg.TRAIN.SAVE_FREQ == 0:
+            pass
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()
