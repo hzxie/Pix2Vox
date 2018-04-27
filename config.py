@@ -17,9 +17,9 @@ __C.CONST.RNG_SEED                      = 0
 __C.CONST.IMG_W                         = 200       # Image width after cropping
 __C.CONST.IMG_H                         = 200       # Image height after cropping
 __C.CONST.IMG_C                         = 4         # Image channels before (/after) cropping
-__C.CONST.N_VOX                         = 64
+__C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 1
-__C.CONST.BATCH_SIZE                    = 75
+__C.CONST.BATCH_SIZE                    = 32
 __C.CONST.Z_SIZE                        = 200
 
 #
@@ -29,7 +29,7 @@ __C.DIR     = edict()
 __C.DIR.DATASET                         = 'ShapeNet'
 __C.DIR.DATASET_TAXONOMY_FILE_PATH      = './datasets/ShapeNet.json'
 __C.DIR.DATASET_QUERY_PATH              = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering'
-__C.DIR.VOXEL_PATH                      = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetVox64/%s/%s.mat'
+__C.DIR.VOXEL_PATH                      = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
 __C.DIR.RENDERING_PATH                  = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
 __C.DIR.OUT_PATH                        = './output'
 
@@ -69,8 +69,7 @@ __C.TRAIN.DISCRIMINATOR_LR_MILESTONES   = []
 __C.TRAIN.DISCRIMINATOR_ACC_THRESHOLD   = .8
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
-__C.TRAIN.WEIGHT_DECAY                  = 5e-10
-__C.TRAIN.LOSS_LIMIT                    = 3000      # stop training if the loss exceeds the limit
+__C.TRAIN.VISUALIZATION_FREQ            = 50        # visualization reconstruction voxels every visualization_freq batch
 __C.TRAIN.SAVE_FREQ                     = 10        # weights will be overwritten every save_freq epoch
 
 #

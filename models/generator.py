@@ -12,7 +12,7 @@ class Generator(torch.nn.Module):
         
         # Layer Definition
         self.layer1 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.Z_SIZE, cfg.CONST.N_VOX * 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(0, 0, 0)),
+            torch.nn.ConvTranspose3d(cfg.CONST.Z_SIZE, cfg.CONST.N_VOX * 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
             torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 8),
             torch.nn.ReLU()
         )
