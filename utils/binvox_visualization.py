@@ -5,6 +5,7 @@
 
 import numpy as np
 import matplotlib
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import os
 import scipy.ndimage
@@ -13,31 +14,25 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # Force matplotlib to not use any XWindow backend
 matplotlib.use('Agg')
-plt.style.use("ggplot")
 
-def get_rendering_images(voxel, save_path):
-    figure  = plt.figure()
-    axis    = figure.gca(projection='3d')
-    axis.voxels(voxel, edgecolor='k')
-
-    plt.savefig(save_path)
-    return scipy.ndimage.imread(save_path)
-
-def get_voxel_views(voxel, save_dir, n_itr):
-    rendering_view_pixels = []
+def get_voxel_views(voxels, save_dir, n_itr):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    # View #1
-    save_path = os.path.join(save_dir, 'Voxel-Rendering-itr-%d-00.png' % n_itr)
-    rendering_view_pixels.append(get_rendering_images(voxel, save_path))
+    voxels = voxels[:8].__ge__(0.5)
+    fig = plt.figure(figsize=(24, 12))
+    gs = gridspec.GridSpec(2, 4)
+    gs.update(wspace=0.05, hspace=0.05)
 
-    # View #2
-    save_path = os.path.join(save_dir, 'Voxel-Rendering-itr-%d-01.png' % n_itr)
-    rendering_view_pixels.append(get_rendering_images(np.transpose(voxel, (0, 2, 1)), save_path))
-
-    # View #3
-    save_path = os.path.join(save_dir, 'Voxel-Rendering-itr-%d-02.png' % n_itr)
-    rendering_view_pixels.append(get_rendering_images(np.transpose(voxel, (1, 0, 2)), save_path))
-
-    return rendering_view_pixels
+    for i, sample in enumerate(voxels):
+        x, y, z = sample.nonzero()
+        ax = plt.subplot(gs[i], projection='3d')
+        ax.scatter(x, y, z, zdir='z', c='red')
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_aspect('equal')
+    
+    save_path = os.path.join(save_dir, 'voxels-%06d.png' % n_itr)
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+    return scipy.ndimage.imread(save_path)
