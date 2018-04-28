@@ -19,7 +19,7 @@ __C.CONST.IMG_H                         = 200       # Image height after croppin
 __C.CONST.IMG_C                         = 4         # Image channels before (/after) cropping
 __C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 1
-__C.CONST.BATCH_SIZE                    = 32
+__C.CONST.BATCH_SIZE                    = 100
 __C.CONST.Z_SIZE                        = 200
 
 #
@@ -49,10 +49,8 @@ __C.TRAIN.INITIAL_EPOCH                 = 0         # when the training resumes,
 __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
 __C.TRAIN.NUM_WORKER                    = 1         # number of data workers
-__C.TRAIN.NUM_EPOCHES                   = 600       # maximum number of epoches
+__C.TRAIN.NUM_EPOCHES                   = 1000      # maximum number of epoches
 __C.TRAIN.NUM_RENDERING                 = 20
-__C.TRAIN.VALIDATION_FREQ               = 500
-__C.TRAIN.NAN_CHECK_FREQ                = 1000
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
 __C.TRAIN.RANDOM_CROP                   = True

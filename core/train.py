@@ -57,9 +57,11 @@ def train_net(cfg):
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
 
     # Summary writer for TensorBoard
-    output_dir   = os.path.join(cfg.DIR.OUT_PATH, dt.now().isoformat())
-    train_writer = SummaryWriter(os.path.join(output_dir, 'logs', 'train'))
-    val_writer   = SummaryWriter(os.path.join(output_dir, 'logs', 'test'))
+    log_dir      = os.path.join(cfg.DIR.OUT_PATH, 'logs', dt.now().isoformat())
+    img_dir      = os.path.join(cfg.DIR.OUT_PATH, 'images', dt.now().isoformat())
+    ckpt_dir     = os.path.join(cfg.DIR.OUT_PATH, 'checkpoints', dt.now().isoformat())
+    train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
+    val_writer   = SummaryWriter(os.path.join(log_dir, 'test'))
 
     # Set up networks
     generator            = Generator(cfg)
@@ -96,7 +98,6 @@ def train_net(cfg):
     # Load pretrained model if exists
     network_params = None
     if 'WEIGHTS' in cfg.CONST:
-        # TODO
         network_params = torch.load(cfg.CONST.WEIGHTS)
 
     # Training loop
@@ -155,15 +156,23 @@ def train_net(cfg):
 
             # Tick / tock
             batch_end_time = time()
+            
             # Append loss and accuracy to average metrics
-            batch_generator_loss.append(generator_loss)
-            batch_discriminator_loss.append(discriminator_loss)
-            batch_discriminator_acuracy.append(discriminator_acuracy)
+            batch_generator_loss.append(generator_loss.item())
+            batch_discriminator_loss.append(discriminator_loss.item())
+            batch_discriminator_acuracy.append(discriminator_acuracy.item())
             # Append loss and accuracy to TensorBoard
             n_itr = epoch_idx * n_batches + batch_idx
-            train_writer.add_scalar('%s/GLoss' % cfg.DIR.DATASET, generator_loss, n_itr)
-            train_writer.add_scalar('%s/DLoss' % cfg.DIR.DATASET, discriminator_loss, n_itr)
-            train_writer.add_scalar('%s/DAccuracy' % cfg.DIR.DATASET, discriminator_acuracy, n_itr)
+            train_writer.add_scalar('Loss/GLoss', generator_loss.item(), n_itr)
+            train_writer.add_scalar('Loss/DLoss', discriminator_loss.item(), n_itr)
+            train_writer.add_scalar('Loss/DLoss_Real', discriminator_loss_real.item(), n_itr)
+            train_writer.add_scalar('Loss/DLoss_Fake', discriminator_loss_fake.item(), n_itr)
+            train_writer.add_scalar('Accuracy/DAccuracy', discriminator_acuracy.item(), n_itr)
+            # Append rendering images of voxels to TensorBoard
+            if n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
+                generated_voxels = generated_voxels.cpu().data[:8].squeeze().numpy()
+                voxel_views      = utils.binvox_visualization.get_voxel_views(generated_voxels, os.path.join(img_dir, 'train'), n_itr)
+                train_writer.add_image('Voxel View', voxel_views, n_itr)
 
             print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f' % \
                 (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, batch_idx, n_batches, batch_end_time - batch_start_time, \
@@ -179,9 +188,18 @@ def train_net(cfg):
         # TODO
 
         # Save weights to file
-        # TODO
-        if batch_idx % cfg.TRAIN.SAVE_FREQ == 0:
-            pass
+        # TODO: Save the best validation model (not availble for 3D-GAN)
+        if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0:
+            if not os.path.exists(ckpt_dir):
+                os.makedirs(ckpt_dir)
+            
+            torch.save({
+                'epoch_idx': epoch_idx,
+                'generator_state_dict': generator.state_dict(),
+                'generator_solver_state_dict': generator_solver.state_dict(),
+                'discriminator_state_dict': discriminator.state_dict(),
+                'discriminator_solver_state_dict': discriminator_solver.state_dict(),
+            }, os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % epoch_idx))
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()
