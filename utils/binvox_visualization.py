@@ -25,7 +25,8 @@ def get_voxel_views(voxels, save_dir, n_itr):
     gs.update(wspace=0.05, hspace=0.05)
 
     for i, sample in enumerate(voxels):
-        x, y, z = sample.nonzero()
+        # use x, z, y instead of x, y, z to better visualize voxels
+        x, z, y = sample.nonzero()
         ax = plt.subplot(gs[i], projection='3d')
         ax.scatter(x, y, z, zdir='z', c='red')
         ax.set_xticklabels([])
