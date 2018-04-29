@@ -170,8 +170,8 @@ def train_net(cfg):
             train_writer.add_scalar('Accuracy/DAccuracy', discriminator_acuracy.item(), n_itr)
             # Append rendering images of voxels to TensorBoard
             if n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
-                generated_voxels = generated_voxels.cpu().data[:8].squeeze().numpy()
-                voxel_views      = utils.binvox_visualization.get_voxel_views(generated_voxels, os.path.join(img_dir, 'train'), n_itr)
+                gv           = generated_voxels.cpu().data[:8].squeeze().numpy()
+                voxel_views  = utils.binvox_visualization.get_voxel_views(gv, os.path.join(img_dir, 'train'), n_itr)
                 train_writer.add_image('Voxel View', voxel_views, n_itr)
 
             print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f' % \
@@ -189,10 +189,10 @@ def train_net(cfg):
 
         # Save weights to file
         # TODO: Save the best validation model (not availble for 3D-GAN)
-        if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0:
+        if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 and not epoch_idx == 0:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
-            
+
             torch.save({
                 'epoch_idx': epoch_idx,
                 'generator_state_dict': generator.state_dict(),
