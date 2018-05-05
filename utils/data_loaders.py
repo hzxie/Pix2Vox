@@ -25,16 +25,18 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        rendering_images, voxel = self.get_datum(idx)
+        taxonomy_name, sample_name, rendering_images, voxel = self.get_datum(idx)
 
         if self.transforms:
             rendering_images, voxel = self.transforms(rendering_images, voxel)
         
-        return rendering_images, voxel
+        return taxonomy_name, sample_name, rendering_images, voxel
 
     def get_datum(self, idx):
+        taxonomy_name         = self.file_list[idx]['taxonomy_name']
+        sample_name           = self.file_list[idx]['sample_name']
         rendering_image_paths = self.file_list[idx]['rendering_images']
-        voxel_path = self.file_list[idx]['voxel']
+        voxel_path            = self.file_list[idx]['voxel']
 
         # Get data of rendering images
         rendering_images = []
@@ -42,7 +44,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             rendering_image = scipy.ndimage.imread(image_path)
             if len(rendering_image.shape) < 3:
                 print('[FATAL] %s It seems that there is something wrong with the image file %s' % (dt.now(), image_path))
-                sys.exit(-2)
+                sys.exit(2)
 
             rendering_images.append(rendering_image)
 
@@ -50,10 +52,10 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         voxel = scipy.io.loadmat(voxel_path)
         if not voxel:
             print('[FATAL] %s Failed to get voxel data from file %s' % (dt.now(), voxel_path))
-            sys.exit(-2)
+            sys.exit(2)
 
         voxel = voxel['Volume'].astype(np.float32)
-        return np.asarray(rendering_images), voxel
+        return taxonomy_name, sample_name, np.asarray(rendering_images), voxel
 
 # //////////////////////////////// = End of ShapeNetDataset Class Definition = ///////////////////////////////// #
 
@@ -101,8 +103,10 @@ class ShapeNetDataLoader:
 
             # Append to the list of rendering images
             files_of_taxonomy.append({
+                'taxonomy_name': taxonomy_folder_name,
+                'sample_name': sample_name,
                 'rendering_images': rendering_images_file_path,
-                'voxel': voxel_file_path
+                'voxel': voxel_file_path,
             })
 
             # Report the progress of reading dataset
@@ -122,3 +126,7 @@ class ShapeNetDataLoader:
         return samples[int(n_samples * dataset_portion[0]):int(n_samples * dataset_portion[1])]
 
 # /////////////////////////////// = End of ShapeNetDataGetter Class Definition = /////////////////////////////// #
+
+DATASET_LOADER_MAPPING = {
+    'ShapeNet': ShapeNetDataLoader,
+}

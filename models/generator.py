@@ -36,18 +36,19 @@ class Generator(torch.nn.Module):
             torch.nn.Sigmoid()
         )
 
-    def forward(self, x, y):
+    def forward(self, x):
+        # print(x.size())    # torch.Size([batch_size, z_size])
         out = x.view(-1, self.cfg.CONST.Z_SIZE, 1, 1, 1)
-        #print(out.size())  # torch.Size([100, 200, 1, 1, 1])
+        # print(out.size())  # torch.Size([batch_size, z_size, 1, 1, 1])
         out = self.layer1(out)
-        #print(out.size())  # torch.Size([100, 512, 4, 4, 4])
+        # print(out.size())  # torch.Size([batch_size, 256, 2, 2, 2])
         out = self.layer2(out)
-        #print(out.size())  # torch.Size([100, 256, 8, 8, 8])
+        # print(out.size())  # torch.Size([batch_size, 128, 4, 4, 4])
         out = self.layer3(out)
-        #print(out.size())  # torch.Size([100, 128, 16, 16, 16])
+        # print(out.size())  # torch.Size([batch_size, 64, 8, 8, 8])
         out = self.layer4(out)
-        #print(out.size())  # torch.Size([100, 64, 32, 32, 32])
+        # print(out.size())  # torch.Size([batch_size, 32, 16, 16, 16])
         out = self.layer5(out)
-        #print(out.size())  # torch.Size([100, 1, 64, 64, 64])
+        # print(out.size())  # torch.Size([batch_size, 1, 32, 32, 32])
 
-        return out
+        return torch.squeeze(out, 1)
