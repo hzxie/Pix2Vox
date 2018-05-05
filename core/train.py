@@ -13,7 +13,7 @@ import torch.utils.data
 import utils.binvox_visualization
 import utils.data_loaders
 import utils.data_transforms
-import utils.gpu_utils
+import utils.network_utils
 
 from datetime import datetime as dt
 from tensorboardX import SummaryWriter
@@ -30,13 +30,14 @@ def train_net(cfg):
 
     # Set up data augmentation
     train_transforms = utils.data_transforms.Compose([
+        utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
         utils.data_transforms.AddRandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE),
         utils.data_transforms.ArrayToTensor3d(),
     ])
     
     # Set up data loader
-    dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DIR.DATASET](cfg)
+    dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
     n_views           = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
     train_data_loader = torch.utils.data.DataLoader(
         dataset=dataset_loader.get_dataset(cfg.TRAIN.DATASET_PORTION, n_views, train_transforms),
@@ -54,6 +55,11 @@ def train_net(cfg):
     generator            = Generator(cfg)
     discriminator        = Discriminator(cfg)
     image_encoder        = ImageEncoder(cfg)
+
+    # Initialize weights of networks
+    generator.apply(utils.network_utils.init_weights)
+    discriminator.apply(utils.network_utils.init_weights)
+    image_encoder.apply(utils.network_utils.init_weights)
 
     # Set up solver
     generator_solver     = None
@@ -115,12 +121,12 @@ def train_net(cfg):
             image_encoder.train();
 
             # Get data from data loader
-            rendering_images = utils.gpu_utils.var_or_cuda(rendering_images)
-            voxels           = utils.gpu_utils.var_or_cuda(voxels)
+            rendering_images = utils.network_utils.var_or_cuda(rendering_images)
+            voxels           = utils.network_utils.var_or_cuda(voxels)
 
             # Use soft labels
-            labels_real     = utils.gpu_utils.var_or_cuda(torch.Tensor(n_samples).uniform_(0.7, 1.2))
-            labels_fake     = utils.gpu_utils.var_or_cuda(torch.Tensor(n_samples).uniform_(0, 0.3))
+            labels_real     = utils.network_utils.var_or_cuda(torch.Tensor(n_samples).uniform_(0.7, 1.2))
+            labels_fake     = utils.network_utils.var_or_cuda(torch.Tensor(n_samples).uniform_(0, 0.3))
 
             # Train the discriminator
             rendering_image_features    = image_encoder(rendering_images)
