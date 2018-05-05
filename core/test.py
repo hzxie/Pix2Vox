@@ -118,6 +118,22 @@ def test_net(cfg, test_writer, generator, image_encoder):
         mean_iou.append(test_iou[taxonomy_name]['iou'] * test_iou[taxonomy_name]['n_samples'])
     mean_iou = np.mean(mean_iou, axis=0) / n_samples
 
-    print(test_iou)
-    print(mean_iou)
+    # Print header
+    print('====== TEST RESULTS ======')
+    print('Taxonomy', end='\t')
+    for th in cfg.TEST.VOXEL_THRESH:
+        print('t=%.2f' % th, end='\t')
+    print()
+    # Print body
+    for taxonomy_name in test_iou:
+        print(taxonomy_name, end='\t')
+        for ti in test_iou[taxonomy_name]['iou']:
+            print('%.4f' % ti, end='\t')
+        print()
+    # Print mean IoU for each threshold
+    print('Overall ', end='\t')
+    for mi in mean_iou:
+        print('%.4f' % mi, end='\t')
+    print('\n')
+    
     return np.max(mean_iou)
