@@ -38,16 +38,16 @@ class Discriminator(torch.nn.Module):
 
     def forward(self, x, y):
         out = x.view(-1, 1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX)
-        # print(out.size())   # torch.Size([32, 1, 64, 64, 64])
+        # print(out.size())   # torch.Size([batch_size, 1, 32, 32, 32])
         out = self.layer1(out)
-        # print(out.size())   # torch.Size([32, 64, 32, 32, 32])
+        # print(out.size())   # torch.Size([batch_size, 32, 32, 32, 32])
         out = self.layer2(out)
-        # print(out.size())   # torch.Size([32, 128, 16, 16, 16])
+        # print(out.size())   # torch.Size([batch_size, 64, 16, 16, 16])
         out = self.layer3(out)
-        # print(out.size())   # torch.Size([32, 256, 8, 8, 8])
+        # print(out.size())   # torch.Size([batch_size, 128, 8, 8, 8])
         out = self.layer4(out)
-        # print(out.size())   # torch.Size([32, 512, 4, 4, 4])
+        # print(out.size())   # torch.Size([batch_size, 256, 4, 4, 4])
         out = self.layer5(out)
-        # print(out.size())   # torch.Size([32, 1, 1, 1, 1])
+        # print(out.size())   # torch.Size([batch_size, 1, 1, 1, 1])
 
-        return out
+        return out.view(self.cfg.CONST.BATCH_SIZE)

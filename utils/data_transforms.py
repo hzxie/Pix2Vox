@@ -5,6 +5,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
 class Compose(object):
     """ Composes several transforms together.
@@ -23,7 +24,19 @@ class Compose(object):
         
         return rendering_images, voxel
 
-# ///////////////////////////////////// = End of Compose Class Definition = //////////////////////////////////// #
+
+class ArrayToTensor3d(object):
+    """Converts a numpy.ndarray (H x W x C) to a torch.FloatTensor of shape (C x H x W)."""
+    
+    def __call__(self, rendering_images, voxel):
+        assert(isinstance(rendering_images, np.ndarray))
+        array = np.transpose(rendering_images, (0, 3, 1, 2))
+        # handle numpy array
+        tensor = torch.from_numpy(array)
+        
+        # put it from HWC to CHW format
+        return tensor.float(), voxel
+
 
 class CropCenter(object):
     def __init__(self, crop_height, crop_width, n_channels):
@@ -51,7 +64,6 @@ class CropCenter(object):
         
         return processed_images, voxel
 
-# /////////////////////////////////// = End of CenterCrop Class Definition = /////////////////////////////////// #
 
 class AddRandomBackground(object):
     def __init__(self, random_bg_color_range):
@@ -78,4 +90,3 @@ class AddRandomBackground(object):
 
         return processed_images, voxel
 
-# //////////////////////////////// = End of RandomBackground Class Definition = //////////////////////////////// #

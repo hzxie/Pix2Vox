@@ -1,8 +1,8 @@
 argparse
 easydict
+matplotlib
 multiprocessing
 numpy
 pprint
 scipy
-
-git+https://github.com/matplotlib/matplotlib
+tensorboardX

@@ -6,29 +6,23 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import torch
 import torch.backends.cudnn
 import torch.utils.data
 
 import utils.binvox_visualization
 import utils.data_loaders
 import utils.data_transforms
+import utils.gpu_utils
 
 from datetime import datetime as dt
 from tensorboardX import SummaryWriter
 from time import time
 
+from core.test import test_net
 from models.discriminator import Discriminator
 from models.generator import Generator
-
-DATASET_LOADER_MAPPING = {
-    'ShapeNet': utils.data_loaders.ShapeNetDataLoader,
-}
-
-def var_or_cuda(x):
-    if torch.cuda.is_available():
-        x = x.cuda()
-    
-    return x
+from models.image_encoder import ImageEncoder
 
 def train_net(cfg):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
@@ -38,21 +32,14 @@ def train_net(cfg):
     train_transforms = utils.data_transforms.Compose([
         utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
         utils.data_transforms.AddRandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE),
-    ])
-    val_transforms   = utils.data_transforms.Compose([
-        utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
-        utils.data_transforms.AddRandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
+        utils.data_transforms.ArrayToTensor3d(),
     ])
     
     # Set up data loader
-    dataset_loader    = DATASET_LOADER_MAPPING[cfg.DIR.DATASET](cfg)
+    dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DIR.DATASET](cfg)
     n_views           = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
     train_data_loader = torch.utils.data.DataLoader(
         dataset=dataset_loader.get_dataset(cfg.TRAIN.DATASET_PORTION, n_views, train_transforms),
-        batch_size=cfg.CONST.BATCH_SIZE,
-        num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
-    val_data_loader   = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, val_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
 
@@ -66,34 +53,35 @@ def train_net(cfg):
     # Set up networks
     generator            = Generator(cfg)
     discriminator        = Discriminator(cfg)
+    image_encoder        = ImageEncoder(cfg)
 
     # Set up solver
     generator_solver     = None
     discriminator_solver = None
+    image_encoder_solver = None
     if cfg.TRAIN.POLICY == 'adam':
         generator_solver     = torch.optim.Adam(generator.parameters(), lr=cfg.TRAIN.GENERATOR_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
         discriminator_solver = torch.optim.Adam(discriminator.parameters(), lr=cfg.TRAIN.DISCRIMINATOR_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        image_encoder_solver = torch.optim.Adam(image_encoder.parameters(), lr=cfg.TRAIN.IMAGE_ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     elif cfg.TRAIN.POLICY == 'sgd':
         generator_solver     = torch.optim.SGD(generator.parameters(), lr=cfg.TRAIN.GENERATOR_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
         discriminator_solver = torch.optim.SGD(discriminator.parameters(), lr=cfg.TRAIN.DISCRIMINATOR_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
+        image_encoder_solver = torch.optim.SGD(image_encoder.parameters(), lr=cfg.TRAIN.IMAGE_ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     else:
         raise Exception('[FATAL] %s Unknown optimizer %s.' % (dt.now(), cfg.TRAIN.POLICY))
 
     # Set up learning rate scheduler to decay learning rates dynamically
     generator_lr_scheduler     = torch.optim.lr_scheduler.MultiStepLR(generator_solver, milestones=cfg.TRAIN.GENERATOR_LR_MILESTONES, gamma=0.1)
     discriminator_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(discriminator_solver, milestones=cfg.TRAIN.DISCRIMINATOR_LR_MILESTONES, gamma=0.1)
+    image_encoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(image_encoder_solver, milestones=cfg.TRAIN.IMAGE_ENCODER_LR_MILESTONES, gamma=0.1)
 
     if torch.cuda.is_available():
-        discriminator.cuda()
         generator.cuda()
+        discriminator.cuda()
+        image_encoder.cuda()
 
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()
-
-    # Use CUDA if it is available
-    if torch.cuda.is_available():
-        generator.cuda()
-        discriminator.cuda()
 
     # Load pretrained model if exists
     network_params = None
@@ -101,94 +89,108 @@ def train_net(cfg):
         network_params = torch.load(cfg.CONST.WEIGHTS)
 
     # Training loop
+    best_iou = 0
     for epoch_idx in range(cfg.TRAIN.INITIAL_EPOCH, cfg.TRAIN.NUM_EPOCHES):
         n_batches = len(train_data_loader)
         # Average meterics
-        batch_generator_loss        = []
-        batch_discriminator_loss    = []
-        batch_discriminator_acuracy = []
+        epoch_image_encoder_loss    = []
+        epoch_generator_loss        = []
+        epoch_discriminator_loss    = []
+        epoch_discriminator_acuracy = []
         
         # Tick / tock
         epoch_start_time = time()
 
-        for batch_idx, (rendering_images, voxels) in enumerate(train_data_loader):
+        for batch_idx, (taxonomy_names, sample_names, rendering_images, voxels) in enumerate(train_data_loader):
+            n_samples = len(voxels)
+            if not n_samples == cfg.CONST.BATCH_SIZE:
+                continue
+
             # Tick / tock
             batch_start_time = time()
 
-            # Generate Gaussian noise
-            n_samples   = len(voxels)
-            voxels      = var_or_cuda(voxels)
-            z           = var_or_cuda(torch.Tensor(n_samples, cfg.CONST.Z_SIZE).normal_(0, .33))
+            # switch models to training mode
+            generator.train();
+            discriminator.train();
+            image_encoder.train();
+
+            # Get data from data loader
+            rendering_images = utils.gpu_utils.var_or_cuda(rendering_images)
+            voxels           = utils.gpu_utils.var_or_cuda(voxels)
 
             # Use soft labels
-            labels_real = var_or_cuda(torch.Tensor(n_samples).uniform_(0.7, 1.2))
-            labels_fake = var_or_cuda(torch.Tensor(n_samples).uniform_(0, 0.3))
+            labels_real     = utils.gpu_utils.var_or_cuda(torch.Tensor(n_samples).uniform_(0.7, 1.2))
+            labels_fake     = utils.gpu_utils.var_or_cuda(torch.Tensor(n_samples).uniform_(0, 0.3))
 
             # Train the discriminator
-            generated_voxels            = generator(z, None)
-            pred_labels_real            = discriminator(voxels, None)
-            pred_labels_fake            = discriminator(generated_voxels, None)
+            rendering_image_features    = image_encoder(rendering_images)
+            generated_voxels            = generator(rendering_image_features)
+            pred_labels_real            = discriminator(voxels, rendering_image_features)
+            pred_labels_fake            = discriminator(generated_voxels, rendering_image_features)
 
             discriminator_loss_real     = bce_loss(pred_labels_real, labels_real)
             discriminator_loss_fake     = bce_loss(pred_labels_fake, labels_fake)
-            discriminator_loss          = discriminator_loss_real + discriminator_loss_fake
+            discriminator_loss          = (discriminator_loss_real + discriminator_loss_fake) * 0.5
 
-            discriminator_acuracy_real  = torch.ge(pred_labels_real.squeeze(), 0.5).float()
-            discriminator_acuracy_fake  = torch.le(pred_labels_fake.squeeze(), 0.5).float()
-            discriminator_acuracy       = torch.mean(torch.cat((discriminator_acuracy_real, discriminator_acuracy_fake),0))
+            discriminator_acuracy_real  = torch.ge(pred_labels_real.view(cfg.CONST.BATCH_SIZE), 0.5).float()
+            discriminator_acuracy_fake  = torch.le(pred_labels_fake.view(cfg.CONST.BATCH_SIZE), 0.5).float()
+            discriminator_acuracy       = torch.mean(torch.cat((discriminator_acuracy_real, discriminator_acuracy_fake), 0))
 
             # Balance the learning speed of discriminator and generator
             if discriminator_acuracy <= cfg.TRAIN.DISCRIMINATOR_ACC_THRESHOLD:
                 discriminator.zero_grad()
-                discriminator_loss.backward()
+                discriminator_loss.backward(retain_graph=True)
                 discriminator_solver.step()
 
-            # Train the generator
-            z                   = var_or_cuda(torch.Tensor(n_samples, cfg.CONST.Z_SIZE).normal_(0, .33))
-            generated_voxels    = generator(z, None)
-            pred_labels_fake    = discriminator(generated_voxels, None)
-            generator_loss      = bce_loss(pred_labels_fake, labels_real)
+            # Train the generator and the image encoder
+            image_encoder_loss          = bce_loss(generated_voxels, voxels) * 10
+            generator_loss              = bce_loss(pred_labels_fake, labels_real) + image_encoder_loss
 
             discriminator.zero_grad()
             generator.zero_grad()
+            image_encoder.zero_grad()
+            
             generator_loss.backward()
+            
             generator_solver.step()
+            image_encoder_solver.step()
 
             # Tick / tock
             batch_end_time = time()
             
             # Append loss and accuracy to average metrics
-            batch_generator_loss.append(generator_loss.item())
-            batch_discriminator_loss.append(discriminator_loss.item())
-            batch_discriminator_acuracy.append(discriminator_acuracy.item())
+            epoch_image_encoder_loss.append(image_encoder_loss.item())
+            epoch_generator_loss.append(generator_loss.item())
+            epoch_discriminator_loss.append(discriminator_loss.item())
+            epoch_discriminator_acuracy.append(discriminator_acuracy.item())
             # Append loss and accuracy to TensorBoard
             n_itr = epoch_idx * n_batches + batch_idx
-            train_writer.add_scalar('Loss/GLoss', generator_loss.item(), n_itr)
-            train_writer.add_scalar('Loss/DLoss', discriminator_loss.item(), n_itr)
-            train_writer.add_scalar('Loss/DLoss_Real', discriminator_loss_real.item(), n_itr)
-            train_writer.add_scalar('Loss/DLoss_Fake', discriminator_loss_fake.item(), n_itr)
-            train_writer.add_scalar('Accuracy/DAccuracy', discriminator_acuracy.item(), n_itr)
+            train_writer.add_scalar('Generator/GeneratorLoss', generator_loss.item(), n_itr)
+            train_writer.add_scalar('Generator/ImageEncoderLoss', image_encoder_loss.item(), n_itr)
+            train_writer.add_scalar('Discriminator/Loss', discriminator_loss.item(), n_itr)
+            train_writer.add_scalar('Discriminator/Accuracy', discriminator_acuracy.item(), n_itr)
             # Append rendering images of voxels to TensorBoard
             if n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
-                gv           = generated_voxels.cpu().data[:8].squeeze().numpy()
+                # TODO: add GT here ...
+                gv           = generated_voxels.cpu().data[:8].numpy()
                 voxel_views  = utils.binvox_visualization.get_voxel_views(gv, os.path.join(img_dir, 'train'), n_itr)
-                train_writer.add_image('Voxel View', voxel_views, n_itr)
+                train_writer.add_image('Reconstructed Voxels', voxel_views, n_itr)
 
-            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f' % \
-                (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, batch_idx, n_batches, batch_end_time - batch_start_time, \
-                    discriminator_loss, discriminator_acuracy, generator_loss))
+            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f ILoss = %.4f' % \
+                (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, batch_end_time - batch_start_time, \
+                    discriminator_loss, discriminator_acuracy, generator_loss, image_encoder_loss))
 
         # Tick / tock
         epoch_end_time = time()
-        print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f' % 
-            (dt.now(), epoch_idx, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, np.mean(batch_discriminator_loss), \
-                np.mean(batch_discriminator_acuracy), np.mean(batch_generator_loss)))
+        print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f ILoss = %.4f' % 
+            (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, np.mean(epoch_discriminator_loss), \
+                np.mean(epoch_discriminator_acuracy), np.mean(epoch_generator_loss), np.mean(epoch_image_encoder_loss)))
 
         # Validate the training models
-        # TODO
+        mean_iou = test_net(cfg, val_writer, generator, image_encoder)
 
         # Save weights to file
-        # TODO: Save the best validation model (not availble for 3D-GAN)
+        # TODO: Save the best validation model
         if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 and not epoch_idx == 0:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
