@@ -48,7 +48,7 @@ __C.TRAIN.RESUME_TRAIN                  = False
 __C.TRAIN.INITIAL_EPOCH                 = 0         # when the training resumes, set the epoch number
 __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
-__C.TRAIN.NUM_WORKER                    = 4         # number of data workers
+__C.TRAIN.NUM_WORKER                    = 1         # number of data workers
 __C.TRAIN.NUM_EPOCHES                   = 2000      # maximum number of epoches
 __C.TRAIN.NUM_RENDERING                 = 20
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
@@ -78,4 +78,4 @@ __C.TRAIN.SAVE_FREQ                     = 25        # weights will be overwritte
 __C.TEST                                = edict()
 __C.TEST.DATASET_PORTION                = [.8, 1]
 __C.TEST.RANDOM_BG_COLOR_RANGE          = [[240, 240], [240, 240], [240, 240]]
-__C.TEST.VOXEL_THRESH                   = [.4, .5]
+__C.TEST.VOXEL_THRESH                   = [.3, .4, .5]
