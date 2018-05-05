@@ -18,14 +18,14 @@ __C.CONST.IMG_W                         = 224       # Image width after cropping
 __C.CONST.IMG_H                         = 224       # Image height after cropping
 __C.CONST.IMG_C                         = 3         # Image channels after cropping
 __C.CONST.N_VOX                         = 32
-__C.CONST.N_VIEWS                       = 12
+__C.CONST.N_VIEWS                       = 6
 __C.CONST.BATCH_SIZE                    = 8
 __C.CONST.Z_SIZE                        = 128
 
 #
 # Directories
 #
-__C.DIR     							= edict()
+__C.DIR                                 = edict()
 __C.DIR.DATASET_TAXONOMY_FILE_PATH      = './datasets/ShapeNet.json'
 __C.DIR.DATASET_QUERY_PATH              = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering'
 __C.DIR.VOXEL_PATH                      = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
@@ -35,10 +35,10 @@ __C.DIR.OUT_PATH                        = './output'
 #
 # Dataset
 #
-__C.DATASET 							= edict()
+__C.DATASET                             = edict()
 __C.DATASET.DATASET_NAME                = 'ShapeNet'
-__C.DATASET.MEAN                		= [32.2859, 27.1176, 24.4343, 50.5743]
-__C.DATASET.STD                 		= [0.1903, 0.1708, 0.1634, 0.2678]
+__C.DATASET.MEAN                        = [32.2859, 27.1176, 24.4343, 50.5743]
+__C.DATASET.STD                         = [0.1903, 0.1708, 0.1634, 0.2678]
 
 #
 # Network

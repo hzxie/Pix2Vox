@@ -45,9 +45,10 @@ def train_net(cfg):
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
 
     # Summary writer for TensorBoard
-    log_dir      = os.path.join(cfg.DIR.OUT_PATH, 'logs', dt.now().isoformat())
-    img_dir      = os.path.join(cfg.DIR.OUT_PATH, 'images', dt.now().isoformat())
-    ckpt_dir     = os.path.join(cfg.DIR.OUT_PATH, 'checkpoints', dt.now().isoformat())
+    output_dir   = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
+    log_dir      = output_dir % 'logs'
+    img_dir      = output_dir % 'images'
+    ckpt_dir     = output_dir % 'checkpoints'
     train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
     val_writer   = SummaryWriter(os.path.join(log_dir, 'test'))
 
@@ -59,7 +60,7 @@ def train_net(cfg):
     # Initialize weights of networks
     generator.apply(utils.network_utils.init_weights)
     discriminator.apply(utils.network_utils.init_weights)
-    image_encoder.apply(utils.network_utils.init_weights)
+    # image_encoder.apply(utils.network_utils.init_weights)
 
     # Set up solver
     generator_solver     = None
@@ -68,11 +69,11 @@ def train_net(cfg):
     if cfg.TRAIN.POLICY == 'adam':
         generator_solver     = torch.optim.Adam(generator.parameters(), lr=cfg.TRAIN.GENERATOR_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
         discriminator_solver = torch.optim.Adam(discriminator.parameters(), lr=cfg.TRAIN.DISCRIMINATOR_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
-        image_encoder_solver = torch.optim.Adam(image_encoder.parameters(), lr=cfg.TRAIN.IMAGE_ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        image_encoder_solver = torch.optim.Adam(filter(lambda p: p.requires_grad, image_encoder.parameters()), lr=cfg.TRAIN.IMAGE_ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     elif cfg.TRAIN.POLICY == 'sgd':
         generator_solver     = torch.optim.SGD(generator.parameters(), lr=cfg.TRAIN.GENERATOR_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
         discriminator_solver = torch.optim.SGD(discriminator.parameters(), lr=cfg.TRAIN.DISCRIMINATOR_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
-        image_encoder_solver = torch.optim.SGD(image_encoder.parameters(), lr=cfg.TRAIN.IMAGE_ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        image_encoder_solver = torch.optim.SGD(filter(lambda p: p.requires_grad, image_encoder.parameters()), lr=cfg.TRAIN.IMAGE_ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     else:
         raise Exception('[FATAL] %s Unknown optimizer %s.' % (dt.now(), cfg.TRAIN.POLICY))
 
@@ -188,12 +189,14 @@ def train_net(cfg):
 
         # Tick / tock
         epoch_end_time = time()
+        image_encoder_mean_loss = np.mean(epoch_image_encoder_loss)
+        train_writer.add_scalar('Generator/MeanLoss', image_encoder_mean_loss, epoch_idx + 1)
         print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) DLoss = %.4f DAccuracy = %.4f GLoss = %.4f ILoss = %.4f' % 
             (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, np.mean(epoch_discriminator_loss), \
-                np.mean(epoch_discriminator_acuracy), np.mean(epoch_generator_loss), np.mean(epoch_image_encoder_loss)))
+                np.mean(epoch_discriminator_acuracy), np.mean(epoch_generator_loss), image_encoder_mean_loss))
 
         # Validate the training models
-        mean_iou = test_net(cfg, val_writer, generator, image_encoder)
+        mean_iou = test_net(cfg, epoch_idx + 1, output_dir, val_writer, generator, image_encoder)
 
         # Save weights to file
         # TODO: Save the best validation model

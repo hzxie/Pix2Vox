@@ -7,7 +7,7 @@
 # - https://github.com/shawnxu1318/MVCNN-Multi-View-Convolutional-Neural-Networks/blob/master/mvcnn.py
 
 import torch
-import 
+import torchvision.models
 
 class VGG(torch.nn.Module):
     def __init__(self, cfg):
@@ -42,7 +42,8 @@ class ImageEncoder(torch.nn.Module):
         self.cfg = cfg
 
         # Layer Definition
-        self.vgg = VGG(cfg)
+        vgg16_bn = torchvision.models.vgg16_bn(pretrained=True)
+        self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:24]
         self.layer1 = torch.nn.Sequential(
             torch.nn.Dropout(p=0.2),
             torch.nn.Conv2d(self.cfg.CONST.N_VIEWS * 256, 512, kernel_size=1),
@@ -60,6 +61,10 @@ class ImageEncoder(torch.nn.Module):
             torch.nn.ELU(inplace=True),
             torch.nn.AvgPool2d(kernel_size=19)
         )
+
+        # Don't update params in VGG16
+        for param in vgg16_bn.parameters():
+            param.requires_grad = False
 
     def forward(self, x):
         # print(x.size())  # torch.Size([batch_size, n_views, img_c, img_h, img_w])

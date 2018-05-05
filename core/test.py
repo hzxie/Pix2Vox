@@ -24,12 +24,12 @@ from models.discriminator import Discriminator
 from models.generator import Generator
 from models.image_encoder import ImageEncoder
 
-def test_net(cfg, test_writer, generator, image_encoder):
+def test_net(cfg, epoch_idx=-1, output_dir=None, test_writer=None, generator=None, image_encoder=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark  = True
 
     # Set up data augmentation
-    val_transforms   = utils.data_transforms.Compose([
+    val_transforms  = utils.data_transforms.Compose([
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
         utils.data_transforms.AddRandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
@@ -37,21 +37,24 @@ def test_net(cfg, test_writer, generator, image_encoder):
     ])
 
     # Set up data loader
-    dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-    n_views           = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
-    val_data_loader   = torch.utils.data.DataLoader(
+    dataset_loader   = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
+    n_views          = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
+    val_data_loader  = torch.utils.data.DataLoader(
         dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, val_transforms),
         batch_size=1,
         num_workers=1, pin_memory=True, shuffle=False)
 
     # Summary writer for TensorBoard
-    log_dir           = os.path.join(cfg.DIR.OUT_PATH, 'logs', dt.now().isoformat())
-    img_dir           = os.path.join(cfg.DIR.OUT_PATH, 'images', dt.now().isoformat())
-    need_close_writer = False
+    need_to_close_writer = False
+    if output_dir is None:
+        need_to_close_writer = True
+        output_dir  = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
+        test_writer = SummaryWriter(os.path.join(log_dir, 'test'))
+    
+    log_dir  = output_dir % 'logs'
+    img_dir  = output_dir % 'images'
+    ckpt_dir = output_dir % 'checkpoints'
 
-    if test_writer is None:
-        val_writer          = SummaryWriter(os.path.join(log_dir, 'test'))
-        need_close_writer   = True
 
     # Set up networks
     if generator is None or image_encoder is None:
@@ -137,5 +140,12 @@ def test_net(cfg, test_writer, generator, image_encoder):
     for mi in mean_iou:
         print('%.4f' % mi, end='\t')
     print('\n')
-    
+
+    # Add testing results to TensorBoard
+    test_writer.add_scalar('Generator/MeanLoss', image_encoder_loss, epoch_idx)
+
+    # Close SummaryWriter for TensorBoard
+    if need_to_close_writer:
+        test_writer.close()
+
     return np.max(mean_iou)
