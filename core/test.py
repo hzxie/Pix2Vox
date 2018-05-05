@@ -142,10 +142,13 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_writer=None, generator=Non
     print('\n')
 
     # Add testing results to TensorBoard
-    test_writer.add_scalar('Generator/MeanLoss', image_encoder_loss, epoch_idx)
+    max_iou = np.max(mean_iou)
+    if not epoch_idx == -1:
+        test_writer.add_scalar('Generator/MeanLoss', image_encoder_loss, epoch_idx)
+        test_writer.add_scalar('Generator/IoU', max_iou, epoch_idx)
 
     # Close SummaryWriter for TensorBoard
     if need_to_close_writer:
         test_writer.close()
 
-    return np.max(mean_iou)
+    return max_iou
