@@ -41,7 +41,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         # Get data of rendering images
         rendering_images = []
         for image_path in rendering_image_paths:
-            rendering_image = scipy.ndimage.imread(image_path)
+            rendering_image = scipy.ndimage.imread(image_path).astype(np.float32)
             if len(rendering_image.shape) < 3:
                 print('[FATAL] %s It seems that there is something wrong with the image file %s' % (dt.now(), image_path))
                 sys.exit(2)

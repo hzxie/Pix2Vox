@@ -9,11 +9,12 @@ import os
 import torch
 import torch.backends.cudnn
 import torch.utils.data
+import torchvision.transforms
 
 import utils.binvox_visualization
 import utils.data_loaders
 import utils.data_transforms
-import utils.gpu_utils
+import utils.network_utils
 
 from datetime import datetime as dt
 from tensorboardX import SummaryWriter
@@ -29,13 +30,14 @@ def test_net(cfg, test_writer, generator, image_encoder):
 
     # Set up data augmentation
     val_transforms   = utils.data_transforms.Compose([
+        utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
         utils.data_transforms.AddRandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
         utils.data_transforms.ArrayToTensor3d(),
     ])
 
     # Set up data loader
-    dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DIR.DATASET](cfg)
+    dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
     n_views           = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
     val_data_loader   = torch.utils.data.DataLoader(
         dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, val_transforms),
@@ -79,8 +81,8 @@ def test_net(cfg, test_writer, generator, image_encoder):
 
         with torch.no_grad():
             # Get data from data loader
-            rendering_images = utils.gpu_utils.var_or_cuda(rendering_images)
-            voxel            = utils.gpu_utils.var_or_cuda(voxel)
+            rendering_images = utils.network_utils.var_or_cuda(rendering_images)
+            voxel            = utils.network_utils.var_or_cuda(voxel)
 
             # Test the generator
             rendering_image_features    = image_encoder(rendering_images)

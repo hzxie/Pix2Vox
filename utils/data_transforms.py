@@ -38,10 +38,23 @@ class ArrayToTensor3d(object):
         return tensor.float(), voxel
 
 
+class Normalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std  = std
+
+    def __call__(self, rendering_images, voxel):
+        assert(isinstance(rendering_images, np.ndarray))
+        for img_idx, img in enumerate(rendering_images):
+            rendering_images[img_idx] -= self.mean
+            rendering_images[img_idx] /= self.std
+
+        return rendering_images, voxel
+
+
 class CropCenter(object):
     def __init__(self, crop_height, crop_width, n_channels):
-        ''' Set the height and weight after cropping
-        '''
+        """Set the height and weight after cropping"""
         self.crop_height   = crop_height
         self.crop_width    = crop_width
         self.n_channels    = n_channels

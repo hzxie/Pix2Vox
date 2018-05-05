@@ -25,13 +25,20 @@ __C.CONST.Z_SIZE                        = 128
 #
 # Directories
 #
-__C.DIR     = edict()
-__C.DIR.DATASET                         = 'ShapeNet'
+__C.DIR     							= edict()
 __C.DIR.DATASET_TAXONOMY_FILE_PATH      = './datasets/ShapeNet.json'
 __C.DIR.DATASET_QUERY_PATH              = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering'
 __C.DIR.VOXEL_PATH                      = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
 __C.DIR.RENDERING_PATH                  = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
 __C.DIR.OUT_PATH                        = './output'
+
+#
+# Dataset
+#
+__C.DATASET 							= edict()
+__C.DATASET.DATASET_NAME                = 'ShapeNet'
+__C.DATASET.MEAN                		= [32.2859, 27.1176, 24.4343, 50.5743]
+__C.DATASET.STD                 		= [0.1903, 0.1708, 0.1634, 0.2678]
 
 #
 # Network
@@ -62,7 +69,7 @@ __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
 __C.TRAIN.GENERATOR_LEARNING_RATE       = .0025
 __C.TRAIN.DISCRIMINATOR_LEARNING_RATE   = .001
-__C.TRAIN.IMAGE_ENCODER_LEARNING_RATE   = .001
+__C.TRAIN.IMAGE_ENCODER_LEARNING_RATE   = .0001
 __C.TRAIN.GENERATOR_LR_MILESTONES       = []
 __C.TRAIN.DISCRIMINATOR_LR_MILESTONES   = []
 __C.TRAIN.IMAGE_ENCODER_LR_MILESTONES   = []
