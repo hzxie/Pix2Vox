@@ -89,7 +89,7 @@ def main():
 if __name__ == '__main__':
     # Check python version
     if sys.version_info < (3, 0):
-        raise Exception("Please follow the installation instruction on 'https://github.com/hzxie/Rec2Net'")
+        raise Exception("Please follow the installation instruction on 'https://github.com/hzxie/Pixel2Voxel'")
 
     # Setup logger
     mp.log_to_stderr()

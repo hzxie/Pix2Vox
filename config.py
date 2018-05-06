@@ -14,9 +14,9 @@ cfg     = __C
 __C.CONST                               = edict()
 __C.CONST.DEVICE                        = '0'
 __C.CONST.RNG_SEED                      = 0
-__C.CONST.IMG_W                         = 224       # Image width after cropping
-__C.CONST.IMG_H                         = 224       # Image height after cropping
-__C.CONST.IMG_C                         = 3         # Image channels after cropping
+__C.CONST.IMG_W                         = 224       # Image width for input
+__C.CONST.IMG_H                         = 224       # Image height for input
+__C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 6
 __C.CONST.BATCH_SIZE                    = 8
@@ -60,10 +60,16 @@ __C.TRAIN.NUM_EPOCHES                   = 2000      # maximum number of epoches
 __C.TRAIN.NUM_RENDERING                 = 20
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
-__C.TRAIN.RANDOM_CROP                   = True
-__C.TRAIN.PAD_X                         = 10
-__C.TRAIN.PAD_Y                         = 10
-__C.TRAIN.FLIP                          = True
+__C.TRAIN.CROP_IMG_W                    = 200
+__C.TRAIN.CROP_IMG_H                    = 200
+__C.TRAIN.CROP_IMG_C                    = 4
+__C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15) # range of degrees to select from
+__C.TRAIN.TRANSLATE_RANGE               = None      # tuple of maximum absolute fraction for horizontal and vertical translations
+__C.TRAIN.SCALE_RANGE                   = None      # tuple of scaling factor interval
+__C.TRAIN.BRIGHTNESS                    = .25
+__C.TRAIN.CONTRAST                      = .25
+__C.TRAIN.SATURATION                    = .25
+__C.TRAIN.HUE                           = .25
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 ## Learning
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
@@ -76,8 +82,8 @@ __C.TRAIN.IMAGE_ENCODER_LR_MILESTONES   = []
 __C.TRAIN.DISCRIMINATOR_ACC_THRESHOLD   = .8
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
-__C.TRAIN.VISUALIZATION_FREQ            = 50        # visualization reconstruction voxels every visualization_freq batch
-__C.TRAIN.SAVE_FREQ                     = 25        # weights will be overwritten every save_freq epoch
+__C.TRAIN.VISUALIZATION_FREQ            = 100       # visualization reconstruction voxels every visualization_freq batch
+__C.TRAIN.SAVE_FREQ                     = 10        # weights will be overwritten every save_freq epoch
 
 #
 # Testing options
@@ -85,4 +91,4 @@ __C.TRAIN.SAVE_FREQ                     = 25        # weights will be overwritte
 __C.TEST                                = edict()
 __C.TEST.DATASET_PORTION                = [.8, 1]
 __C.TEST.RANDOM_BG_COLOR_RANGE          = [[240, 240], [240, 240], [240, 240]]
-__C.TEST.VOXEL_THRESH                   = [.1, .2, .3, .4, .5]
+__C.TEST.VOXEL_THRESH                   = [.2, .25, .3, .4, .5]
