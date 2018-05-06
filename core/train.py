@@ -96,14 +96,26 @@ def train_net(cfg):
     bce_loss = torch.nn.BCELoss()
 
     # Load pretrained model if exists
-    network_params = None
-    if 'WEIGHTS' in cfg.CONST:
-        network_params = torch.load(cfg.CONST.WEIGHTS)
+    init_epoch     = 0
+    best_iou       = -1
+    best_epoch     = -1
+    if 'WEIGHTS' in cfg.CONST and cfg.TRAIN.RESUME_TRAIN:
+        print('[INFO] %s Recovering from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
+        checkpoint = torch.load(cfg.CONST.WEIGHTS)
+        init_epoch = checkpoint['epoch_idx']
+        best_iou   = checkpoint['best_iou']
+        best_epoch = checkpoint['best_epoch']
+
+        generator.load_state_dict(checkpoint['generator_state_dict'])
+        generator_solver.load_state_dict(checkpoint['generator_solver_state_dict'])
+        image_encoder.load_state_dict(checkpoint['image_encoder_state_dict'])
+        image_encoder_solver.load_state_dict(checkpoint['image_encoder_solver_state_dict'])
+
+        print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
+                 % (dt.now(), init_epoch, best_iou, best_epoch))
 
     # Training loop
-    best_iou   = -1
-    best_epoch = -1
-    for epoch_idx in range(cfg.TRAIN.INITIAL_EPOCH, cfg.TRAIN.NUM_EPOCHES):
+    for epoch_idx in range(init_epoch, cfg.TRAIN.NUM_EPOCHES):
         n_batches = len(train_data_loader)
         # Average meterics
         epoch_image_encoder_loss    = []
@@ -174,18 +186,15 @@ def train_net(cfg):
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
             utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
-                    generator, generator_solver, image_encoder, image_encoder_solver)
+                    epoch_idx + 1, generator, generator_solver, image_encoder, image_encoder_solver, best_iou, best_epoch)
         elif iou > best_iou:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
             
+            best_iou   = iou
             best_epoch = epoch_idx + 1
             utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
-                    epoch_idx + 1, generator, generator_solver, image_encoder, image_encoder_solver)
-
-        # Print best IoU
-        if not best_epoch == -1:
-            print('[INFO] %s Best IoU = %.4f / Best epoch = %d' % (dt.now(), best_iou, best_epoch))
+                    epoch_idx + 1, generator, generator_solver, image_encoder, image_encoder_solver, best_iou, best_epoch)
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()

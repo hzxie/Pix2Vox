@@ -52,7 +52,6 @@ __C.NETWORK.TCONV_USE_BIAS              = False
 #
 __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
-__C.TRAIN.INITIAL_EPOCH                 = 0         # when the training resumes, set the epoch number
 __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
 __C.TRAIN.NUM_WORKER                    = 1         # number of data workers
