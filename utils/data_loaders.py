@@ -15,10 +15,9 @@ import torch.utils.data.dataset
 from datetime import datetime as dt
 
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
-    ''' ShapeNetDataset class used for PyTorch DataLoader
-    '''
+    """ShapeNetDataset class used for PyTorch DataLoader"""
     def __init__(self, file_list_with_metadata, transforms=None):
-        self.file_list = file_list_with_metadata
+        self.file_list  = file_list_with_metadata
         self.transforms = transforms
 
     def __len__(self):

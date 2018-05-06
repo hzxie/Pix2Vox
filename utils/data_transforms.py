@@ -3,16 +3,20 @@
 # 
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
-import matplotlib.pyplot as plt
 import numpy as np
+import scipy.misc
 import torch
+import torchvision.transforms
+
+from PIL import Image
+from random import random
 
 class Compose(object):
     """ Composes several transforms together.
     For example:
     >>> transforms.Compose([
-    >>>     transforms.AddRandomBackground(),
-    >>>     transforms.CropCenter(127, 127, 3),
+    >>>     transforms.RandomBackground(),
+    >>>     transforms.CenterCrop(127, 127, 3),
     >>>  ])
     """
     def __init__(self, transforms):
@@ -25,8 +29,13 @@ class Compose(object):
         return rendering_images, voxel
 
 
-class ArrayToTensor3d(object):
-    """Converts a numpy.ndarray (H x W x C) to a torch.FloatTensor of shape (C x H x W)."""
+class ToTensor(object):
+    """
+    Convert a PIL Image or numpy.ndarray to tensor.
+    Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
+    """
+    def __init__(self):
+        pass
     
     def __call__(self, rendering_images, voxel):
         assert(isinstance(rendering_images, np.ndarray))
@@ -45,40 +54,98 @@ class Normalize(object):
 
     def __call__(self, rendering_images, voxel):
         assert(isinstance(rendering_images, np.ndarray))
-        for img_idx, img in enumerate(rendering_images):
-            rendering_images[img_idx] -= self.mean
-            rendering_images[img_idx] /= self.std
+        rendering_images -= self.mean
+        rendering_images /= self.std
 
         return rendering_images, voxel
 
 
-class CropCenter(object):
-    def __init__(self, crop_height, crop_width, n_channels):
-        """Set the height and weight after cropping"""
-        self.crop_height   = crop_height
-        self.crop_width    = crop_width
-        self.n_channels    = n_channels
+class CenterCrop(object):
+    def __init__(self, img_size, crop_size):
+        """Set the height and weight before and after cropping"""
+        self.img_size_h   = img_size[0]
+        self.img_size_w   = img_size[1]
+        self.crop_size_h  = crop_size[0]
+        self.crop_size_w  = crop_size[1]
 
     def __call__(self, rendering_images, voxel):
-        processed_images = np.empty(shape=(0, self.crop_height, self.crop_width, self.n_channels))
+        if len(rendering_images) == 0:
+            return rendering_images, voxel
 
+        img_height, img_width, img_channels = rendering_images[0].shape
+        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, img_channels))
         for img_idx, img in enumerate(rendering_images):
-            img_height, img_width, _ = img.shape
-
-            if img_height <= self.crop_height or img_width <= self.crop_width:
+            if img_height <= self.crop_size_h or img_width <= self.crop_size_w:
                 return rendering_images, voxel
 
-            x_left  = int((img_width - self.crop_width) / 2.)
-            x_right = int(x_left + self.crop_width)
-            y_left  = int((img_height - self.crop_height) / 2.)
-            y_right = int(y_left + self.crop_height)
+            x_left  = int((img_width - self.crop_size_w) * 0.5)
+            x_right = int(x_left + self.crop_size_w)
+            y_left  = int((img_height - self.crop_size_h) * 0.5)
+            y_right = int(y_left + self.crop_size_h)
 
-            processed_images = np.append(processed_images, [img[y_left: y_right, x_left: x_right]], axis=0)
+            processed_image  = scipy.misc.imresize(img[y_left: y_right, x_left: x_right], (self.img_size_h, self.img_size_w))
+            processed_images = np.append(processed_images, [processed_image], axis=0)
         
         return processed_images, voxel
 
 
-class AddRandomBackground(object):
+class RandomCrop(object):
+    def __init__(self, img_size, crop_size):
+        """Set the height and weight before and after cropping"""
+        self.img_size_h   = img_size[0]
+        self.img_size_w   = img_size[1]
+        self.crop_size_h  = crop_size[0]
+        self.crop_size_w  = crop_size[1]
+
+    def __call__(self, rendering_images, voxel):
+        if len(rendering_images) == 0:
+            return rendering_images, voxel
+
+        img_height, img_width, img_channels = rendering_images[0].shape
+        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, img_channels))
+        for img_idx, img in enumerate(rendering_images):
+            if img_height <= self.crop_size_h or img_width <= self.crop_size_w:
+                return rendering_images, voxel
+
+            x_left  = int((img_width - self.crop_size_w) * random())
+            x_right = int(x_left + self.crop_size_w)
+            y_left  = int((img_height - self.crop_size_h) * random())
+            y_right = int(y_left + self.crop_size_h)
+
+            processed_image  = scipy.misc.imresize(img[y_left: y_right, x_left: x_right], (self.img_size_h, self.img_size_w))
+            processed_images = np.append(processed_images, [processed_image], axis=0)
+        
+        return processed_images, voxel
+
+
+class RandomAffine(object):
+    def __init__(self, rotate_degree_range, translation_range, scale_range):
+        self._random_affine = torchvision.transforms.RandomAffine(rotate_degree_range, translation_range, scale_range)
+
+    def __call__(self, rendering_images, voxel):
+        # TODO
+        
+        return rendering_images, voxel
+
+
+class ColorJitter(object):
+    def __init__(self, brightness, contrast, saturation, hue):
+        self._color_jitter = torchvision.transforms.ColorJitter(brightness, contrast, saturation, hue)
+
+    def __call__(self, rendering_images, voxel):
+        if len(rendering_images) == 0:
+            return rendering_images, voxel
+
+        img_height, img_width, img_channels = rendering_images[0].shape
+        processed_images = np.empty(shape=(0, img_height, img_width, img_channels))
+        for img_idx, img in enumerate(rendering_images):
+            processed_image  = np.array(self._color_jitter(Image.fromarray(np.uint8(img * 255))))
+            processed_images = np.append(processed_images, [processed_image], axis=0)
+        
+        return rendering_images, voxel
+
+
+class RandomBackground(object):
     def __init__(self, random_bg_color_range):
         self.random_bg_color_range = random_bg_color_range
 
