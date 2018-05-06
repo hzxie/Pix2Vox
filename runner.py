@@ -46,11 +46,6 @@ def get_args_from_command_line():
     parser.add_argument(
         '--weights', dest='weights', help='Initialize network from the weights file', default=None)
     parser.add_argument('--out', dest='out_path', help='Set output path', default=cfg.DIR.OUT_PATH)
-    parser.add_argument(
-        '--init-epoch',
-        dest='epoch',
-        help='Start from the specified epoch',
-        default=cfg.TRAIN.INITIAL_EPOCH)
     args = parser.parse_args()
     return args
 
@@ -71,7 +66,6 @@ def main():
     if args.weights is not None:
         cfg.CONST.WEIGHTS = args.weights
         cfg.TRAIN.RESUME_TRAIN = True
-        cfg.TRAIN.INITIAL_EPOCH = int(args.init_epoch)
 
     # Print config
     print('Use config:')

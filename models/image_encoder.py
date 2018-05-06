@@ -77,9 +77,13 @@ class ImageEncoder(torch.nn.Module):
             rendering_features.append(features)
 
         rendering_features = torch.cat(rendering_features, 1)
+        # print(rendering_features.size())  # torch.Size([batch_size, n_views * 256, 28. 28])
         rendering_features = self.layer1(rendering_features)
+        # print(rendering_features.size())  # torch.Size([batch_size, 512, 28, 28])
         rendering_features = self.layer2(rendering_features)
+        # print(rendering_features.size())  # torch.Size([batch_size, 256, 26, 26])
         rendering_features = self.layer3(rendering_features)
+        # print(rendering_features.size())  # torch.Size([batch_size, 128, 1, 1])
 
         return rendering_features.view(self.cfg.CONST.BATCH_SIZE, -1)
 
