@@ -85,4 +85,4 @@ __C.TRAIN.SAVE_FREQ                     = 25        # weights will be overwritte
 __C.TEST                                = edict()
 __C.TEST.DATASET_PORTION                = [.8, 1]
 __C.TEST.RANDOM_BG_COLOR_RANGE          = [[240, 240], [240, 240], [240, 240]]
-__C.TEST.VOXEL_THRESH                   = [.3, .4, .5]
+__C.TEST.VOXEL_THRESH                   = [.1, .2, .3, .4, .5]

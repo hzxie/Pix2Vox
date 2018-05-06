@@ -23,3 +23,13 @@ def init_weights(m):
     elif type(m) == torch.nn.Linear:
         torch.nn.init.normal_(m.weight, 0, 0.01)
         torch.nn.init.constant_(m.bias, 0)
+
+
+def save_checkpoints(file_name, epoch_idx, generator, generator_solver, image_encoder, image_encoder_solver):
+    torch.save({
+        'epoch_idx': epoch_idx,
+        'generator_state_dict': generator.state_dict(),
+        'generator_solver_state_dict': generator_solver.state_dict(),
+        'image_encoder_state_dict': image_encoder.state_dict(),
+        'image_encoder_solver_state_dict': image_encoder_solver.state_dict(),
+    }, os.path.join(ckpt_dir, file_name))

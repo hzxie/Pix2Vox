@@ -1,7 +1,6 @@
 argparse
 easydict
 matplotlib
-multiprocessing
 numpy
 pprint
 scipy
