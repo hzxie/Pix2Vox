@@ -24,38 +24,35 @@ from models.discriminator import Discriminator
 from models.generator import Generator
 from models.image_encoder import ImageEncoder
 
-def test_net(cfg, epoch_idx=-1, output_dir=None, test_writer=None, generator=None, image_encoder=None):
+def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, generator=None, image_encoder=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark  = True
 
-    # Set up data augmentation
-    val_transforms  = utils.data_transforms.Compose([
-        utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
-        utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
-        utils.data_transforms.AddRandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
-        utils.data_transforms.ArrayToTensor3d(),
-    ])
-
     # Set up data loader
-    dataset_loader   = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-    n_views          = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
-    val_data_loader  = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, val_transforms),
-        batch_size=1,
-        num_workers=1, pin_memory=True, shuffle=False)
+    if test_data_loader is None:
+        # Set up data augmentation
+        test_transforms  = utils.data_transforms.Compose([
+            utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
+            utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
+            utils.data_transforms.AddRandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
+            utils.data_transforms.ArrayToTensor3d(),
+        ])
+
+        dataset_loader   = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
+        n_views          = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
+        test_data_loader = torch.utils.data.DataLoader(
+            dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, test_transforms),
+            batch_size=1,
+            num_workers=1, pin_memory=True, shuffle=False)
 
     # Summary writer for TensorBoard
     need_to_close_writer = False
     if output_dir is None:
         need_to_close_writer = True
         output_dir  = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
+        log_dir     = output_dir % 'logs'
         test_writer = SummaryWriter(os.path.join(log_dir, 'test'))
     
-    log_dir  = output_dir % 'logs'
-    img_dir  = output_dir % 'images'
-    ckpt_dir = output_dir % 'checkpoints'
-
-
     # Set up networks
     if generator is None or image_encoder is None:
         generator            = Generator(cfg)
@@ -71,10 +68,10 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_writer=None, generator=Non
     bce_loss = torch.nn.BCELoss()
 
     # Testing loop
-    n_samples = len(val_data_loader)
+    n_samples = len(test_data_loader)
     test_iou  = dict()
     test_image_encoder_loss = []
-    for sample_idx, (taxonomy_name, sample_name, rendering_images, voxel) in enumerate(val_data_loader):
+    for sample_idx, (taxonomy_name, sample_name, rendering_images, voxel) in enumerate(test_data_loader):
         taxonomy_name = taxonomy_name[0]
         sample_name   = sample_name[0]
 

@@ -34,6 +34,12 @@ def train_net(cfg):
         utils.data_transforms.AddRandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE),
         utils.data_transforms.ArrayToTensor3d(),
     ])
+    val_transforms  = utils.data_transforms.Compose([
+        utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
+        utils.data_transforms.CropCenter(cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C),
+        utils.data_transforms.AddRandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
+        utils.data_transforms.ArrayToTensor3d(),
+    ])
     
     # Set up data loader
     dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
@@ -42,6 +48,10 @@ def train_net(cfg):
         dataset=dataset_loader.get_dataset(cfg.TRAIN.DATASET_PORTION, n_views, train_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
+    val_data_loader = torch.utils.data.DataLoader(
+        dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, val_transforms),
+        batch_size=cfg.CONST.BATCH_SIZE,
+        num_workers=1, pin_memory=True, shuffle=False)
 
     # Summary writer for TensorBoard
     output_dir   = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
@@ -57,7 +67,7 @@ def train_net(cfg):
 
     # Initialize weights of networks
     generator.apply(utils.network_utils.init_weights)
-    # image_encoder.apply(utils.network_utils.init_weights)
+    image_encoder.apply(utils.network_utils.init_weights)
 
     # Set up solver
     generator_solver     = None
@@ -88,7 +98,8 @@ def train_net(cfg):
         network_params = torch.load(cfg.CONST.WEIGHTS)
 
     # Training loop
-    best_iou = 0
+    best_iou   = -1
+    best_epoch = -1
     for epoch_idx in range(cfg.TRAIN.INITIAL_EPOCH, cfg.TRAIN.NUM_EPOCHES):
         n_batches = len(train_data_loader)
         # Average meterics
@@ -145,29 +156,33 @@ def train_net(cfg):
             print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) ILoss = %.4f' % \
                 (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, batch_end_time - batch_start_time, image_encoder_loss))
 
+            break
+
         # Tick / tock
-        epoch_end_time = time()
         image_encoder_mean_loss = np.mean(epoch_image_encoder_loss)
         train_writer.add_scalar('Generator/MeanLoss', image_encoder_mean_loss, epoch_idx + 1)
+        epoch_end_time = time()
         print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) ILoss = %.4f' % 
             (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, image_encoder_mean_loss))
 
         # Validate the training models
-        mean_iou = test_net(cfg, epoch_idx + 1, output_dir, val_writer, generator, image_encoder)
+        iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, generator, image_encoder)
 
         # Save weights to file
-        # TODO: Save the best validation model
-        # if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 and not epoch_idx == 0:
-        #     if not os.path.exists(ckpt_dir):
-        #         os.makedirs(ckpt_dir)
+        if (epoch_idx + 1) % cfg.TRAIN.SAVE_FREQ == 0:
+            if not os.path.exists(ckpt_dir):
+                os.makedirs(ckpt_dir)
+            network_utils.save_checkpoints('ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1), generator, generator_solver, image_encoder, image_encoder_solver)
+        elif iou > best_iou:
+            if not os.path.exists(ckpt_dir):
+                os.makedirs(ckpt_dir)
+            
+            best_epoch = epoch_idx + 1
+            network_utils.save_checkpoints('best-ckpt.pth.tar' % (epoch_idx + 1), generator, generator_solver, image_encoder, image_encoder_solver)
 
-        #     torch.save({
-        #         'epoch_idx': epoch_idx,
-        #         'generator_state_dict': generator.state_dict(),
-        #         'generator_solver_state_dict': generator_solver.state_dict(),
-        #         'discriminator_state_dict': discriminator.state_dict(),
-        #         'discriminator_solver_state_dict': discriminator_solver.state_dict(),
-        #     }, os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % epoch_idx))
+        # Print best IoU
+        if not best_epoch == -1:
+            print('[INFO] %s Best IoU = %.4f / Best epoch = %d' % (dt.now(), best_iou, best_epoch))
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()
