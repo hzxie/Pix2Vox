@@ -4,16 +4,12 @@
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import numpy as np
-import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import os
 import scipy.ndimage
 
 from mpl_toolkits.mplot3d import Axes3D
-
-# Force matplotlib to not use any XWindow backend
-matplotlib.use('Agg')
 
 def get_voxel_views(voxels, save_dir, n_itr):
     if not os.path.exists(save_dir):

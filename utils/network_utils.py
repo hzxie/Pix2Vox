@@ -3,6 +3,7 @@
 # 
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
+import os
 import torch
 
 def var_or_cuda(x):
@@ -25,11 +26,11 @@ def init_weights(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-def save_checkpoints(file_name, epoch_idx, generator, generator_solver, image_encoder, image_encoder_solver):
+def save_checkpoints(file_path, epoch_idx, generator, generator_solver, image_encoder, image_encoder_solver):
     torch.save({
         'epoch_idx': epoch_idx,
         'generator_state_dict': generator.state_dict(),
         'generator_solver_state_dict': generator_solver.state_dict(),
         'image_encoder_state_dict': image_encoder.state_dict(),
         'image_encoder_solver_state_dict': image_encoder_solver.state_dict(),
-    }, os.path.join(ckpt_dir, file_name))
+    }, file_path)

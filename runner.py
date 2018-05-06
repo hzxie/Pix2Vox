@@ -4,10 +4,13 @@
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import logging
+import matplotlib
 import multiprocessing as mp
 import numpy as np
 import os
 import sys
+# Fix problem: no $DISPLAY environment variable
+matplotlib.use('Agg')
 
 from argparse import ArgumentParser
 from pprint import pprint

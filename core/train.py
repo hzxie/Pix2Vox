@@ -50,7 +50,7 @@ def train_net(cfg):
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
     val_data_loader = torch.utils.data.DataLoader(
         dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, val_transforms),
-        batch_size=cfg.CONST.BATCH_SIZE,
+        batch_size=1,
         num_workers=1, pin_memory=True, shuffle=False)
 
     # Summary writer for TensorBoard
@@ -156,8 +156,6 @@ def train_net(cfg):
             print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) ILoss = %.4f' % \
                 (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, batch_end_time - batch_start_time, image_encoder_loss))
 
-            break
-
         # Tick / tock
         image_encoder_mean_loss = np.mean(epoch_image_encoder_loss)
         train_writer.add_scalar('Generator/MeanLoss', image_encoder_mean_loss, epoch_idx + 1)
@@ -172,13 +170,15 @@ def train_net(cfg):
         if (epoch_idx + 1) % cfg.TRAIN.SAVE_FREQ == 0:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
-            network_utils.save_checkpoints('ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1), generator, generator_solver, image_encoder, image_encoder_solver)
+            network_utils.save_checkpoints(os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
+                    generator, generator_solver, image_encoder, image_encoder_solver)
         elif iou > best_iou:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
             
             best_epoch = epoch_idx + 1
-            network_utils.save_checkpoints('best-ckpt.pth.tar' % (epoch_idx + 1), generator, generator_solver, image_encoder, image_encoder_solver)
+            utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
+                    epoch_idx + 1, generator, generator_solver, image_encoder, image_encoder_solver)
 
         # Print best IoU
         if not best_epoch == -1:
@@ -187,3 +187,4 @@ def train_net(cfg):
     # Close SummaryWriter for TensorBoard
     train_writer.close()
     val_writer.close()
+
