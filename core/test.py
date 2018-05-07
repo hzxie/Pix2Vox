@@ -20,11 +20,10 @@ from datetime import datetime as dt
 from tensorboardX import SummaryWriter
 from time import time
 
-from models.discriminator import Discriminator
-from models.generator import Generator
-from models.image_encoder import ImageEncoder
+from models.decoder import Decoder
+from models.encoder import Encoder
 
-def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, generator=None, image_encoder=None):
+def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, encoder=None, decoder=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark  = True
 
@@ -56,15 +55,18 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         test_writer = SummaryWriter(os.path.join(log_dir, 'test'))
     
     # Set up networks
-    if generator is None or image_encoder is None:
-        generator            = Generator(cfg)
-        image_encoder        = ImageEncoder(cfg)
+    if decoder is None or encoder is None:
+        encoder     = Encoder(cfg)
+        decoder     = Decoder(cfg)
 
         if torch.cuda.is_available():
-            generator.cuda()
-            image_encoder.cuda()
+            encoder.cuda()
+            decoder.cuda()
 
-        # TODO: load weights from file
+        print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
+        checkpoint = torch.load(cfg.CONST.WEIGHTS)
+        encoder.load_state_dict(checkpoint['encoder_state_dict'])
+        decoder.load_state_dict(checkpoint['decoder_state_dict'])
 
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()
@@ -72,27 +74,27 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     # Testing loop
     n_samples = len(test_data_loader)
     test_iou  = dict()
-    test_image_encoder_loss = []
+    test_encoder_loss = []
     for sample_idx, (taxonomy_name, sample_name, rendering_images, voxel) in enumerate(test_data_loader):
         taxonomy_name = taxonomy_name[0]
         sample_name   = sample_name[0]
 
         # Switch models to training mode
-        generator.eval();
-        image_encoder.eval();
+        encoder.eval();
+        decoder.eval();
 
         with torch.no_grad():
             # Get data from data loader
             rendering_images = utils.network_utils.var_or_cuda(rendering_images)
             voxel            = utils.network_utils.var_or_cuda(voxel)
 
-            # Test the generator
-            rendering_image_features    = image_encoder(rendering_images)
-            generated_voxel             = generator(rendering_image_features)
+            # Test the decoder
+            rendering_image_features    = encoder(rendering_images)
+            generated_voxel             = decoder(rendering_image_features)
 
             # Loss
-            image_encoder_loss          = bce_loss(generated_voxel, voxel) * 10
-            test_image_encoder_loss.append(image_encoder_loss)
+            encoder_loss          = bce_loss(generated_voxel, voxel) * 10
+            test_encoder_loss.append(encoder_loss)
 
             # IoU per sample
             sample_iou = []
@@ -113,7 +115,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
 
             # print
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s ILoss = %.4f IoU = %s' % \
-                (dt.now(), sample_idx + 1, n_samples, taxonomy_name, sample_name, image_encoder_loss, sample_iou))
+                (dt.now(), sample_idx + 1, n_samples, taxonomy_name, sample_name, encoder_loss, sample_iou))
 
     # Output testing results
     mean_iou = []
@@ -143,8 +145,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     # Add testing results to TensorBoard
     max_iou = np.max(mean_iou)
     if not epoch_idx == -1:
-        test_writer.add_scalar('Generator/MeanLoss', image_encoder_loss, epoch_idx)
-        test_writer.add_scalar('Generator/IoU', max_iou, epoch_idx)
+        test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_loss, epoch_idx)
+        test_writer.add_scalar('EncoderDecoder/IoU', max_iou, epoch_idx)
 
     # Close SummaryWriter for TensorBoard
     if need_to_close_writer:

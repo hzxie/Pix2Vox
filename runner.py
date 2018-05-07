@@ -65,7 +65,8 @@ def main():
         cfg.DIR.OUT_PATH = args.out_path
     if args.weights is not None:
         cfg.CONST.WEIGHTS = args.weights
-        cfg.TRAIN.RESUME_TRAIN = True
+        if not args.test:
+            cfg.TRAIN.RESUME_TRAIN = True
 
     # Print config
     print('Use config:')
@@ -78,7 +79,11 @@ def main():
     if not args.test:
         train_net(cfg)
     else:
-        test_net(cfg)
+        if 'WEIGHTS' in cfg.CONST and os.path.exists(cfg.CONST.WEIGHTS):
+            test_net(cfg)
+        else:
+            print('[FATAL] %s Please specify the file path of checkpoint.' % (dt.now()))
+            sys.exit(2)
 
 if __name__ == '__main__':
     # Check python version
