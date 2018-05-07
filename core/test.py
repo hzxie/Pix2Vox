@@ -80,7 +80,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     test_iou  = dict()
     test_encoder_loss = []
     test_refiner_loss = []
-    for sample_idx, (taxonomy_name, sample_name, rendering_images, voxel) in enumerate(test_data_loader):
+    for sample_idx, (taxonomy_name, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
         taxonomy_name = taxonomy_name[0]
         sample_name   = sample_name[0]
 
@@ -91,16 +91,16 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
 
         with torch.no_grad():
             # Get data from data loader
-            rendering_images = utils.network_utils.var_or_cuda(rendering_images)
-            voxel            = utils.network_utils.var_or_cuda(voxel)
+            rendering_images    = utils.network_utils.var_or_cuda(rendering_images)
+            ground_truth_voxel  = utils.network_utils.var_or_cuda(ground_truth_voxel)
 
             # Test the decoder
             image_features, raw_features    = encoder(rendering_images)
-            generated_voxels                = decoder(image_features)
-            encoder_loss                    = bce_loss(generated_voxels, voxels) * 10
+            generated_voxel                 = decoder(image_features)
+            encoder_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
-            generated_voxels                = refiner(generated_voxels, raw_features)
-            refiner_loss                    = bce_loss(generated_voxels, voxels) * 10
+            generated_voxel                 = refiner(generated_voxel, raw_features)
+            refiner_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
             # Append loss and accuracy to average metrics
             test_encoder_loss.append(encoder_loss.item())
@@ -110,8 +110,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             sample_iou = []
             for th in cfg.TEST.VOXEL_THRESH:
                 _voxel       = torch.ge(generated_voxel, th).float()
-                intersection = torch.sum(_voxel.mul(voxel)).float()
-                union        = torch.sum(torch.ge(_voxel.add(voxel), 1)).float()
+                intersection = torch.sum(_voxel.mul(ground_truth_voxel)).float()
+                union        = torch.sum(torch.ge(_voxel.add(ground_truth_voxel), 1)).float()
                 sample_iou.append((intersection / union).item())
 
             # IoU per taxonomy

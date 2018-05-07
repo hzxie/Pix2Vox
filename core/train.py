@@ -134,8 +134,8 @@ def train_net(cfg):
         epoch_refiner_loss = []
 
         n_batches = len(train_data_loader)
-        for batch_idx, (taxonomy_names, sample_names, rendering_images, voxels) in enumerate(train_data_loader):
-            n_samples = len(voxels)
+        for batch_idx, (taxonomy_names, sample_names, rendering_images, ground_truth_voxels) in enumerate(train_data_loader):
+            n_samples = len(ground_truth_voxels)
             # Ignore imcomplete batches at the end of each epoch
             if not n_samples == cfg.CONST.BATCH_SIZE:
                 continue
@@ -148,16 +148,16 @@ def train_net(cfg):
             decoder.train();
 
             # Get data from data loader
-            rendering_images = utils.network_utils.var_or_cuda(rendering_images)
-            voxels           = utils.network_utils.var_or_cuda(voxels)
+            rendering_images    = utils.network_utils.var_or_cuda(rendering_images)
+            ground_truth_voxels = utils.network_utils.var_or_cuda(ground_truth_voxels)
 
             # Train the encoder, decoder and refiner
             image_features, raw_features    = encoder(rendering_images)
             generated_voxels                = decoder(image_features)
-            encoder_loss                    = bce_loss(generated_voxels, voxels) * 10
+            encoder_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
             generated_voxels                = refiner(generated_voxels, raw_features)
-            refiner_loss                    = bce_loss(generated_voxels, voxels) * 10
+            refiner_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
             # Gradient decent
             encoder.zero_grad()
@@ -178,7 +178,9 @@ def train_net(cfg):
             train_writer.add_scalar('Refiner/BatchLoss', encoder_loss.item(), n_itr)
             # Append rendering images of voxels to TensorBoard
             if n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
-                # TODO: add GT here ...
+                gtv          = ground_truth_voxels.cpu().data[:8].numpy()
+                voxel_views  = utils.binvox_visualization.get_voxel_views(gtv, os.path.join(img_dir, 'train'), n_itr)
+                train_writer.add_image('Ground Truth Voxels', voxel_views, n_itr)
                 gv           = generated_voxels.cpu().data[:8].numpy()
                 voxel_views  = utils.binvox_visualization.get_voxel_views(gv, os.path.join(img_dir, 'train'), n_itr)
                 train_writer.add_image('Reconstructed Voxels', voxel_views, n_itr)
