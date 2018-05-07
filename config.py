@@ -27,9 +27,9 @@ __C.CONST.Z_SIZE                        = 128
 #
 __C.DIR                                 = edict()
 __C.DIR.DATASET_TAXONOMY_FILE_PATH      = './datasets/ShapeNet.json'
-__C.DIR.DATASET_QUERY_PATH              = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering'
-__C.DIR.VOXEL_PATH                      = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
-__C.DIR.RENDERING_PATH                  = '/run/media/Data/Temporary/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
+__C.DIR.DATASET_QUERY_PATH              = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering'
+__C.DIR.VOXEL_PATH                      = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
+__C.DIR.RENDERING_PATH                  = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
 __C.DIR.OUT_PATH                        = './output'
 
 #

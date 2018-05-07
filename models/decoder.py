@@ -12,27 +12,27 @@ class Decoder(torch.nn.Module):
         
         # Layer Definition
         self.layer1 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.Z_SIZE, cfg.CONST.N_VOX * 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
+            torch.nn.ConvTranspose3d(cfg.CONST.Z_SIZE, cfg.CONST.N_VOX * 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 8),
             torch.nn.ReLU()
         )
         self.layer2 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 8, cfg.CONST.N_VOX * 4, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
+            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 8, cfg.CONST.N_VOX * 4, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 4),
             torch.nn.ReLU()
         )
         self.layer3 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 4, cfg.CONST.N_VOX * 2, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
+            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 4, cfg.CONST.N_VOX * 2, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 2),
             torch.nn.ReLU()
         )
         self.layer4 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 2, cfg.CONST.N_VOX, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
+            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 2, cfg.CONST.N_VOX, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.BatchNorm3d(cfg.CONST.N_VOX),
             torch.nn.ReLU()
         )
         self.layer5 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX, 1, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
+            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX, 1, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.Sigmoid()
         )
 
