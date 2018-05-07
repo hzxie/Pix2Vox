@@ -28,15 +28,15 @@ def init_weights(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-def save_checkpoints(file_path, epoch_idx, generator, generator_solver, \
-        image_encoder, image_encoder_solver, best_iou, best_epoch):
+def save_checkpoints(file_path, epoch_idx, encoder, encoder_solver, \
+        decoder, decoder_solver, best_iou, best_epoch):
     print('[INFO] %s Saving checkpoint to %s ...' % (dt.now(), file_path))
     torch.save({
         'epoch_idx': epoch_idx,
         'best_iou': best_iou,
         'best_epoch': best_epoch,
-        'generator_state_dict': generator.state_dict(),
-        'generator_solver_state_dict': generator_solver.state_dict(),
-        'image_encoder_state_dict': image_encoder.state_dict(),
-        'image_encoder_solver_state_dict': image_encoder_solver.state_dict(),
+        'encoder_state_dict': encoder.state_dict(),
+        'encoder_solver_state_dict': encoder_solver.state_dict(),
+        'decoder_state_dict': decoder.state_dict(),
+        'decoder_solver_state_dict': decoder_solver.state_dict(),
     }, file_path)
