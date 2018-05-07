@@ -20,10 +20,11 @@ from datetime import datetime as dt
 from tensorboardX import SummaryWriter
 from time import time
 
-from models.decoder import Decoder
 from models.encoder import Encoder
+from models.decoder import Decoder
+from models.refiner import Refiner
 
-def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, encoder=None, decoder=None):
+def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, encoder=None, decoder=None, refiner=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark  = True
 
@@ -58,15 +59,18 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     if decoder is None or encoder is None:
         encoder     = Encoder(cfg)
         decoder     = Decoder(cfg)
+        refiner     = Refiner(cfg)
 
         if torch.cuda.is_available():
             encoder.cuda()
             decoder.cuda()
+            refiner.cuda()
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
+        refiner.load_state_dict(checkpoint['refiner_state_dict'])
 
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()
@@ -75,6 +79,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     n_samples = len(test_data_loader)
     test_iou  = dict()
     test_encoder_loss = []
+    test_refiner_loss = []
     for sample_idx, (taxonomy_name, sample_name, rendering_images, voxel) in enumerate(test_data_loader):
         taxonomy_name = taxonomy_name[0]
         sample_name   = sample_name[0]
@@ -82,6 +87,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         # Switch models to training mode
         encoder.eval();
         decoder.eval();
+        refiner.eval();
 
         with torch.no_grad():
             # Get data from data loader
@@ -89,12 +95,16 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             voxel            = utils.network_utils.var_or_cuda(voxel)
 
             # Test the decoder
-            rendering_image_features    = encoder(rendering_images)
-            generated_voxel             = decoder(rendering_image_features)
+            image_features, raw_features    = encoder(rendering_images)
+            generated_voxels                = decoder(image_features)
+            encoder_loss                    = bce_loss(generated_voxels, voxels) * 10
 
-            # Loss
-            encoder_loss          = bce_loss(generated_voxel, voxel) * 10
-            test_encoder_loss.append(encoder_loss)
+            generated_voxels                = refiner(generated_voxels, raw_features)
+            refiner_loss                    = bce_loss(generated_voxels, voxels) * 10
+
+            # Append loss and accuracy to average metrics
+            test_encoder_loss.append(encoder_loss.item())
+            test_refiner_loss.append(refiner_loss.item())
 
             # IoU per sample
             sample_iou = []
@@ -113,9 +123,10 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             test_iou[taxonomy_name]['n_samples'] += 1
             test_iou[taxonomy_name]['iou'].append(sample_iou)
 
-            # print
-            print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s ILoss = %.4f IoU = %s' % \
-                (dt.now(), sample_idx + 1, n_samples, taxonomy_name, sample_name, encoder_loss, sample_iou))
+            # Print sample loss and IoU
+            print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f RLoss = %.4f IoU = %s' % \
+                (dt.now(), sample_idx + 1, n_samples, taxonomy_name, sample_name, encoder_loss.item(), \
+                    refiner_loss.item(), ['%.4f' % si for si in sample_iou]))
 
     # Output testing results
     mean_iou = []
@@ -145,8 +156,9 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     # Add testing results to TensorBoard
     max_iou = np.max(mean_iou)
     if not epoch_idx == -1:
-        test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_loss, epoch_idx)
-        test_writer.add_scalar('EncoderDecoder/IoU', max_iou, epoch_idx)
+        test_writer.add_scalar('EncoderDecoder/EpochLoss', np.mean(test_encoder_loss), epoch_idx)
+        test_writer.add_scalar('Refiner/EpochLoss', np.mean(test_refiner_loss), epoch_idx)
+        test_writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)
 
     # Close SummaryWriter for TensorBoard
     if need_to_close_writer:

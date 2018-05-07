@@ -18,7 +18,7 @@ __C.CONST.IMG_W                         = 224       # Image width for input
 __C.CONST.IMG_H                         = 224       # Image height for input
 __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
-__C.CONST.N_VIEWS                       = 6
+__C.CONST.N_VIEWS                       = 12
 __C.CONST.BATCH_SIZE                    = 8
 __C.CONST.Z_SIZE                        = 128
 
@@ -72,10 +72,12 @@ __C.TRAIN.HUE                           = .25
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 ## Learning
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
-__C.TRAIN.ENCODER_LEARNING_RATE   		= .001
-__C.TRAIN.DECODER_LEARNING_RATE       	= .0025
-__C.TRAIN.ENCODER_LR_MILESTONES   		= []
-__C.TRAIN.DECODER_LR_MILESTONES       	= []
+__C.TRAIN.ENCODER_LEARNING_RATE         = .001
+__C.TRAIN.DECODER_LEARNING_RATE         = .0025
+__C.TRAIN.REFINER_LEARNING_RATE         = .0025
+__C.TRAIN.ENCODER_LR_MILESTONES         = []
+__C.TRAIN.DECODER_LR_MILESTONES         = []
+__C.TRAIN.REFINER_LR_MILESTONES         = []
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.VISUALIZATION_FREQ            = 100       # visualization reconstruction voxels every visualization_freq batch

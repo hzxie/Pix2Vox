@@ -73,7 +73,8 @@ def main():
     pprint(cfg)
 
     # Set GPU to use
-    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
+    if type(cfg.CONST.DEVICE) == str:
+        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
 
     # Start train/test process
     if not args.test:
