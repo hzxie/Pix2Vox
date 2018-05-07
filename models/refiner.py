@@ -43,10 +43,10 @@ class Refiner(torch.nn.Module):
     def forward(self, gen_voxels, raw_features):
         raw_features    = self.layer1(raw_features)
         # print(raw_features.size())    # torch.Size([batch_size, 256, 16, 16])
-        raw_features    = raw_features.view((self.cfg.CONST.BATCH_SIZE, -1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
+        raw_features    = raw_features.view((-1, 2, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
         # print(raw_features.size())    # torch.Size([batch_size, 2, 32, 32, 32])
 
-        gen_voxels      = gen_voxels.view((self.cfg.CONST.BATCH_SIZE, 1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
+        gen_voxels      = gen_voxels.view((-1, 1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
         voxel_features  = torch.cat((gen_voxels, raw_features), 1)
         # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
 
@@ -62,4 +62,4 @@ class Refiner(torch.nn.Module):
         # print(voxel_features.size())  # torch.Size([batch_size, 1, 32, 32, 32])
         voxel_features  = self.layer7(voxel_features + gen_voxels)
 
-        return voxel_features.squeeze()
+        return voxel_features.view((-1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
