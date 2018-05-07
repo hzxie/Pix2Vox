@@ -12,25 +12,54 @@ class Refiner(torch.nn.Module):
 
         # Layer Definition
         self.layer1 = torch.nn.Sequential(
-            torch.nn.Conv3d(1, cfg.CONST.N_VOX, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX),
-            torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
+            torch.nn.Conv2d(512, 256, kernel_size=13),
+            torch.nn.BatchNorm2d(256),
+            torch.nn.ELU(inplace=True),
+            torch.nn.Dropout(p=0.2)
         )
         self.layer2 = torch.nn.Sequential(
-            torch.nn.Conv3d(cfg.CONST.N_VOX, cfg.CONST.N_VOX * 2, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 2),
+            torch.nn.Conv3d(3, 3, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(3),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
         )
         self.layer3 = torch.nn.Sequential(
-            torch.nn.Conv3d(cfg.CONST.N_VOX * 2, cfg.CONST.N_VOX * 4, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 4),
+            torch.nn.Conv3d(3, 3, kernel_size=3, dilation=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=2),
+            torch.nn.BatchNorm3d(3),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
         )
         self.layer4 = torch.nn.Sequential(
-            torch.nn.Conv3d(cfg.CONST.N_VOX * 4, cfg.CONST.N_VOX * 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=(1, 1, 1)),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 8),
+            torch.nn.Conv3d(3, 3, kernel_size=3, dilation=4, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=4),
+            torch.nn.BatchNorm3d(3),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
         )
+        self.layer5 = torch.nn.Sequential(
+            torch.nn.Conv3d(3, 3, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(3),
+            torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
+        )
+        self.layer6 = torch.nn.Conv3d(3, 1, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1)
+        self.layer7 = torch.nn.Sigmoid()
 
     def forward(self, gen_voxels, raw_features):
-        return gen_voxels
+        raw_features    = self.layer1(raw_features)
+        # print(raw_features.size())    # torch.Size([batch_size, 256, 16, 16])
+        raw_features    = raw_features.view((self.cfg.CONST.BATCH_SIZE, -1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
+        # print(raw_features.size())    # torch.Size([batch_size, 2, 32, 32, 32])
+
+        gen_voxels      = gen_voxels.view((self.cfg.CONST.BATCH_SIZE, 1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
+        voxel_features  = torch.cat((gen_voxels, raw_features), 1)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+
+        voxel_features  = self.layer2(voxel_features)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+        voxel_features  = self.layer3(voxel_features)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+        voxel_features  = self.layer4(voxel_features)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+        voxel_features  = self.layer5(voxel_features)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+        voxel_features  = self.layer6(voxel_features)
+        # print(voxel_features.size())  # torch.Size([batch_size, 1, 32, 32, 32])
+        voxel_features  = self.layer7(voxel_features + gen_voxels)
+
+        return voxel_features.squeeze()
