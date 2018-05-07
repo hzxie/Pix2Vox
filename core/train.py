@@ -22,6 +22,7 @@ from time import time
 from core.test import test_net
 from models.encoder import Encoder
 from models.decoder import Decoder
+from models.refiner import Refiner
 
 def train_net(cfg):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
@@ -67,30 +68,37 @@ def train_net(cfg):
     # Set up networks
     encoder      = Encoder(cfg)
     decoder      = Decoder(cfg)
+    refiner      = Refiner(cfg)
 
     # Initialize weights of networks
-    decoder.apply(utils.network_utils.init_weights)
     encoder.apply(utils.network_utils.init_weights)
+    decoder.apply(utils.network_utils.init_weights)
+    refiner.apply(utils.network_utils.init_weights)
 
     # Set up solver
     decoder_solver = None
     encoder_solver = None
+    refiner_solver = None
     if cfg.TRAIN.POLICY == 'adam':
         encoder_solver = torch.optim.Adam(filter(lambda p: p.requires_grad, encoder.parameters()), lr=cfg.TRAIN.ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
         decoder_solver = torch.optim.Adam(decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        refiner_solver = torch.optim.Adam(refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     elif cfg.TRAIN.POLICY == 'sgd':
-        encoder_solver = torch.optim.SGD(filter(lambda p: p.requires_grad, encoder.parameters()), lr=cfg.TRAIN.ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        encoder_solver = torch.optim.SGD(filter(lambda p: p.requires_grad, encoder.parameters()), lr=cfg.TRAIN.ENCODER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
         decoder_solver = torch.optim.SGD(decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
+        refiner_solver = torch.optim.SGD(refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
     else:
         raise Exception('[FATAL] %s Unknown optimizer %s.' % (dt.now(), cfg.TRAIN.POLICY))
 
     # Set up learning rate scheduler to decay learning rates dynamically
     encoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(encoder_solver, milestones=cfg.TRAIN.ENCODER_LR_MILESTONES, gamma=0.1)
     decoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(decoder_solver, milestones=cfg.TRAIN.DECODER_LR_MILESTONES, gamma=0.1)
+    refiner_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(refiner_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=0.1)
 
     if torch.cuda.is_available():
-        encoder.cuda()
-        decoder.cuda()
+        torch.nn.DataParallel(encoder).cuda()
+        torch.nn.DataParallel(decoder).cuda()
+        torch.nn.DataParallel(refiner).cuda()
 
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()
@@ -110,20 +118,22 @@ def train_net(cfg):
         encoder_solver.load_state_dict(checkpoint['encoder_solver_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
         decoder_solver.load_state_dict(checkpoint['decoder_solver_state_dict'])
+        refiner.load_state_dict(checkpoint['refiner_state_dict'])
+        refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
         
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
 
     # Training loop
     for epoch_idx in range(init_epoch, cfg.TRAIN.NUM_EPOCHES):
-        n_batches = len(train_data_loader)
-        # Average meterics
-        epoch_encoder_loss = []
-        epoch_decoder_loss = []
-        
         # Tick / tock
         epoch_start_time = time()
+        
+        # Average meterics
+        epoch_encoder_loss = []
+        epoch_refiner_loss = []
 
+        n_batches = len(train_data_loader)
         for batch_idx, (taxonomy_names, sample_names, rendering_images, voxels) in enumerate(train_data_loader):
             n_samples = len(voxels)
             # Ignore imcomplete batches at the end of each epoch
@@ -141,26 +151,31 @@ def train_net(cfg):
             rendering_images = utils.network_utils.var_or_cuda(rendering_images)
             voxels           = utils.network_utils.var_or_cuda(voxels)
 
-            # Train the decoder and the image encoder
-            rendering_image_features = encoder(rendering_images)
-            generated_voxels         = decoder(rendering_image_features)
-            encoder_loss             = bce_loss(generated_voxels, voxels) * 10
+            # Train the encoder, decoder and refiner
+            image_features, raw_features    = encoder(rendering_images)
+            generated_voxels                = decoder(image_features)
+            encoder_loss                    = bce_loss(generated_voxels, voxels) * 10
+
+            generated_voxels                = refiner(generated_voxels, raw_features)
+            refiner_loss                    = bce_loss(generated_voxels, voxels) * 10
 
             # Gradient decent
             encoder.zero_grad()
             decoder.zero_grad()
-            encoder_loss.backward()
+            refiner.zero_grad()
+            encoder_loss.backward(retain_graph=True)
+            refiner_loss.backward()
             encoder_solver.step()
             decoder_solver.step()
-
-            # Tick / tock
-            batch_end_time = time()
+            refiner_solver.step()
             
-            # Append loss and accuracy to average metrics
+            # Append loss to average metrics
             epoch_encoder_loss.append(encoder_loss.item())
-            # Append loss and accuracy to TensorBoard
+            epoch_refiner_loss.append(refiner_loss.item())
+            # Append loss to TensorBoard
             n_itr = epoch_idx * n_batches + batch_idx
             train_writer.add_scalar('EncoderDecoder/BatchLoss', encoder_loss.item(), n_itr)
+            train_writer.add_scalar('Refiner/BatchLoss', encoder_loss.item(), n_itr)
             # Append rendering images of voxels to TensorBoard
             if n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
                 # TODO: add GT here ...
@@ -168,18 +183,26 @@ def train_net(cfg):
                 voxel_views  = utils.binvox_visualization.get_voxel_views(gv, os.path.join(img_dir, 'train'), n_itr)
                 train_writer.add_image('Reconstructed Voxels', voxel_views, n_itr)
 
-            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) EDLoss = %.4f' % \
-                (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, batch_end_time - batch_start_time, encoder_loss))
+            # Tick / tock
+            batch_end_time = time()
+            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) EDLoss = %.4f RLoss = %.4f' % \
+                (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, \
+                    batch_end_time - batch_start_time, encoder_loss.item(), refiner_loss.item()))
+
+        # Append epoch loss to TensorBoard
+        encoder_mean_loss = np.mean(epoch_encoder_loss)
+        refiner_mean_loss = np.mean(epoch_refiner_loss)
+        train_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_mean_loss, epoch_idx + 1)
+        train_writer.add_scalar('Refiner/EpochLoss', refiner_mean_loss, epoch_idx + 1)
 
         # Tick / tock
-        encoder_mean_loss = np.mean(epoch_encoder_loss)
-        train_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_mean_loss, epoch_idx + 1)
         epoch_end_time = time()
-        print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) EDLoss = %.4f' % 
-            (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, encoder_mean_loss))
+        print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) EDLoss = %.4f RLoss = %.4f' % 
+            (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, \
+                encoder_mean_loss, refiner_mean_loss))
 
         # Validate the training models
-        iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder)
+        iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder, refiner)
 
         # Save weights to file
         if (epoch_idx + 1) % cfg.TRAIN.SAVE_FREQ == 0:
@@ -187,7 +210,8 @@ def train_net(cfg):
                 os.makedirs(ckpt_dir)
             
             utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
-                    epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, best_iou, best_epoch)
+                    epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
+                    refiner, refiner_solver, best_iou, best_epoch)
         elif iou > best_iou:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
@@ -195,7 +219,8 @@ def train_net(cfg):
             best_iou   = iou
             best_epoch = epoch_idx + 1
             utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
-                    epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, best_iou, best_epoch)
+                    epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
+                    refiner, refiner_solver, best_iou, best_epoch)
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()
