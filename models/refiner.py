@@ -33,12 +33,24 @@ class Refiner(torch.nn.Module):
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
         )
         self.layer5 = torch.nn.Sequential(
+            torch.nn.Conv3d(3, 3, kernel_size=3, dilation=8, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=8),
+            torch.nn.BatchNorm3d(3),
+            torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
+        )
+        self.layer6 = torch.nn.Sequential(
+            torch.nn.Conv3d(3, 3, kernel_size=3, dilation=16, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=16),
+            torch.nn.BatchNorm3d(3),
+            torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
+        )
+        self.layer7 = torch.nn.Sequential(
             torch.nn.Conv3d(3, 3, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.BatchNorm3d(3),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE)
         )
-        self.layer6 = torch.nn.Conv3d(3, 1, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1)
-        self.layer7 = torch.nn.Sigmoid()
+        self.layer8 = torch.nn.Sequential(
+            torch.nn.Conv3d(3, 1, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.Sigmoid()
+        )
 
     def forward(self, gen_voxels, raw_features):
         raw_features    = self.layer1(raw_features)
@@ -59,7 +71,9 @@ class Refiner(torch.nn.Module):
         voxel_features  = self.layer5(voxel_features)
         # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
         voxel_features  = self.layer6(voxel_features)
-        # print(voxel_features.size())  # torch.Size([batch_size, 1, 32, 32, 32])
-        voxel_features  = self.layer7(voxel_features + gen_voxels)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+        voxel_features  = self.layer7(voxel_features)
+        # print(voxel_features.size())  # torch.Size([batch_size, 3, 32, 32, 32])
+        voxel_features  = self.layer8(voxel_features)
 
         return voxel_features.view((-1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
