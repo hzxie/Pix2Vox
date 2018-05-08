@@ -18,7 +18,7 @@ __C.CONST.IMG_W                         = 224       # Image width for input
 __C.CONST.IMG_H                         = 224       # Image height for input
 __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
-__C.CONST.N_VIEWS                       = 12
+__C.CONST.N_VIEWS                       = 20
 __C.CONST.BATCH_SIZE                    = 8
 __C.CONST.Z_SIZE                        = 128
 
@@ -56,7 +56,7 @@ __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
 __C.TRAIN.NUM_WORKER                    = 1         # number of data workers
 __C.TRAIN.NUM_EPOCHES                   = 2000      # maximum number of epoches
-__C.TRAIN.NUM_RENDERING                 = 20
+__C.TRAIN.NUM_RENDERING                 = 12
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
 __C.TRAIN.CROP_IMG_W                    = 200

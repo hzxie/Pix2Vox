@@ -40,10 +40,10 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             utils.data_transforms.ToTensor(),
         ])
 
-        dataset_loader   = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-        n_views          = np.random.randint(cfg.CONST.N_VIEWS) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS
-        test_data_loader = torch.utils.data.DataLoader(
-            dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, n_views, test_transforms),
+        dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
+        n_rendering_views = np.random.randint(cfg.TRAIN.NUM_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.TRAIN.NUM_RENDERING
+        test_data_loader  = torch.utils.data.DataLoader(
+            dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, cfg.CONST.N_VIEWS, n_rendering_views, test_transforms),
             batch_size=1,
             num_workers=1, pin_memory=True, shuffle=False)
 
