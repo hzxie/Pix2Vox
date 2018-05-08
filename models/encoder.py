@@ -19,7 +19,7 @@ class Encoder(torch.nn.Module):
         self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:24]
         self.layer1 = torch.nn.Sequential(
             torch.nn.Dropout(p=0.2),
-            torch.nn.Conv2d(self.cfg.CONST.N_VIEWS * 256, 512, kernel_size=1),
+            torch.nn.Conv2d(self.cfg.TRAIN.NUM_RENDERING * 256, 512, kernel_size=1),
             torch.nn.ELU(inplace=True)
         )
         self.layer2 = torch.nn.Sequential(
