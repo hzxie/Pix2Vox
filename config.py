@@ -20,7 +20,7 @@ __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 20
 __C.CONST.BATCH_SIZE                    = 8
-__C.CONST.Z_SIZE                        = 128
+__C.CONST.Z_SIZE                        = 256
 
 #
 # Directories
@@ -72,6 +72,7 @@ __C.TRAIN.HUE                           = .25
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 ## Learning
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
+__C.TRAIN.EPOCH_START_UPDATE_REFINER    = 30
 __C.TRAIN.ENCODER_LEARNING_RATE         = .001
 __C.TRAIN.DECODER_LEARNING_RATE         = .0025
 __C.TRAIN.REFINER_LEARNING_RATE         = .0025
