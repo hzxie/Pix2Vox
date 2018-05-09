@@ -99,8 +99,11 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             generated_voxel                 = decoder(image_features)
             encoder_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
-            generated_voxel                 = refiner(generated_voxel, raw_features)
-            refiner_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
+            if epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+                generated_voxel             = refiner(generated_voxel, raw_features)
+                refiner_loss                = bce_loss(generated_voxel, ground_truth_voxel) * 10
+            else:
+                refiner_loss                = encoder_loss
 
             # Append loss and accuracy to average metrics
             test_encoder_loss.append(encoder_loss.item())

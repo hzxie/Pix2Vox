@@ -118,8 +118,8 @@ def train_net(cfg):
         encoder_solver.load_state_dict(checkpoint['encoder_solver_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
         decoder_solver.load_state_dict(checkpoint['decoder_solver_state_dict'])
-        refiner.load_state_dict(checkpoint['refiner_state_dict'])
-        refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
+        # refiner.load_state_dict(checkpoint['refiner_state_dict'])
+        # refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
         
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
@@ -156,15 +156,22 @@ def train_net(cfg):
             generated_voxels                = decoder(image_features)
             encoder_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
-            generated_voxels                = refiner(generated_voxels, raw_features)
-            refiner_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
-
+            if epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+                generated_voxels            = refiner(generated_voxels, raw_features)
+                refiner_loss                = bce_loss(generated_voxels, ground_truth_voxels) * 10
+            else:
+                refiner_loss                = encoder_loss
+            
             # Gradient decent
             encoder.zero_grad()
             decoder.zero_grad()
             refiner.zero_grad()
-            encoder_loss.backward(retain_graph=True)
-            refiner_loss.backward()
+            if epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+                encoder_loss.backward(retain_graph=True)
+                refiner_loss.backward()
+            else:
+                encoder_loss.backward()
+
             encoder_solver.step()
             decoder_solver.step()
             refiner_solver.step()

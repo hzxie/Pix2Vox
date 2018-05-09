@@ -32,7 +32,7 @@ class Encoder(torch.nn.Module):
             torch.nn.Conv2d(256, 128, kernel_size=3),
             torch.nn.BatchNorm2d(128),
             torch.nn.ELU(inplace=True),
-            torch.nn.AvgPool2d(kernel_size=19)
+            torch.nn.AvgPool2d(kernel_size=5)
         )
 
         # Don't update params in VGG16
@@ -57,6 +57,6 @@ class Encoder(torch.nn.Module):
         image_features = self.layer2(image_features)
         # print(image_features.size())  # torch.Size([batch_size, 256, 26, 26])
         image_features = self.layer3(image_features)
-        # print(image_features.size())  # torch.Size([batch_size, 128, 1, 1])
+        # print(image_features.size())  # torch.Size([batch_size, 128, 16, 16])
 
         return image_features.view(self.cfg.CONST.BATCH_SIZE, -1), raw_features
