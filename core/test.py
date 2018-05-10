@@ -32,7 +32,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     if test_data_loader is None:
         # Set up data augmentation
         IMG_SIZE  = cfg.CONST.IMG_H, cfg.CONST.IMG_W
-        CROP_SIZE = cfg.TRAIN.CROP_IMG_H, cfg.TRAIN.CROP_IMG_W
+        CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W
         test_transforms  = utils.data_transforms.Compose([
             utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
             utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
@@ -41,7 +41,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         ])
 
         dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-        n_rendering_views = np.random.randint(cfg.TRAIN.NUM_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.TRAIN.NUM_RENDERING
+        n_rendering_views = np.random.randint(cfg.CONST.N_VIEWS_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS_RENDERING
         test_data_loader  = torch.utils.data.DataLoader(
             dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, cfg.CONST.N_VIEWS, n_rendering_views, test_transforms),
             batch_size=1,
@@ -99,7 +99,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             generated_voxel                 = decoder(image_features)
             encoder_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
-            if epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
                 generated_voxel             = refiner(generated_voxel, raw_features)
                 refiner_loss                = bce_loss(generated_voxel, ground_truth_voxel) * 10
             else:

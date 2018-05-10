@@ -17,10 +17,13 @@ __C.CONST.RNG_SEED                      = 0
 __C.CONST.IMG_W                         = 224       # Image width for input
 __C.CONST.IMG_H                         = 224       # Image height for input
 __C.CONST.IMG_C                         = 3         # Image channels for input
+__C.CONST.CROP_IMG_W                    = 200
+__C.CONST.CROP_IMG_H                    = 200
+__C.CONST.CROP_IMG_C                    = 4
 __C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 20
-__C.CONST.BATCH_SIZE                    = 8
-__C.CONST.Z_SIZE                        = 256
+__C.CONST.N_VIEWS_RENDERING             = 5
+__C.CONST.BATCH_SIZE                    = 24
 
 #
 # Directories
@@ -47,6 +50,7 @@ __C.NETWORK                             = edict()
 __C.NETWORK.LEAKY_VALUE                 = .2
 __C.NETWORK.DROPOUT_RATE                = .2
 __C.NETWORK.TCONV_USE_BIAS              = False
+__C.NETWORK.USE_REFINER                 = False
 
 #
 # Training
@@ -57,12 +61,8 @@ __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
 __C.TRAIN.NUM_WORKER                    = 1         # number of data workers
 __C.TRAIN.NUM_EPOCHES                   = 2000      # maximum number of epoches
-__C.TRAIN.NUM_RENDERING                 = 5
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
-__C.TRAIN.CROP_IMG_W                    = 200
-__C.TRAIN.CROP_IMG_H                    = 200
-__C.TRAIN.CROP_IMG_C                    = 4
 __C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15) # range of degrees to select from
 __C.TRAIN.TRANSLATE_RANGE               = None      # tuple of maximum absolute fraction for horizontal and vertical translations
 __C.TRAIN.SCALE_RANGE                   = None      # tuple of scaling factor interval
@@ -73,8 +73,8 @@ __C.TRAIN.HUE                           = .5
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 ## Learning
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
-__C.TRAIN.EPOCH_START_UPDATE_REFINER    = 100
-__C.TRAIN.ENCODER_LEARNING_RATE         = .001
+__C.TRAIN.EPOCH_START_USE_REFINER       = 0
+__C.TRAIN.ENCODER_LEARNING_RATE         = .005
 __C.TRAIN.DECODER_LEARNING_RATE         = .0025
 __C.TRAIN.REFINER_LEARNING_RATE         = .0025
 __C.TRAIN.ENCODER_LR_MILESTONES         = [40, 80]
