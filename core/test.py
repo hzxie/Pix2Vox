@@ -78,8 +78,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     # Testing loop
     n_samples = len(test_data_loader)
     test_iou  = dict()
-    test_encoder_loss = []
-    test_refiner_loss = []
+    encoder_losses    = utils.network_utils.AverageMeter()
+    refiner_losses    = utils.network_utils.AverageMeter()
     for sample_idx, (taxonomy_name, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
         taxonomy_name = taxonomy_name[0]
         sample_name   = sample_name[0]
@@ -106,8 +106,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
                 refiner_loss                = encoder_loss
 
             # Append loss and accuracy to average metrics
-            test_encoder_loss.append(encoder_loss.item())
-            test_refiner_loss.append(refiner_loss.item())
+            encoder_losses.update(encoder_loss.item())
+            refiner_losses.update(refiner_loss.item())
 
             # IoU per sample
             sample_iou = []
@@ -159,8 +159,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     # Add testing results to TensorBoard
     max_iou = np.max(mean_iou)
     if not epoch_idx == -1:
-        test_writer.add_scalar('EncoderDecoder/EpochLoss', np.mean(test_encoder_loss), epoch_idx)
-        test_writer.add_scalar('Refiner/EpochLoss', np.mean(test_refiner_loss), epoch_idx)
+        test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx)
+        test_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)
 
     # Close SummaryWriter for TensorBoard
