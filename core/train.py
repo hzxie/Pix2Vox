@@ -129,24 +129,27 @@ def train_net(cfg):
         # Tick / tock
         epoch_start_time = time()
         
-        # Average meterics
-        epoch_encoder_loss = []
-        epoch_refiner_loss = []
+        # Batch average meterics
+        batch_time        = utils.network_utils.AverageMeter()
+        data_time         = utils.network_utils.AverageMeter()
+        encoder_losses    = utils.network_utils.AverageMeter()
+        refiner_losses    = utils.network_utils.AverageMeter()
 
         # Adjust learning rate
         encoder_lr_scheduler.step()
         decoder_lr_scheduler.step()
         refiner_lr_scheduler.step()
 
-        n_batches = len(train_data_loader)
+        batch_end_time = time()
+        n_batches      = len(train_data_loader)
         for batch_idx, (taxonomy_names, sample_names, rendering_images, ground_truth_voxels) in enumerate(train_data_loader):
+            # Measure data time
+            data_time.update(time() - batch_end_time)
+
             n_samples = len(ground_truth_voxels)
             # Ignore imcomplete batches at the end of each epoch
             if not n_samples == cfg.CONST.BATCH_SIZE:
                 continue
-
-            # Tick / tock
-            batch_start_time = time()
 
             # switch models to training mode
             encoder.train();
@@ -182,8 +185,8 @@ def train_net(cfg):
             refiner_solver.step()
             
             # Append loss to average metrics
-            epoch_encoder_loss.append(encoder_loss.item())
-            epoch_refiner_loss.append(refiner_loss.item())
+            encoder_losses.update(encoder_loss.item())
+            refiner_losses.update(refiner_loss.item())
             # Append loss to TensorBoard
             n_itr = epoch_idx * n_batches + batch_idx
             train_writer.add_scalar('EncoderDecoder/BatchLoss', encoder_loss.item(), n_itr)
@@ -198,22 +201,21 @@ def train_net(cfg):
                 train_writer.add_image('Reconstructed Voxels', voxel_views, n_itr)
 
             # Tick / tock
+            batch_time.update(time() - batch_end_time)
             batch_end_time = time()
-            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] Total Time = %.3f (s) EDLoss = %.4f RLoss = %.4f' % \
+            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] BatchTime = %.3f (s) DataTime = %.3f (s) EDLoss = %.4f RLoss = %.4f' % \
                 (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, \
-                    batch_end_time - batch_start_time, encoder_loss.item(), refiner_loss.item()))
+                    batch_time.val, data_time.val, encoder_loss.item(), refiner_loss.item()))
 
         # Append epoch loss to TensorBoard
-        encoder_mean_loss = np.mean(epoch_encoder_loss)
-        refiner_mean_loss = np.mean(epoch_refiner_loss)
-        train_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_mean_loss, epoch_idx + 1)
-        train_writer.add_scalar('Refiner/EpochLoss', refiner_mean_loss, epoch_idx + 1)
+        train_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx + 1)
+        train_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx + 1)
 
         # Tick / tock
         epoch_end_time = time()
-        print('[INFO] %s Epoch [%d/%d] Total Time = %.3f (s) EDLoss = %.4f RLoss = %.4f' % 
+        print('[INFO] %s Epoch [%d/%d] EpochTime = %.3f (s) EDLoss = %.4f RLoss = %.4f' % 
             (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, \
-                encoder_mean_loss, refiner_mean_loss))
+                encoder_losses.avg, refiner_losses.avg))
 
         # Validate the training models
         iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder, refiner)
@@ -226,7 +228,7 @@ def train_net(cfg):
             utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
                     refiner, refiner_solver, best_iou, best_epoch)
-        elif iou > best_iou:
+        if iou > best_iou:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
             

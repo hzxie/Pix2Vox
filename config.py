@@ -59,7 +59,7 @@ __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
 __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
-__C.TRAIN.NUM_WORKER                    = 1         # number of data workers
+__C.TRAIN.NUM_WORKER                    = 4         # number of data workers
 __C.TRAIN.NUM_EPOCHES                   = 2000      # maximum number of epoches
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
@@ -74,7 +74,7 @@ __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 ## Learning
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
 __C.TRAIN.EPOCH_START_USE_REFINER       = 0
-__C.TRAIN.ENCODER_LEARNING_RATE         = .005
+__C.TRAIN.ENCODER_LEARNING_RATE         = .001
 __C.TRAIN.DECODER_LEARNING_RATE         = .0025
 __C.TRAIN.REFINER_LEARNING_RATE         = .0025
 __C.TRAIN.ENCODER_LR_MILESTONES         = [40, 80]
