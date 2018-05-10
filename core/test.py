@@ -136,7 +136,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     for taxonomy_name in test_iou:
         test_iou[taxonomy_name]['iou'] = np.mean(test_iou[taxonomy_name]['iou'], axis=0)
         mean_iou.append(test_iou[taxonomy_name]['iou'] * test_iou[taxonomy_name]['n_samples'])
-    mean_iou = np.mean(mean_iou, axis=0) / n_samples
+    mean_iou = np.sum(mean_iou, axis=0) / n_samples
 
     # Print header
     print('====== TEST RESULTS ======')
