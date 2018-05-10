@@ -18,7 +18,7 @@ class Encoder(torch.nn.Module):
         vgg16_bn = torchvision.models.vgg16_bn(pretrained=True)
         self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:24]
         self.layer1 = torch.nn.Sequential(
-            torch.nn.Dropout(p=0.2),
+            torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE),
             torch.nn.Conv2d(self.cfg.TRAIN.NUM_RENDERING * 256, 512, kernel_size=1),
             torch.nn.ELU(inplace=True)
         )
@@ -26,7 +26,7 @@ class Encoder(torch.nn.Module):
             torch.nn.Conv2d(512, 256, kernel_size=3),
             torch.nn.BatchNorm2d(256),
             torch.nn.ELU(inplace=True),
-            torch.nn.Dropout(p=0.2)
+            torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE)
         )
         self.layer3 = torch.nn.Sequential(
             torch.nn.Conv2d(256, 128, kernel_size=3),

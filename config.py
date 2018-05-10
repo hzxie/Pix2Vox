@@ -37,14 +37,15 @@ __C.DIR.OUT_PATH                        = './output'
 #
 __C.DATASET                             = edict()
 __C.DATASET.DATASET_NAME                = 'ShapeNet'
-__C.DATASET.MEAN                        = [32.2859, 27.1176, 24.4343, 50.5743]
-__C.DATASET.STD                         = [0.1903, 0.1708, 0.1634, 0.2678]
+__C.DATASET.MEAN                        = [26.2284, 22.7098, 20.8072, 43.9129]
+__C.DATASET.STD                         = [0.0676, 0.0618, 0.0598, 0.0984]
 
 #
 # Network
 #
 __C.NETWORK                             = edict()
 __C.NETWORK.LEAKY_VALUE                 = .2
+__C.NETWORK.DROPOUT_RATE                = .2
 __C.NETWORK.TCONV_USE_BIAS              = False
 
 #
@@ -56,7 +57,7 @@ __C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
 __C.TRAIN.NUM_WORKER                    = 1         # number of data workers
 __C.TRAIN.NUM_EPOCHES                   = 2000      # maximum number of epoches
-__C.TRAIN.NUM_RENDERING                 = 12
+__C.TRAIN.NUM_RENDERING                 = 5
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
 __C.TRAIN.CROP_IMG_W                    = 200
@@ -65,20 +66,20 @@ __C.TRAIN.CROP_IMG_C                    = 4
 __C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15) # range of degrees to select from
 __C.TRAIN.TRANSLATE_RANGE               = None      # tuple of maximum absolute fraction for horizontal and vertical translations
 __C.TRAIN.SCALE_RANGE                   = None      # tuple of scaling factor interval
-__C.TRAIN.BRIGHTNESS                    = .25
-__C.TRAIN.CONTRAST                      = .25
-__C.TRAIN.SATURATION                    = .25
-__C.TRAIN.HUE                           = .25
+__C.TRAIN.BRIGHTNESS                    = .5
+__C.TRAIN.CONTRAST                      = .5
+__C.TRAIN.SATURATION                    = .5
+__C.TRAIN.HUE                           = .5
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 ## Learning
 __C.TRAIN.POLICY                        = 'adam'    # available options: sgd, adam
-__C.TRAIN.EPOCH_START_UPDATE_REFINER    = 30
+__C.TRAIN.EPOCH_START_UPDATE_REFINER    = 100
 __C.TRAIN.ENCODER_LEARNING_RATE         = .001
 __C.TRAIN.DECODER_LEARNING_RATE         = .0025
 __C.TRAIN.REFINER_LEARNING_RATE         = .0025
-__C.TRAIN.ENCODER_LR_MILESTONES         = []
-__C.TRAIN.DECODER_LR_MILESTONES         = []
-__C.TRAIN.REFINER_LR_MILESTONES         = []
+__C.TRAIN.ENCODER_LR_MILESTONES         = [40, 80]
+__C.TRAIN.DECODER_LR_MILESTONES         = [40, 80]
+__C.TRAIN.REFINER_LR_MILESTONES         = [40, 80]
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.VISUALIZATION_FREQ            = 100       # visualization reconstruction voxels every visualization_freq batch

@@ -15,7 +15,7 @@ class Refiner(torch.nn.Module):
             torch.nn.Conv2d(512, 512, kernel_size=13),
             torch.nn.BatchNorm2d(512),
             torch.nn.ELU(inplace=True),
-            torch.nn.Dropout(p=0.2)
+            torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE)
         )
         self.layer2 = torch.nn.Sequential(
             torch.nn.Conv3d(5, 5, kernel_size=3, dilation=1, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
