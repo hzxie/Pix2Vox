@@ -30,7 +30,7 @@ def train_net(cfg):
 
     # Set up data augmentation
     IMG_SIZE  = cfg.CONST.IMG_H, cfg.CONST.IMG_W
-    CROP_SIZE = cfg.TRAIN.CROP_IMG_H, cfg.TRAIN.CROP_IMG_W
+    CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W
     train_transforms = utils.data_transforms.Compose([
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
@@ -47,7 +47,7 @@ def train_net(cfg):
     
     # Set up data loader
     dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-    n_rendering_views = np.random.randint(cfg.TRAIN.NUM_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.TRAIN.NUM_RENDERING
+    n_rendering_views = np.random.randint(cfg.CONST.N_VIEWS_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS_RENDERING
     train_data_loader = torch.utils.data.DataLoader(
         dataset=dataset_loader.get_dataset(cfg.TRAIN.DATASET_PORTION, cfg.CONST.N_VIEWS, n_rendering_views, train_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
@@ -118,8 +118,8 @@ def train_net(cfg):
         encoder_solver.load_state_dict(checkpoint['encoder_solver_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
         decoder_solver.load_state_dict(checkpoint['decoder_solver_state_dict'])
-        # refiner.load_state_dict(checkpoint['refiner_state_dict'])
-        # refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
+        refiner.load_state_dict(checkpoint['refiner_state_dict'])
+        refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
         
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
@@ -132,6 +132,11 @@ def train_net(cfg):
         # Average meterics
         epoch_encoder_loss = []
         epoch_refiner_loss = []
+
+        # Adjust learning rate
+        encoder_lr_scheduler.step()
+        decoder_lr_scheduler.step()
+        refiner_lr_scheduler.step()
 
         n_batches = len(train_data_loader)
         for batch_idx, (taxonomy_names, sample_names, rendering_images, ground_truth_voxels) in enumerate(train_data_loader):
@@ -156,7 +161,7 @@ def train_net(cfg):
             generated_voxels                = decoder(image_features)
             encoder_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
-            if epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
                 generated_voxels            = refiner(generated_voxels, raw_features)
                 refiner_loss                = bce_loss(generated_voxels, ground_truth_voxels) * 10
             else:
@@ -166,7 +171,7 @@ def train_net(cfg):
             encoder.zero_grad()
             decoder.zero_grad()
             refiner.zero_grad()
-            if epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
                 encoder_loss.backward(retain_graph=True)
                 refiner_loss.backward()
             else:

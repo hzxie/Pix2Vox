@@ -19,7 +19,7 @@ class Encoder(torch.nn.Module):
         self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:24]
         self.layer1 = torch.nn.Sequential(
             torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE),
-            torch.nn.Conv2d(self.cfg.TRAIN.NUM_RENDERING * 256, 512, kernel_size=1),
+            torch.nn.Conv2d(self.cfg.CONST.N_VIEWS_RENDERING * 256, 512, kernel_size=1),
             torch.nn.ELU(inplace=True)
         )
         self.layer2 = torch.nn.Sequential(
@@ -57,6 +57,6 @@ class Encoder(torch.nn.Module):
         image_features = self.layer2(image_features)
         # print(image_features.size())  # torch.Size([batch_size, 256, 26, 26])
         image_features = self.layer3(image_features)
-        # print(image_features.size())  # torch.Size([batch_size, 128, 16, 16])
+        # print(image_features.size())  # torch.Size([batch_size, 128, 4, 4])
 
-        return image_features.view(self.cfg.CONST.BATCH_SIZE, -1), raw_features
+        return image_features.view(-1, 2048), raw_features
