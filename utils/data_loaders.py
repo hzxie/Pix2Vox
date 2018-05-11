@@ -13,6 +13,15 @@ import sys
 import torch.utils.data.dataset
 
 from datetime import datetime as dt
+from enum import Enum, unique
+
+@unique
+class DatasetType(Enum):
+    TRAIN = 0
+    TEST  = 1
+    VAL   = 2
+
+# //////////////////////////////// = End of DatasetType Class Definition = ///////////////////////////////// #
 
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     """ShapeNetDataset class used for PyTorch DataLoader"""
@@ -71,21 +80,29 @@ class ShapeNetDataLoader:
         with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def get_dataset(self, dataset_portion, total_views, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
         files = []
         
         # Load data for each category
         for taxonomy in self.dataset_taxonomy:
             taxonomy_folder_name = taxonomy['taxonomy_id']
             print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' % (dt.now(), taxonomy['taxonomy_id'], taxonomy['taxonomy_name']))
-            files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, dataset_portion, total_views))
+
+            samples = []
+            if dataset_type == DatasetType.TRAIN:
+                samples = taxonomy['train']
+            elif dataset_type == DatasetType.TEST:
+                samples = taxonomy['test']
+            elif dataset_type == DatasetType.VAL:
+                samples = taxonomy['val']
+            
+            files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, samples, total_views))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
         return ShapeNetDataset(files, n_rendering_views, transforms)
 
-    def get_files_of_taxonomy(self, taxonomy_folder_name, dataset_portion, total_views):
+    def get_files_of_taxonomy(self, taxonomy_folder_name, samples, total_views):
         files_of_taxonomy = []
-        samples = self.get_samples_of_taxonomy(taxonomy_folder_name, dataset_portion)
         n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
@@ -114,16 +131,6 @@ class ShapeNetDataLoader:
             #     print('[INFO] %s Collecting %d of %d' % (dt.now(), sample_idx + 1, n_samples))
 
         return files_of_taxonomy
-
-    def get_samples_of_taxonomy(self, taxonomy_folder_name, dataset_portion):
-        ''' Get the name list of samples of a taxonomy
-        '''
-        taxonomy_folder = os.path.join(self.dataset_query_path, taxonomy_folder_name)
-        samples = [sample_name for sample_name in os.listdir(taxonomy_folder) 
-                    if os.path.isdir(os.path.join(taxonomy_folder, sample_name))]
-        n_samples = len(samples)
-
-        return samples[int(n_samples * dataset_portion[0]):int(n_samples * dataset_portion[1])]
 
 # /////////////////////////////// = End of ShapeNetDataGetter Class Definition = /////////////////////////////// #
 

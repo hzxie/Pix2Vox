@@ -57,9 +57,8 @@ __C.NETWORK.USE_REFINER                 = False
 #
 __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
-__C.TRAIN.DATASET_PORTION               = [0, .8]
 ## Data worker
-__C.TRAIN.NUM_WORKER                    = 2         # number of data workers
+__C.TRAIN.NUM_WORKER                    = 1         # number of data workers
 __C.TRAIN.NUM_EPOCHES                   = 200       # maximum number of epoches
 __C.TRAIN.RANDOM_NUM_VIEWS              = False     # feed in random # views if n_views > 1
 ## Data augmentation
@@ -89,6 +88,5 @@ __C.TRAIN.SAVE_FREQ                     = 10        # weights will be overwritte
 # Testing options
 #
 __C.TEST                                = edict()
-__C.TEST.DATASET_PORTION                = [.8, 1]
 __C.TEST.RANDOM_BG_COLOR_RANGE          = [[240, 240], [240, 240], [240, 240]]
 __C.TEST.VOXEL_THRESH                   = [.2, .3, .4, .5]
