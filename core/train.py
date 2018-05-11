@@ -49,11 +49,11 @@ def train_net(cfg):
     dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
     n_rendering_views = np.random.randint(cfg.CONST.N_VIEWS_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS_RENDERING
     train_data_loader = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(cfg.TRAIN.DATASET_PORTION, cfg.CONST.N_VIEWS, n_rendering_views, train_transforms),
+        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS, n_rendering_views, train_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
     val_data_loader   = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, cfg.CONST.N_VIEWS, n_rendering_views, val_transforms),
+        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS, n_rendering_views, val_transforms),
         batch_size=1,
         num_workers=1, pin_memory=True, shuffle=False)
 
@@ -164,7 +164,7 @@ def train_net(cfg):
             generated_voxels                = decoder(image_features)
             encoder_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
-            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
                 generated_voxels            = refiner(generated_voxels, raw_features)
                 refiner_loss                = bce_loss(generated_voxels, ground_truth_voxels) * 10
             else:
@@ -174,7 +174,7 @@ def train_net(cfg):
             encoder.zero_grad()
             decoder.zero_grad()
             refiner.zero_grad()
-            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
                 encoder_loss.backward(retain_graph=True)
                 refiner_loss.backward()
             else:

@@ -50,7 +50,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
         n_rendering_views = np.random.randint(cfg.CONST.N_VIEWS_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS_RENDERING
         test_data_loader  = torch.utils.data.DataLoader(
-            dataset=dataset_loader.get_dataset(cfg.TEST.DATASET_PORTION, cfg.CONST.N_VIEWS, n_rendering_views, test_transforms),
+            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS, n_rendering_views, test_transforms),
             batch_size=1,
             num_workers=1, pin_memory=True, shuffle=False)
 
@@ -106,7 +106,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             generated_voxel                 = decoder(image_features)
             encoder_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
-            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_UPDATE_REFINER:
+            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
                 generated_voxel             = refiner(generated_voxel, raw_features)
                 refiner_loss                = bce_loss(generated_voxel, ground_truth_voxel) * 10
             else:
