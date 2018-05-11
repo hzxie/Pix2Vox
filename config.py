@@ -30,9 +30,13 @@ __C.CONST.BATCH_SIZE                    = 24
 #
 __C.DIR                                 = edict()
 __C.DIR.DATASET_TAXONOMY_FILE_PATH      = './datasets/ShapeNet.json'
-__C.DIR.DATASET_QUERY_PATH              = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering'
-__C.DIR.VOXEL_PATH                      = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
-__C.DIR.RENDERING_PATH                  = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
+# For ShapeNet
+# __C.DIR.DATASET_QUERY_PATH            = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering'
+# __C.DIR.VOXEL_PATH                    = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
+# __C.DIR.RENDERING_PATH                = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
+# For Pascal 3D
+__C.DIR.MESH_PATH                       = '/home/hzxie/Datasets/PASCAL3D/CAD/%s.mat'
+__C.DIR.RENDERING_PATH                  = '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG'
 __C.DIR.OUT_PATH                        = './output'
 
 #
