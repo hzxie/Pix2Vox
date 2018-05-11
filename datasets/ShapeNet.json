@@ -1,54 +1,93 @@
 [
     {
         "taxonomy_id": "04256520",
-        "taxonomy_name": "sofa"
+        "taxonomy_name": "sofa",
+        "baseline": {
+            "1-view": 0.628
+        }
     },
     {
         "taxonomy_id": "02691156",
-        "taxonomy_name": "airplane"
+        "taxonomy_name": "airplane",
+        "baseline": {
+            "1-view": 0.513
+        }
     },
     {
         "taxonomy_id": "03636649",
-        "taxonomy_name": "lamp"
+        "taxonomy_name": "lamp",
+        "baseline": {
+            "1-view": 0.381
+        }
     },
     {
         "taxonomy_id": "04401088",
-        "taxonomy_name": "telephone"
+        "taxonomy_name": "telephone",
+        "baseline": {
+            "1-view": 0.661
+        }
     },
     {
         "taxonomy_id": "04530566",
-        "taxonomy_name": "watercraft"
+        "taxonomy_name": "watercraft",
+        "baseline": {
+            "1-view": 0.513
+        }
     },
     {
         "taxonomy_id": "03691459",
-        "taxonomy_name": "speaker"
+        "taxonomy_name": "speaker",
+        "baseline": {
+            "1-view": 0.662
+        }
     },
     {
         "taxonomy_id": "03001627",
-        "taxonomy_name": "chair"
+        "taxonomy_name": "chair",
+        "baseline": {
+            "1-view": 0.466
+        }
     },
     {
         "taxonomy_id": "02933112",
-        "taxonomy_name": "cabinet"
+        "taxonomy_name": "cabinet",
+        "baseline": {
+            "1-view": 0.716
+        }
     },
     {
         "taxonomy_id": "04379243",
-        "taxonomy_name": "table"
+        "taxonomy_name": "table",
+        "baseline": {
+            "1-view": 0.513
+        }
     },
     {
         "taxonomy_id": "03211117",
-        "taxonomy_name": "display"
+        "taxonomy_name": "display",
+        "baseline": {
+            "1-view": 0.468
+        }
     },
     {
         "taxonomy_id": "02958343",
-        "taxonomy_name": "car"
+        "taxonomy_name": "car",
+        "baseline": {
+            "1-view": 0.798
+        }
     },
     {
         "taxonomy_id": "02828884",
-        "taxonomy_name": "bench"
+        "taxonomy_name": "bench",
+        "baseline": {
+            "1-view": 0.421
+        }
     },
     {
         "taxonomy_id": "04090263",
-        "taxonomy_name": "rifle"
+        "taxonomy_name": "rifle",
+        "baseline": {
+            "1-view": 0.544
+        }
     }
 ]
