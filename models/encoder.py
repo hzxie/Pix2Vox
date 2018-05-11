@@ -43,7 +43,7 @@ class Encoder(torch.nn.Module):
         # print(rendering_images.size())  # torch.Size([batch_size, n_views, img_c, img_h, img_w])
         rendering_images   = rendering_images.permute(1, 0, 2, 3, 4).contiguous()
         rendering_images   = torch.split(rendering_images, 1, dim=0)
-        image_features     = []
+        image_features = []
 
         for view_idx, img in enumerate(rendering_images):
             features = self.vgg(img.view(-1, self.cfg.CONST.IMG_C, self.cfg.CONST.IMG_H, self.cfg.CONST.IMG_W))

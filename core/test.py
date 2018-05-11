@@ -3,6 +3,7 @@
 # 
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -27,6 +28,12 @@ from models.refiner import Refiner
 def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, encoder=None, decoder=None, refiner=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark  = True
+
+    # Load taxonomies of dataset
+    taxonomies = []
+    with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+        taxonomies = json.loads(file.read())
+    taxonomies = { t['taxonomy_id']: t for t in taxonomies }
 
     # Set up data loader
     if test_data_loader is None:
@@ -80,8 +87,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     test_iou  = dict()
     encoder_losses    = utils.network_utils.AverageMeter()
     refiner_losses    = utils.network_utils.AverageMeter()
-    for sample_idx, (taxonomy_name, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
-        taxonomy_name = taxonomy_name[0]
+    for sample_idx, (taxonomy_id, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
+        taxonomy_id = taxonomy_id[0]
         sample_name   = sample_name[0]
 
         # Switch models to training mode
@@ -118,40 +125,45 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
                 sample_iou.append((intersection / union).item())
 
             # IoU per taxonomy
-            if not taxonomy_name in test_iou:
-                test_iou[taxonomy_name] = {
+            if not taxonomy_id in test_iou:
+                test_iou[taxonomy_id] = {
                     'n_samples': 0,
                     'iou': []
                 }
-            test_iou[taxonomy_name]['n_samples'] += 1
-            test_iou[taxonomy_name]['iou'].append(sample_iou)
+            test_iou[taxonomy_id]['n_samples'] += 1
+            test_iou[taxonomy_id]['iou'].append(sample_iou)
 
             # Print sample loss and IoU
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f RLoss = %.4f IoU = %s' % \
-                (dt.now(), sample_idx + 1, n_samples, taxonomy_name, sample_name, encoder_loss.item(), \
+                (dt.now(), sample_idx + 1, n_samples, taxonomy_id, sample_name, encoder_loss.item(), \
                     refiner_loss.item(), ['%.4f' % si for si in sample_iou]))
 
     # Output testing results
     mean_iou = []
-    for taxonomy_name in test_iou:
-        test_iou[taxonomy_name]['iou'] = np.mean(test_iou[taxonomy_name]['iou'], axis=0)
-        mean_iou.append(test_iou[taxonomy_name]['iou'] * test_iou[taxonomy_name]['n_samples'])
+    for taxonomy_id in test_iou:
+        test_iou[taxonomy_id]['iou'] = np.mean(test_iou[taxonomy_id]['iou'], axis=0)
+        mean_iou.append(test_iou[taxonomy_id]['iou'] * test_iou[taxonomy_id]['n_samples'])
     mean_iou = np.sum(mean_iou, axis=0) / n_samples
 
     # Print header
-    print('====== TEST RESULTS ======')
+    print('============================ TEST RESULTS ============================')
     print('Taxonomy', end='\t')
+    print('#Sample', end='\t')
+    print('Baseline', end='\t')
     for th in cfg.TEST.VOXEL_THRESH:
         print('t=%.2f' % th, end='\t')
     print()
     # Print body
-    for taxonomy_name in test_iou:
-        print(taxonomy_name, end='\t')
-        for ti in test_iou[taxonomy_name]['iou']:
+    for taxonomy_id in test_iou:
+        print('%s' % taxonomies[taxonomy_id]['taxonomy_name'].ljust(8), end='\t')
+        print('%d' % test_iou[taxonomy_id]['n_samples'], end='\t')
+        print('%.4f' % taxonomies[taxonomy_id]['baseline']['%d-view' % cfg.CONST.N_VIEWS_RENDERING], end='\t\t')
+        
+        for ti in test_iou[taxonomy_id]['iou']:
             print('%.4f' % ti, end='\t')
         print()
     # Print mean IoU for each threshold
-    print('Overall ', end='\t')
+    print('Overall ', end='\t\t\t\t')
     for mi in mean_iou:
         print('%.4f' % mi, end='\t')
     print('\n')
