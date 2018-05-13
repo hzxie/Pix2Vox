@@ -38,8 +38,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     # Set up data loader
     if test_data_loader is None:
         # Set up data augmentation
-        IMG_SIZE  = cfg.CONST.IMG_H, cfg.CONST.IMG_W
-        CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W
+        IMG_SIZE  = cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C
+        CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W, cfg.CONST.CROP_IMG_C
         test_transforms  = utils.data_transforms.Compose([
             utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
             utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
@@ -54,14 +54,6 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             batch_size=1,
             num_workers=1, pin_memory=True, shuffle=False)
 
-    # Summary writer for TensorBoard
-    need_to_close_writer = False
-    if output_dir is None:
-        need_to_close_writer = True
-        output_dir  = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
-        log_dir     = output_dir % 'logs'
-        test_writer = SummaryWriter(os.path.join(log_dir, 'test'))
-    
     # Set up networks
     if decoder is None or encoder is None:
         encoder     = Encoder(cfg)
@@ -174,9 +166,5 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)
-
-    # Close SummaryWriter for TensorBoard
-    if need_to_close_writer:
-        test_writer.close()
 
     return max_iou
