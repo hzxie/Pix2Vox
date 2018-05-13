@@ -2,6 +2,7 @@ argparse
 easydict
 matplotlib
 numpy
+opencv-python
 pprint
 scipy
 torchvision

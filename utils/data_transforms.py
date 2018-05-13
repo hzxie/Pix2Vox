@@ -3,8 +3,10 @@
 # 
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
-import scipy.misc
 import torch
 import torchvision.transforms
 
@@ -22,9 +24,12 @@ class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
 
-    def __call__(self, rendering_images, voxel):
+    def __call__(self, rendering_images, voxel, bounding_box=None):
         for t in self.transforms:
-            rendering_images, voxel = t(rendering_images, voxel)
+            if t.__class__.__name__ == 'RandomCrop' or t.__class__.__name__ == 'CenterCrop':
+                rendering_images, voxel = t(rendering_images, voxel, bounding_box)
+            else:
+                rendering_images, voxel = t(rendering_images, voxel)
         
         return rendering_images, voxel
 
@@ -34,9 +39,6 @@ class ToTensor(object):
     Convert a PIL Image or numpy.ndarray to tensor.
     Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
     """
-    def __init__(self):
-        pass
-    
     def __call__(self, rendering_images, voxel):
         assert(isinstance(rendering_images, np.ndarray))
         array = np.transpose(rendering_images, (0, 3, 1, 2))
@@ -67,23 +69,58 @@ class CenterCrop(object):
         self.img_size_w   = img_size[1]
         self.crop_size_h  = crop_size[0]
         self.crop_size_w  = crop_size[1]
+        self.crop_size_c  = crop_size[2]
 
-    def __call__(self, rendering_images, voxel):
+    def __call__(self, rendering_images, voxel, bounding_box=None):
         if len(rendering_images) == 0:
             return rendering_images, voxel
 
-        img_height, img_width, img_channels = rendering_images[0].shape
-        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, img_channels))
+        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, self.crop_size_c))
         for img_idx, img in enumerate(rendering_images):
-            if img_height <= self.crop_size_h or img_width <= self.crop_size_w:
-                return rendering_images, voxel
+            img_height, img_width, _ = img.shape
+            
+            if not bounding_box is None:
+                # Calculate the size of bounding boxes
+                bbox_width   = bounding_box[2] - bounding_box[0]
+                bbox_height  = bounding_box[3] - bounding_box[1]
+                bbox_x_mid   = (bounding_box[2] + bounding_box[0]) * 0.5
+                bbox_y_mid   = (bounding_box[3] + bounding_box[1]) * 0.5
 
-            x_left  = int((img_width - self.crop_size_w) * 0.5)
-            x_right = int(x_left + self.crop_size_w)
-            y_left  = int((img_height - self.crop_size_h) * 0.5)
-            y_right = int(y_left + self.crop_size_h)
+                crop_size_w  = bbox_width if bbox_width > bbox_height else bbox_height
+                crop_size_h  = bbox_width if bbox_width > bbox_height else bbox_height
 
-            processed_image  = scipy.misc.imresize(img[y_left: y_right, x_left: x_right], (self.img_size_h, self.img_size_w))
+                # Make the crop area as a square
+                x_left       = bbox_x_mid - crop_size_w * 0.5
+                x_right      = x_left + crop_size_w
+                y_top        = bbox_y_mid - crop_size_h * 0.5
+                y_bottom     = y_top + crop_size_h
+
+                # If the crop position is out of the image, fix it
+                if x_left < 0:
+                    x_left   = 0
+                    x_right  = crop_size_w
+                elif x_right > img_width:
+                    x_left   = img_width - crop_size_w if img_width > crop_size_w else 0
+                    x_right  = img_width
+                if y_top < 0:
+                    y_top    = 0
+                    y_bottom = crop_size_h
+                elif y_bottom > img_height:
+                    y_top    = img_height - crop_size_h if img_height > crop_size_h else 0
+                    y_bottom = img_height
+            else:
+                if img_height > self.crop_size_h and img_width > self.crop_size_w:
+                    x_left   = (img_width - self.crop_size_w) * 0.5
+                    x_right  = x_left + self.crop_size_w
+                    y_top    = (img_height - self.crop_size_h) * 0.5
+                    y_bottom = y_top + self.crop_size_h
+                else:
+                    x_left   = 0
+                    x_right  = img_width
+                    y_top    = 0
+                    y_bottom = img_height
+
+            processed_image  = cv2.resize(img[int(y_top): int(y_bottom), int(x_left): int(x_right)], (self.img_size_h, self.img_size_w))
             processed_images = np.append(processed_images, [processed_image], axis=0)
         
         return processed_images, voxel
@@ -96,24 +133,74 @@ class RandomCrop(object):
         self.img_size_w   = img_size[1]
         self.crop_size_h  = crop_size[0]
         self.crop_size_w  = crop_size[1]
+        self.crop_size_c  = crop_size[2]
 
-    def __call__(self, rendering_images, voxel):
+    def __call__(self, rendering_images, voxel, bounding_box=None):
         if len(rendering_images) == 0:
             return rendering_images, voxel
 
-        img_height, img_width, img_channels = rendering_images[0].shape
-        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, img_channels))
+        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, self.crop_size_c))
         for img_idx, img in enumerate(rendering_images):
-            if img_height <= self.crop_size_h or img_width <= self.crop_size_w:
-                return rendering_images, voxel
+            img_height, img_width, _ = img.shape
+            
+            if not bounding_box is None:
+                # Random move bounding boxes
+                for i in range(4):
+                    bounding_box[i] += random() * 80 - 40
 
-            x_left  = int((img_width - self.crop_size_w) * random())
-            x_right = int(x_left + self.crop_size_w)
-            y_left  = int((img_height - self.crop_size_h) * random())
-            y_right = int(y_left + self.crop_size_h)
+                # Calculate the size of bounding boxes
+                bbox_width   = bounding_box[2] - bounding_box[0]
+                bbox_height  = bounding_box[3] - bounding_box[1]
+                bbox_x_mid   = (bounding_box[2] + bounding_box[0]) * 0.5
+                bbox_y_mid   = (bounding_box[3] + bounding_box[1]) * 0.5
 
-            processed_image  = scipy.misc.imresize(img[y_left: y_right, x_left: x_right], (self.img_size_h, self.img_size_w))
+                crop_size_w  = bbox_width if bbox_width > bbox_height else bbox_height
+                crop_size_h  = bbox_width if bbox_width > bbox_height else bbox_height
+
+                # Make the crop area as a square
+                x_left       = bbox_x_mid - crop_size_w * 0.5
+                x_right      = x_left + crop_size_w
+                y_top        = bbox_y_mid - crop_size_h * 0.5
+                y_bottom     = y_top + crop_size_h
+
+                # If the crop position is out of the image, fix it
+                if x_left < 0:
+                    x_left   = 0
+                    x_right  = crop_size_w
+                elif x_right > img_width:
+                    x_left   = img_width - crop_size_w if img_width > crop_size_w else 0
+                    x_right  = img_width
+                if y_top < 0:
+                    y_top    = 0
+                    y_bottom = crop_size_h
+                elif y_bottom > img_height:
+                    y_top    = img_height - crop_size_h if img_height > crop_size_h else 0
+                    y_bottom = img_height
+            else:
+                if img_height > self.crop_size_h and img_width > self.crop_size_w:
+                    x_left   = (img_width - self.crop_size_w) * random()
+                    x_right  = x_left + self.crop_size_w
+                    y_top    = (img_height - self.crop_size_h) * random()
+                    y_bottom = y_top + self.crop_size_h
+                else:
+                    x_left   = 0
+                    x_right  = img_width
+                    y_top    = 0
+                    y_bottom = img_height
+
+            processed_image  = cv2.resize(img[int(y_top): int(y_bottom), int(x_left): int(x_right)], (self.img_size_h, self.img_size_w))
             processed_images = np.append(processed_images, [processed_image], axis=0)
+            # Debug
+            # fig = plt.figure(figsize=(8, 4))
+            # ax1 = fig.add_subplot(1, 2, 1)
+            # ax1.imshow(img.astype(np.uint8))
+            # if not bounding_box is None:
+            #     rect = patches.Rectangle((bounding_box[0], bounding_box[1]), bbox_width, bbox_height, linewidth=1, edgecolor='r', facecolor='none')
+            #     ax1.add_patch(rect)
+
+            # ax2 = fig.add_subplot(1, 2, 2)
+            # ax2.imshow(processed_image.astype(np.uint8))
+            # plt.show()
         
         return processed_images, voxel
 
@@ -124,7 +211,6 @@ class RandomAffine(object):
 
     def __call__(self, rendering_images, voxel):
         # TODO
-        
         return rendering_images, voxel
 
 

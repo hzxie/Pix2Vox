@@ -23,13 +23,13 @@ def main():
         sys.exit(2)
 
     N_CHANNELS         = 3
-    FILE_NAME_PATTERN  = 'render_*.png'
+    FILE_NAME_PATTERN  = '*.JPEG'
     folders_to_explore = Queue()
     folders_to_explore.put(input_file_folder)
 
     total_files        = 0
-    mean               = np.asarray([0., 0., 0., 0.])
-    std                = np.asarray([0., 0., 0., 0.])
+    mean               = np.asarray([0., 0., 0.])
+    std                = np.asarray([0., 0., 0.])
     while not folders_to_explore.empty():
         current_folder = folders_to_explore.get()
 
