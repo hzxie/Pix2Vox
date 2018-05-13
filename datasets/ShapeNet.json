@@ -1,7 +1,7 @@
 [
 	{
 		"taxonomy_id": "02691156",
-		"taxonomy_name": "airplane",
+		"taxonomy_name": "aeroplane",
 		"baseline": {
 			"1-view": 0.513,
 			"5-view": 0.561
