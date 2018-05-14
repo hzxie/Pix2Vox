@@ -144,10 +144,6 @@ class RandomCrop(object):
             img_height, img_width, _ = img.shape
             
             if not bounding_box is None:
-                # Random move bounding boxes
-                for i in range(4):
-                    bounding_box[i] += random() * 80 - 40
-
                 # Calculate the size of bounding boxes
                 bbox_width   = bounding_box[2] - bounding_box[0]
                 bbox_height  = bounding_box[3] - bounding_box[1]

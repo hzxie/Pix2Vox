@@ -57,14 +57,6 @@ def train_net(cfg):
         batch_size=1,
         num_workers=1, pin_memory=True, shuffle=False)
 
-    # Summary writer for TensorBoard
-    output_dir   = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
-    log_dir      = output_dir % 'logs'
-    img_dir      = output_dir % 'images'
-    ckpt_dir     = output_dir % 'checkpoints'
-    train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
-    val_writer   = SummaryWriter(os.path.join(log_dir, 'test'))
-
     # Set up networks
     encoder      = Encoder(cfg)
     decoder      = Decoder(cfg)
@@ -123,6 +115,14 @@ def train_net(cfg):
         
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
+
+    # Summary writer for TensorBoard
+    output_dir   = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
+    log_dir      = output_dir % 'logs'
+    img_dir      = output_dir % 'images'
+    ckpt_dir     = output_dir % 'checkpoints'
+    train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
+    val_writer   = SummaryWriter(os.path.join(log_dir, 'test'))
 
     # Training loop
     for epoch_idx in range(init_epoch, cfg.TRAIN.NUM_EPOCHES):
