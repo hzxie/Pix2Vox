@@ -61,6 +61,9 @@ def train_net(cfg):
     encoder      = Encoder(cfg)
     decoder      = Decoder(cfg)
     refiner      = Refiner(cfg)
+    print('[DEBUG] %s Parameters in Encoder: %d.' % (dt.now(), utils.network_utils.count_parameters(encoder)))
+    print('[DEBUG] %s Parameters in Decoder: %d.' % (dt.now(), utils.network_utils.count_parameters(decoder)))
+    print('[DEBUG] %s Parameters in Refiner: %d.' % (dt.now(), utils.network_utils.count_parameters(refiner)))
 
     # Initialize weights of networks
     encoder.apply(utils.network_utils.init_weights)
