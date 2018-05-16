@@ -197,7 +197,7 @@ class RandomCrop(object):
             # ax2 = fig.add_subplot(1, 2, 2)
             # ax2.imshow(processed_image.astype(np.uint8))
             # plt.show()
-        
+
         return processed_images, voxel
 
 
@@ -206,8 +206,16 @@ class RandomAffine(object):
         self._random_affine = torchvision.transforms.RandomAffine(rotate_degree_range, translation_range, scale_range)
 
     def __call__(self, rendering_images, voxel):
-        # TODO
-        return rendering_images, voxel
+        if len(rendering_images) == 0:
+            return rendering_images, voxel
+
+        img_height, img_width, img_channels = rendering_images[0].shape
+        processed_images = np.empty(shape=(0, img_height, img_width, img_channels))
+        for img_idx, img in enumerate(rendering_images):
+            processed_image  = np.array(self._random_affine(Image.fromarray(np.uint8(img * 255))))
+            processed_images = np.append(processed_images, [processed_image], axis=0)
+
+        return processed_images, voxel
 
 
 class ColorJitter(object):
