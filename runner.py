@@ -10,7 +10,7 @@ import numpy as np
 import os
 import sys
 # Fix problem: no $DISPLAY environment variable
-matplotlib.use('agg')
+matplotlib.use('Agg')
 
 from argparse import ArgumentParser
 from datetime import datetime as dt
