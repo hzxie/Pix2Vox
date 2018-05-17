@@ -16,10 +16,10 @@ class Encoder(torch.nn.Module):
 
         # Layer Definition
         vgg16_bn = torchvision.models.vgg16_bn(pretrained=True)
-        self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:24]
+        self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:27]
         self.layer1 = torch.nn.Sequential(
             torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE),
-            torch.nn.Conv2d(self.cfg.CONST.N_VIEWS_RENDERING * 256, 512, kernel_size=1),
+            torch.nn.Conv2d(self.cfg.CONST.N_VIEWS_RENDERING * 512, 512, kernel_size=1),
             torch.nn.ELU(inplace=True)
         )
         self.layer2 = torch.nn.Sequential(
