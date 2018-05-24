@@ -69,7 +69,9 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
-        refiner.load_state_dict(checkpoint['refiner_state_dict'])
+
+        if cfg.NETWORK.USE_REFINER:
+            refiner.load_state_dict(checkpoint['refiner_state_dict'])
 
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()

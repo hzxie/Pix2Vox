@@ -112,8 +112,10 @@ def train_net(cfg):
         encoder_solver.load_state_dict(checkpoint['encoder_solver_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
         decoder_solver.load_state_dict(checkpoint['decoder_solver_state_dict'])
-        refiner.load_state_dict(checkpoint['refiner_state_dict'])
-        refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
+
+        if cfg.NETWORK.USE_REFINER:
+            refiner.load_state_dict(checkpoint['refiner_state_dict'])
+            refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
         
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
@@ -227,7 +229,8 @@ def train_net(cfg):
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
             
-            utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
+            utils.network_utils.save_checkpoints(cfg, \
+                    os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
                     refiner, refiner_solver, best_iou, best_epoch)
         if iou > best_iou:
@@ -236,7 +239,8 @@ def train_net(cfg):
             
             best_iou   = iou
             best_epoch = epoch_idx + 1
-            utils.network_utils.save_checkpoints(os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
+            utils.network_utils.save_checkpoints(cfg, \
+                    os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
                     refiner, refiner_solver, best_iou, best_epoch)
 
