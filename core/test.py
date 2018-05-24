@@ -96,15 +96,15 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
             ground_truth_voxel  = utils.network_utils.var_or_cuda(ground_truth_voxel)
 
             # Test the decoder
-            image_features, raw_features    = encoder(rendering_images)
-            generated_voxel                 = decoder(image_features)
-            encoder_loss                    = bce_loss(generated_voxel, ground_truth_voxel) * 10
+            image_features      = encoder(rendering_images)
+            generated_voxel     = decoder(image_features)
+            encoder_loss        = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxel             = refiner(generated_voxel, raw_features)
-                refiner_loss                = bce_loss(generated_voxel, ground_truth_voxel) * 10
+                generated_voxel = refiner(generated_voxel)
+                refiner_loss    = bce_loss(generated_voxel, ground_truth_voxel) * 10
             else:
-                refiner_loss                = encoder_loss
+                refiner_loss    = encoder_loss
 
             # Append loss and accuracy to average metrics
             encoder_losses.update(encoder_loss.item())

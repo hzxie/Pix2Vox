@@ -160,19 +160,19 @@ def train_net(cfg):
             decoder.train();
 
             # Get data from data loader
-            rendering_images    = utils.network_utils.var_or_cuda(rendering_images)
-            ground_truth_voxels = utils.network_utils.var_or_cuda(ground_truth_voxels)
+            rendering_images     = utils.network_utils.var_or_cuda(rendering_images)
+            ground_truth_voxels  = utils.network_utils.var_or_cuda(ground_truth_voxels)
 
             # Train the encoder, decoder and refiner
-            image_features, raw_features    = encoder(rendering_images)
-            generated_voxels                = decoder(image_features)
-            encoder_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
+            image_features       = encoder(rendering_images)
+            generated_voxels     = decoder(image_features)
+            encoder_loss         = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxels            = refiner(generated_voxels, raw_features)
-                refiner_loss                = bce_loss(generated_voxels, ground_truth_voxels) * 10
+                generated_voxels = refiner(generated_voxels)
+                refiner_loss     = bce_loss(generated_voxels, ground_truth_voxels) * 10
             else:
-                refiner_loss                = encoder_loss
+                refiner_loss     = encoder_loss
             
             # Gradient decent
             encoder.zero_grad()

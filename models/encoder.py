@@ -52,11 +52,10 @@ class Encoder(torch.nn.Module):
         image_features = torch.cat(image_features, 1)
         # print(image_features.size())  # torch.Size([batch_size, n_views * 256, 28, 28])
         image_features = self.layer1(image_features)
-        raw_features   = image_features
         # print(image_features.size())  # torch.Size([batch_size, 512, 28, 28])
         image_features = self.layer2(image_features)
         # print(image_features.size())  # torch.Size([batch_size, 256, 26, 26])
         image_features = self.layer3(image_features)
         # print(image_features.size())  # torch.Size([batch_size, 128, 4, 4])
 
-        return image_features.view(-1, 2048), raw_features
+        return image_features.view(-1, 2048)
