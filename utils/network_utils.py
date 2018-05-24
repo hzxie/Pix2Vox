@@ -28,20 +28,24 @@ def init_weights(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-def save_checkpoints(file_path, epoch_idx, encoder, encoder_solver, \
+def save_checkpoints(cfg, file_path, epoch_idx, encoder, encoder_solver, \
         decoder, decoder_solver, refiner, refiner_solver, best_iou, best_epoch):
     print('[INFO] %s Saving checkpoint to %s ...' % (dt.now(), file_path))
-    torch.save({
+    checkpoint = {
         'epoch_idx': epoch_idx,
         'best_iou': best_iou,
         'best_epoch': best_epoch,
         'encoder_state_dict': encoder.state_dict(),
         'encoder_solver_state_dict': encoder_solver.state_dict(),
         'decoder_state_dict': decoder.state_dict(),
-        'decoder_solver_state_dict': decoder_solver.state_dict(),
-        'refiner_state_dict': refiner.state_dict(), 
-        'refiner_solver_state_dict': refiner_solver.state_dict()
-    }, file_path)
+        'decoder_solver_state_dict': decoder_solver.state_dict()
+    }
+
+    if cfg.NETWORK.USE_REFINER:
+        checkpoint['refiner_state_dict'] = refiner.state_dict()
+        checkpoint['refiner_solver_state_dict'] = refiner_solver.state_dict()
+
+    torch.save(checkpoint, file_path)
 
 
 def count_parameters(model):
