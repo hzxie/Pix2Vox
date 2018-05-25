@@ -67,6 +67,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
+        epoch_idx  = checkpoint['epoch_idx']
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
 
@@ -164,7 +165,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
 
     # Add testing results to TensorBoard
     max_iou = np.max(mean_iou)
-    if not epoch_idx == -1:
+    if not test_writer is None:
         test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)

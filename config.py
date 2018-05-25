@@ -72,7 +72,7 @@ __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
 ## Data worker
 __C.TRAIN.NUM_WORKER                    = 4             # number of data workers
-__C.TRAIN.NUM_EPOCHES                   = 200           # maximum number of epoches
+__C.TRAIN.NUM_EPOCHES                   = 300           # maximum number of epoches
 __C.TRAIN.RANDOM_NUM_VIEWS              = False         # feed in random #views if n_views > 1
 ## Data augmentation
 __C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15)     # range of degrees to select from
@@ -89,9 +89,9 @@ __C.TRAIN.EPOCH_START_USE_REFINER       = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = .001
 __C.TRAIN.DECODER_LEARNING_RATE         = .001
 __C.TRAIN.REFINER_LEARNING_RATE         = .001
-__C.TRAIN.ENCODER_LR_MILESTONES         = [100]
-__C.TRAIN.DECODER_LR_MILESTONES         = [100]
-__C.TRAIN.REFINER_LR_MILESTONES         = [100]
+__C.TRAIN.ENCODER_LR_MILESTONES         = [150]
+__C.TRAIN.DECODER_LR_MILESTONES         = [150]
+__C.TRAIN.REFINER_LR_MILESTONES         = [150]
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.VISUALIZATION_FREQ            = 10000         # visualization reconstruction voxels every visualization_freq batch
