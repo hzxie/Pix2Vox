@@ -22,6 +22,7 @@ from time import time
 from core.test import test_net
 from models.encoder import Encoder
 from models.decoder import Decoder
+from models.focal_loss import FocalLoss
 from models.refiner import Refiner
 
 def train_net(cfg):
@@ -95,7 +96,8 @@ def train_net(cfg):
         torch.nn.DataParallel(refiner).cuda()
 
     # Set up loss functions
-    bce_loss = torch.nn.BCELoss()
+    bce_loss   = torch.nn.BCELoss()
+    focal_loss = FocalLoss(cfg.NETWORK.FOCAL_LOSS_GAMMA)
 
     # Load pretrained model if exists
     init_epoch     = 0
@@ -170,7 +172,7 @@ def train_net(cfg):
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
                 generated_voxels = refiner(generated_voxels)
-                refiner_loss     = bce_loss(generated_voxels, ground_truth_voxels) * 10
+                refiner_loss     = focal_loss(generated_voxels, ground_truth_voxels) * 10
             else:
                 refiner_loss     = encoder_loss
             
@@ -196,7 +198,7 @@ def train_net(cfg):
             train_writer.add_scalar('EncoderDecoder/BatchLoss', encoder_loss.item(), n_itr)
             train_writer.add_scalar('Refiner/BatchLoss', encoder_loss.item(), n_itr)
             # Append rendering images of voxels to TensorBoard
-            if n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
+            if n_itr > 0 and n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
                 gtv          = ground_truth_voxels.cpu().data[:8].numpy()
                 voxel_views  = utils.binvox_visualization.get_voxel_views(gtv, os.path.join(img_dir, 'train'), n_itr)
                 train_writer.add_image('Ground Truth Voxels', voxel_views, n_itr)
