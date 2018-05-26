@@ -64,7 +64,6 @@ __C.NETWORK.LEAKY_VALUE                 = .2
 __C.NETWORK.DROPOUT_RATE                = .2
 __C.NETWORK.TCONV_USE_BIAS              = False
 __C.NETWORK.USE_REFINER                 = True
-__C.NETWORK.FOCAL_LOSS_GAMMA            = 2
 
 #
 # Training
