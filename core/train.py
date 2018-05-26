@@ -22,7 +22,6 @@ from time import time
 from core.test import test_net
 from models.encoder import Encoder
 from models.decoder import Decoder
-from models.focal_loss import FocalLoss
 from models.refiner import Refiner
 
 def train_net(cfg):
@@ -97,7 +96,6 @@ def train_net(cfg):
 
     # Set up loss functions
     bce_loss   = torch.nn.BCELoss()
-    focal_loss = FocalLoss(cfg.NETWORK.FOCAL_LOSS_GAMMA)
 
     # Load pretrained model if exists
     init_epoch     = 0
@@ -172,7 +170,7 @@ def train_net(cfg):
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
                 generated_voxels = refiner(generated_voxels)
-                refiner_loss     = focal_loss(generated_voxels, ground_truth_voxels) * 10
+                refiner_loss     = bce_loss(generated_voxels, ground_truth_voxels) * 10
             else:
                 refiner_loss     = encoder_loss
             
