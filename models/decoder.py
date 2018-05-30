@@ -32,15 +32,23 @@ class Decoder(torch.nn.Module):
         )
 
     def forward(self, image_features):
-        gen_voxels = image_features.view(-1, 1024, 2, 2, 2)
-        # print(gen_voxels.size())  # torch.Size([batch_size, 1024, 2, 2, 2])
-        gen_voxels = self.layer1(gen_voxels)
-        # print(gen_voxels.size())  # torch.Size([batch_size, 256, 4, 4, 4])
-        gen_voxels = self.layer2(gen_voxels)
-        # print(gen_voxels.size())  # torch.Size([batch_size, 64, 8, 8, 8])
-        gen_voxels = self.layer3(gen_voxels)
-        # print(gen_voxels.size())  # torch.Size([batch_size, 16, 16, 16, 16])
-        gen_voxels = self.layer4(gen_voxels)
-        # print(gen_voxels.size())  # torch.Size([batch_size, 1, 32, 32, 32])
+        image_features = image_features.permute(1, 0, 2, 3, 4).contiguous()
+        image_features = torch.split(image_features, 1, dim=0)
+        gen_voxels     = []
 
-        return torch.squeeze(gen_voxels, 1)
+        for features in image_features:
+            gen_voxel = features.view(-1, 1024, 2, 2, 2)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 1024, 2, 2, 2])
+            gen_voxel = self.layer1(gen_voxel)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 256, 4, 4, 4])
+            gen_voxel = self.layer2(gen_voxel)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 64, 8, 8, 8])
+            gen_voxel = self.layer3(gen_voxel)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 16, 16, 16, 16])
+            gen_voxel = self.layer4(gen_voxel)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 1, 32, 32, 32])
+            gen_voxels.append(torch.squeeze(gen_voxel, 1))
+
+        gen_voxels = torch.stack(gen_voxels).permute(1, 0, 2, 3, 4).contiguous()
+        # print(gen_voxels.size())      # torch.Size([batch_size, n_views, 32, 32, 32])
+        return torch.mean(gen_voxels, dim=1)
