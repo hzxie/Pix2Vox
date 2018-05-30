@@ -83,7 +83,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
     encoder_losses    = utils.network_utils.AverageMeter()
     refiner_losses    = utils.network_utils.AverageMeter()
     for sample_idx, (taxonomy_id, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
-        taxonomy_id = taxonomy_id[0]
+        taxonomy_id   = taxonomy_id[0]
         sample_name   = sample_name[0]
 
         # Switch models to training mode

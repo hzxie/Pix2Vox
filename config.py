@@ -47,11 +47,11 @@ __C.DIR.RENDERING_PATH                  = '/home/hzxie/Datasets/ShapeNet/ShapeNe
 # Dataset
 #
 __C.DATASET                             = edict()
-# For ShapeNet
+### For ShapeNet
 __C.DATASET.DATASET_NAME                = 'ShapeNet'
 __C.DATASET.MEAN                        = [26.2284, 22.7098, 20.8072, 0]
 __C.DATASET.STD                         = [0.0676, 0.0618, 0.0598, 1]
-# For Pascal 3D
+### For Pascal 3D
 # __C.DATASET.DATASET_NAME              = 'Pascal3D'
 # __C.DATASET.MEAN                      = [121.7832, 118.1967, 113.1437]
 # __C.DATASET.STD                       = [0.4232, 0.4206, 0.4345]
@@ -70,11 +70,12 @@ __C.NETWORK.USE_REFINER                 = True
 #
 __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
-## Data worker
 __C.TRAIN.NUM_WORKER                    = 4             # number of data workers
+### For ShapeNet
 __C.TRAIN.NUM_EPOCHES                   = 300           # maximum number of epoches
+### For Pascal 3D
+# __C.TRAIN.NUM_EPOCHES                 = 100           # maximum number of epoches
 __C.TRAIN.RANDOM_NUM_VIEWS              = False         # feed in random #views if n_views > 1
-## Data augmentation
 __C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15)     # range of degrees to select from
 __C.TRAIN.TRANSLATE_RANGE               = (.1, .1)      # tuple of maximum absolute fraction for horizontal and vertical translations
 __C.TRAIN.SCALE_RANGE                   = (.75, 1.5)    # tuple of scaling factor interval
@@ -83,15 +84,19 @@ __C.TRAIN.CONTRAST                      = .25
 __C.TRAIN.SATURATION                    = .25
 __C.TRAIN.HUE                           = .25
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
-## Learning
 __C.TRAIN.POLICY                        = 'adam'        # available options: sgd, adam
 __C.TRAIN.EPOCH_START_USE_REFINER       = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = .001
 __C.TRAIN.DECODER_LEARNING_RATE         = .001
-__C.TRAIN.REFINER_LEARNING_RATE         = .001
+__C.TRAIN.REFINER_LEARNING_RATE         = .005
+### For ShapeNet
 __C.TRAIN.ENCODER_LR_MILESTONES         = [150]
 __C.TRAIN.DECODER_LR_MILESTONES         = [150]
 __C.TRAIN.REFINER_LR_MILESTONES         = [150]
+### For Pascal 3D
+# __C.TRAIN.ENCODER_LR_MILESTONES       = [50]
+# __C.TRAIN.DECODER_LR_MILESTONES       = [50]
+# __C.TRAIN.REFINER_LR_MILESTONES       = [50]
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.VISUALIZATION_FREQ            = 10000         # visualization reconstruction voxels every visualization_freq batch
