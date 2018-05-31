@@ -4,6 +4,9 @@
 		"taxonomy_name": "aeroplane",
 		"baseline": {
 			"1-view": 0.513,
+			"2-view": 0.536,
+			"3-view": 0.549,
+			"4-view": 0.556,
 			"5-view": 0.561
 		},
 		"test": [
@@ -4063,6 +4066,9 @@
 		"taxonomy_name": "bench",
 		"baseline": {
 			"1-view": 0.421,
+			"2-view": 0.484,
+			"3-view": 0.502,
+			"4-view": 0.516,
 			"5-view": 0.527
 		},
 		"test": [
@@ -5893,6 +5899,9 @@
 		"taxonomy_name": "cabinet",
 		"baseline": {
 			"1-view": 0.716,
+			"2-view": 0.746,
+			"3-view": 0.763,
+			"4-view": 0.767,
 			"5-view": 0.772
 		},
 		"test": [
@@ -7479,6 +7488,9 @@
 		"taxonomy_name": "car",
 		"baseline": {
 			"1-view": 0.798,
+			"2-view": 0.821,
+			"3-view": 0.829,
+			"4-view": 0.833,
 			"5-view": 0.836
 		},
 		"test": [
@@ -14990,7 +15002,10 @@
 		"taxonomy_name": "chair",
 		"baseline": {
 			"1-view": 0.466,
-			"5-view": 0.55
+			"2-view": 0.515,
+			"3-view": 0.533,
+			"4-view": 0.541,
+			"5-view": 0.550
 		},
 		"test": [
 			"3b3a9f4e3aa9f2f4d39a194653571dfc",
@@ -21782,6 +21797,9 @@
 		"taxonomy_name": "display",
 		"baseline": {
 			"1-view": 0.468,
+			"2-view": 0.527,
+			"3-view": 0.545,
+			"4-view": 0.558,
 			"5-view": 0.565
 		},
 		"test": [
@@ -22891,6 +22909,9 @@
 		"taxonomy_name": "lamp",
 		"baseline": {
 			"1-view": 0.381,
+			"2-view": 0.406,
+			"3-view": 0.415,
+			"4-view": 0.416,
 			"5-view": 0.421
 		},
 		"test": [
@@ -25223,6 +25244,9 @@
 		"taxonomy_name": "speaker",
 		"baseline": {
 			"1-view": 0.662,
+			"2-view": 0.696,
+			"3-view": 0.708,
+			"4-view": 0.714,
 			"5-view": 0.717
 		},
 		"test": [
@@ -26855,7 +26879,10 @@
 		"taxonomy_name": "rifle",
 		"baseline": {
 			"1-view": 0.544,
-			"5-view": 0.6
+			"2-view": 0.582,
+			"3-view": 0.593,
+			"4-view": 0.595,
+			"5-view": 0.600
 		},
 		"test": [
 			"beb75684ec2f965412b38b1d99376c0b",
@@ -29241,6 +29268,9 @@
 		"taxonomy_name": "sofa",
 		"baseline": {
 			"1-view": 0.628,
+			"2-view": 0.677,
+			"3-view": 0.690,
+			"4-view": 0.698,
 			"5-view": 0.706
 		},
 		"test": [
@@ -32428,7 +32458,10 @@
 		"taxonomy_name": "table",
 		"baseline": {
 			"1-view": 0.513,
-			"5-view": 0.58
+			"2-view": 0.550,
+			"3-view": 0.564,
+			"4-view": 0.573,
+			"5-view": 0.580
 		},
 		"test": [
 			"bc23348d2f16d4237155483601ac0c56",
@@ -40951,6 +40984,9 @@
 		"taxonomy_name": "telephone",
 		"baseline": {
 			"1-view": 0.661,
+			"2-view": 0.717,
+			"3-view": 0.732,
+			"4-view": 0.738,
 			"5-view": 0.754
 		},
 		"test": [
@@ -42017,7 +42053,10 @@
 		"taxonomy_name": "watercraft",
 		"baseline": {
 			"1-view": 0.513,
-			"5-view": 0.61
+			"2-view": 0.576,
+			"3-view": 0.596,
+			"4-view": 0.604,
+			"5-view": 0.610
 		},
 		"test": [
 			"ff70051c32217b2df671917093bd361",
