@@ -12,22 +12,27 @@ class Decoder(torch.nn.Module):
 
         # Layer Definition
         self.layer1 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(1024, 256, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
-            torch.nn.BatchNorm3d(256),
+            torch.nn.ConvTranspose3d(2048, 512, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(512),
             torch.nn.ReLU()
         )
         self.layer2 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(256, 64, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
-            torch.nn.BatchNorm3d(64),
+            torch.nn.ConvTranspose3d(512, 128, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(128),
             torch.nn.ReLU()
         )
         self.layer3 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(64, 16, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
-            torch.nn.BatchNorm3d(16),
+            torch.nn.ConvTranspose3d(128, 32, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(32),
             torch.nn.ReLU()
         )
         self.layer4 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(16, 1, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.ConvTranspose3d(32, 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(8),
+            torch.nn.ReLU()
+        )
+        self.layer5 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(8, 1, kernel_size=1, bias=cfg.NETWORK.TCONV_USE_BIAS),
             torch.nn.Sigmoid()
         )
 
@@ -37,15 +42,17 @@ class Decoder(torch.nn.Module):
         gen_voxels     = []
 
         for features in image_features:
-            gen_voxel = features.view(-1, 1024, 2, 2, 2)
-            # print(gen_voxel.size())   # torch.Size([batch_size, 1024, 2, 2, 2])
+            gen_voxel = features.view(-1, 2048, 2, 2, 2)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 2048, 2, 2, 2])
             gen_voxel = self.layer1(gen_voxel)
-            # print(gen_voxel.size())   # torch.Size([batch_size, 256, 4, 4, 4])
+            # print(gen_voxel.size())   # torch.Size([batch_size, 512, 4, 4, 4])
             gen_voxel = self.layer2(gen_voxel)
-            # print(gen_voxel.size())   # torch.Size([batch_size, 64, 8, 8, 8])
+            # print(gen_voxel.size())   # torch.Size([batch_size, 128, 8, 8, 8])
             gen_voxel = self.layer3(gen_voxel)
-            # print(gen_voxel.size())   # torch.Size([batch_size, 16, 16, 16, 16])
+            # print(gen_voxel.size())   # torch.Size([batch_size, 32, 16, 16, 16])
             gen_voxel = self.layer4(gen_voxel)
+            # print(gen_voxel.size())   # torch.Size([batch_size, 8, 32, 32, 32])
+            gen_voxel = self.layer5(gen_voxel)
             # print(gen_voxel.size())   # torch.Size([batch_size, 1, 32, 32, 32])
             gen_voxels.append(torch.squeeze(gen_voxel, 1))
 
