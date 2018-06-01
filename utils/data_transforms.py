@@ -144,34 +144,49 @@ class RandomCrop(object):
             img_height, img_width, _ = img.shape
             
             if not bounding_box is None:
-                # Calculate the size of bounding boxes
-                bbox_width   = bounding_box[2] - bounding_box[0]
-                bbox_height  = bounding_box[3] - bounding_box[1]
-                bbox_x_mid   = (bounding_box[2] + bounding_box[0]) * 0.5
-                bbox_y_mid   = (bounding_box[3] + bounding_box[1]) * 0.5
+                # Random move bounding boxes
+                for i in range(4):
+                    bounding_box[i] += random() * 100 - 50
+                    if bounding_box[i] < 0:
+                        bounding_box[i] = 0
+                    if (i == 0 or i == 2) and bounding_box[i] > img_width:
+                        bounding_box[i] = img_width - 50
+                    if (i == 1 or i == 3) and bounding_box[i] > img_height:
+                        bounding_box[i] = img_height - 50
 
-                crop_size_w  = bbox_width if bbox_width > bbox_height else bbox_height
-                crop_size_h  = bbox_width if bbox_width > bbox_height else bbox_height
+                if bounding_box[2] <= bounding_box[0]:
+                    bounding_box[2] = bounding_box[0] + 50
+                if bounding_box[3] <= bounding_box[1]:
+                    bounding_box[3] = bounding_box[1] + 50
+
+                # Calculate the size of bounding boxes
+                bbox_width      = bounding_box[2] - bounding_box[0]
+                bbox_height     = bounding_box[3] - bounding_box[1]
+                bbox_x_mid      = (bounding_box[2] + bounding_box[0]) * 0.5
+                bbox_y_mid      = (bounding_box[3] + bounding_box[1]) * 0.5
+
+                crop_size_w     = bbox_width if bbox_width > bbox_height else bbox_height
+                crop_size_h     = bbox_width if bbox_width > bbox_height else bbox_height
 
                 # Make the crop area as a square
-                x_left       = bbox_x_mid - crop_size_w * 0.5
-                x_right      = x_left + crop_size_w
-                y_top        = bbox_y_mid - crop_size_h * 0.5
-                y_bottom     = y_top + crop_size_h
+                x_left          = bbox_x_mid - crop_size_w * 0.5
+                x_right         = x_left + crop_size_w
+                y_top           = bbox_y_mid - crop_size_h * 0.5
+                y_bottom        = y_top + crop_size_h
 
                 # If the crop position is out of the image, fix it
                 if x_left < 0:
-                    x_left   = 0
-                    x_right  = crop_size_w
+                    x_left      = 0
+                    x_right     = crop_size_w
                 elif x_right > img_width:
-                    x_left   = img_width - crop_size_w if img_width > crop_size_w else 0
-                    x_right  = img_width
+                    x_left      = img_width - crop_size_w if img_width > crop_size_w else 0
+                    x_right     = img_width
                 if y_top < 0:
-                    y_top    = 0
-                    y_bottom = crop_size_h
+                    y_top       = 0
+                    y_bottom    = crop_size_h
                 elif y_bottom > img_height:
-                    y_top    = img_height - crop_size_h if img_height > crop_size_h else 0
-                    y_bottom = img_height
+                    y_top       = img_height - crop_size_h if img_height > crop_size_h else 0
+                    y_bottom    = img_height
             else:
                 if img_height > self.crop_size_h and img_width > self.crop_size_w:
                     x_left   = (img_width - self.crop_size_w) * random()
@@ -259,4 +274,3 @@ class RandomBackground(object):
             processed_images = np.append(processed_images, [img], axis=0)
 
         return processed_images, voxel
-
