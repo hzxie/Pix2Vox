@@ -35,6 +35,7 @@ def train_net(cfg):
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.RandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE),
+        utils.data_transforms.ColorJitter(cfg.TRAIN.BRIGHTNESS, cfg.TRAIN.CONTRAST, cfg.TRAIN.SATURATION, cfg.TRAIN.HUE),
         utils.data_transforms.ToTensor(),
     ])
     val_transforms  = utils.data_transforms.Compose([
