@@ -21,8 +21,8 @@ __C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 20
 __C.CONST.N_VIEWS_RENDERING             = 1
 __C.CONST.BATCH_SIZE                    = 24
-__C.CONST.CROP_IMG_W                    = 200       # Dummy property for Pascal 3D
-__C.CONST.CROP_IMG_H                    = 200       # Dummy property for Pascal 3D
+__C.CONST.CROP_IMG_W                    = 210       # Dummy property for Pascal 3D
+__C.CONST.CROP_IMG_H                    = 210       # Dummy property for Pascal 3D
 # For ShapeNet
 __C.CONST.CROP_IMG_C                    = 4
 # For Pascal3D
@@ -72,7 +72,7 @@ __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
 __C.TRAIN.NUM_WORKER                    = 4             # number of data workers
 ### For ShapeNet
-__C.TRAIN.NUM_EPOCHES                   = 300           # maximum number of epoches
+__C.TRAIN.NUM_EPOCHES                   = 250           # maximum number of epoches
 ### For Pascal 3D
 # __C.TRAIN.NUM_EPOCHES                 = 100           # maximum number of epoches
 __C.TRAIN.RANDOM_NUM_VIEWS              = False         # feed in random #views if n_views > 1
