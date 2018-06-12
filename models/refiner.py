@@ -12,20 +12,20 @@ class Refiner(torch.nn.Module):
 
         # Layer Definition
         self.layer1 = torch.nn.Sequential(
-            torch.nn.Conv3d(1, cfg.CONST.N_VOX, kernel_size=4, padding=2),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX),
+            torch.nn.Conv3d(1, 32, kernel_size=4, padding=2),
+            torch.nn.BatchNorm3d(32),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE),
             torch.nn.MaxPool3d(kernel_size=2)
         )
         self.layer2 = torch.nn.Sequential(
-            torch.nn.Conv3d(cfg.CONST.N_VOX, cfg.CONST.N_VOX * 2, kernel_size=4, padding=2),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 2),
+            torch.nn.Conv3d(32, 64, kernel_size=4, padding=2),
+            torch.nn.BatchNorm3d(64),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE),
             torch.nn.MaxPool3d(kernel_size=2)
         )
         self.layer3 = torch.nn.Sequential(
-            torch.nn.Conv3d(cfg.CONST.N_VOX * 2, cfg.CONST.N_VOX * 4, kernel_size=4, padding=2),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 4),
+            torch.nn.Conv3d(64, 128, kernel_size=4, padding=2),
+            torch.nn.BatchNorm3d(128),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE),
             torch.nn.MaxPool3d(kernel_size=2)
         )
@@ -38,17 +38,17 @@ class Refiner(torch.nn.Module):
             torch.nn.ReLU()
         )
         self.layer6 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 4, cfg.CONST.N_VOX * 2, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX * 2),
+            torch.nn.ConvTranspose3d(128, 64, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(64),
             torch.nn.ReLU()
         )
         self.layer7 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX * 2, cfg.CONST.N_VOX, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
-            torch.nn.BatchNorm3d(cfg.CONST.N_VOX),
+            torch.nn.ConvTranspose3d(64, 32, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(32),
             torch.nn.ReLU()
         )
         self.layer8 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(cfg.CONST.N_VOX, 1, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.ConvTranspose3d(32, 1, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
             torch.nn.Sigmoid()
         )
 
@@ -65,7 +65,7 @@ class Refiner(torch.nn.Module):
         # print(flatten_features.size())  # torch.Size([batch_size, 2048])
         flatten_features = self.layer5(flatten_features)
         # print(flatten_features.size())  # torch.Size([batch_size, 8192])
-        voxels_4_r       = voxels_4_l + flatten_features.view(-1, self.cfg.CONST.N_VOX * 4, 4, 4, 4)
+        voxels_4_r       = voxels_4_l + flatten_features.view(-1, 128, 4, 4, 4)
         # print(voxels_4_r.size())        # torch.Size([batch_size, 128, 4, 4, 4])
         voxels_8_r       = voxels_8_l + self.layer6(voxels_4_r)
         # print(voxels_8_r.size())        # torch.Size([batch_size, 64, 8, 8, 8])

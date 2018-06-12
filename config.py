@@ -20,7 +20,7 @@ __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
 __C.CONST.N_VIEWS                       = 20
 __C.CONST.N_VIEWS_RENDERING             = 1
-__C.CONST.BATCH_SIZE                    = 24
+__C.CONST.BATCH_SIZE                    = 64
 __C.CONST.CROP_IMG_W                    = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                    = 210       # Dummy property for Pascal 3D
 # For ShapeNet
@@ -86,9 +86,9 @@ __C.TRAIN.HUE                           = .25
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 __C.TRAIN.POLICY                        = 'adam'        # available options: sgd, adam
 __C.TRAIN.EPOCH_START_USE_REFINER       = 0
-__C.TRAIN.ENCODER_LEARNING_RATE         = .001
-__C.TRAIN.DECODER_LEARNING_RATE         = .001
-__C.TRAIN.REFINER_LEARNING_RATE         = .005
+__C.TRAIN.ENCODER_LEARNING_RATE         = 1e-3
+__C.TRAIN.DECODER_LEARNING_RATE         = 1e-3
+__C.TRAIN.REFINER_LEARNING_RATE         = 1e-4
 ### For ShapeNet
 __C.TRAIN.ENCODER_LR_MILESTONES         = [150]
 __C.TRAIN.DECODER_LR_MILESTONES         = [150]
