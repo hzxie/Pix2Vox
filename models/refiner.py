@@ -11,8 +11,14 @@ class Refiner(torch.nn.Module):
         self.cfg = cfg
 
         # Layer Definition
+        self.layer0 = torch.nn.Sequential(
+            torch.nn.Conv3d(1, 8, kernel_size=1),
+            torch.nn.BatchNorm3d(8),
+            torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE),
+            torch.nn.MaxPool3d(kernel_size=1)
+        )
         self.layer1 = torch.nn.Sequential(
-            torch.nn.Conv3d(1, 32, kernel_size=4, padding=2),
+            torch.nn.Conv3d(8, 32, kernel_size=4, padding=2),
             torch.nn.BatchNorm3d(32),
             torch.nn.LeakyReLU(cfg.NETWORK.LEAKY_VALUE),
             torch.nn.MaxPool3d(kernel_size=2)
@@ -48,13 +54,20 @@ class Refiner(torch.nn.Module):
             torch.nn.ReLU()
         )
         self.layer8 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(32, 1, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.ConvTranspose3d(32, 8, kernel_size=4, stride=2, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1),
+            torch.nn.BatchNorm3d(8),
+            torch.nn.ReLU(),
+        )
+        self.layer9 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(8, 1, kernel_size=1),
             torch.nn.Sigmoid()
         )
 
     def forward(self, coarse_voxels):
-        voxels_32_l      = coarse_voxels.view((-1, 1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
-        # print(voxels_32_l.size())       # torch.Size([batch_size, 1, 32, 32, 32])
+        coarse_voxels    = coarse_voxels.view((-1, 1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
+        # print(coarse_voxels.size())       # torch.Size([batch_size, 1, 32, 32, 32])
+        voxels_32_l      = self.layer0(coarse_voxels)
+        # print(voxels_32_l.size())       # torch.Size([batch_size, 8, 32, 32, 32])
         voxels_16_l      = self.layer1(voxels_32_l)
         # print(voxels_16_l.size())       # torch.Size([batch_size, 32, 16, 16, 16])
         voxels_8_l       = self.layer2(voxels_16_l)
@@ -71,7 +84,9 @@ class Refiner(torch.nn.Module):
         # print(voxels_8_r.size())        # torch.Size([batch_size, 64, 8, 8, 8])
         voxels_16_r      = voxels_16_l + self.layer7(voxels_8_r)
         # print(voxels_16_r.size())       # torch.Size([batch_size, 32, 16, 16, 16])
-        voxels_32_r      = (voxels_32_l + self.layer8(voxels_16_r)) * 0.5
-        # print(voxels_32_r.size())       # torch.Size([batch_size, 1, 32, 32, 32])
+        voxels_32_r      = voxels_32_l + self.layer8(voxels_16_r)
+        # print(voxels_32_r.size())       # torch.Size([batch_size, 8, 32, 32, 32])
+        refined_voxels   = (coarse_voxels + self.layer9(voxels_32_r)) * 0.5
+        # print(refined_voxels.size())       # torch.Size([batch_size, 1, 32, 32, 32])
 
-        return voxels_32_r.view((-1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
+        return refined_voxels.view((-1, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX, self.cfg.CONST.N_VOX))
