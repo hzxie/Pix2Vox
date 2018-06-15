@@ -159,7 +159,7 @@ def train_net(cfg):
             # switch models to training mode
             encoder.train();
             decoder.train();
-            refiner.train();
+            # refiner.train();
 
             # Get data from data loader
             rendering_images     = utils.network_utils.var_or_cuda(rendering_images)
