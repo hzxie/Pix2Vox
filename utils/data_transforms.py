@@ -120,7 +120,7 @@ class CenterCrop(object):
                     y_top    = 0
                     y_bottom = img_height
 
-            processed_image  = cv2.resize(img[int(y_top): int(y_bottom), int(x_left): int(x_right)], (self.img_size_h, self.img_size_w))
+            processed_image  = cv2.resize(img[int(y_top): int(y_bottom), int(x_left): int(x_right)], (self.img_size_w, self.img_size_h))
             processed_images = np.append(processed_images, [processed_image], axis=0)
         
         return processed_images, voxel
@@ -199,7 +199,7 @@ class RandomCrop(object):
                     y_top    = 0
                     y_bottom = img_height
 
-            processed_image  = cv2.resize(img[int(y_top): int(y_bottom), int(x_left): int(x_right)], (self.img_size_h, self.img_size_w))
+            processed_image  = cv2.resize(img[int(y_top): int(y_bottom), int(x_left): int(x_right)], (self.img_size_w, self.img_size_h))
             processed_images = np.append(processed_images, [processed_image], axis=0)
             # Debug
             # fig = plt.figure(figsize=(8, 4))

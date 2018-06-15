@@ -18,11 +18,14 @@ __C.CONST.IMG_W                         = 224       # Image width for input
 __C.CONST.IMG_H                         = 224       # Image height for input
 __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
-__C.CONST.N_VIEWS                       = 20
-__C.CONST.N_VIEWS_RENDERING             = 1
-__C.CONST.BATCH_SIZE                    = 64
+__C.CONST.N_VIEWS                       = 20        # Dummy property for Pascal 3D
+__C.CONST.N_VIEWS_RENDERING             = 1         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                    = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                    = 210       # Dummy property for Pascal 3D
+# For ShapeNet
+__C.CONST.BATCH_SIZE                    = 64
+# For Pascal3D
+__C.CONST.BATCH_SIZE                    = 24
 # For ShapeNet
 __C.CONST.CROP_IMG_C                    = 4
 # For Pascal3D
@@ -88,7 +91,7 @@ __C.TRAIN.POLICY                        = 'adam'        # available options: sgd
 __C.TRAIN.EPOCH_START_USE_REFINER       = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.DECODER_LEARNING_RATE         = 1e-3
-__C.TRAIN.REFINER_LEARNING_RATE         = 1e-4
+__C.TRAIN.REFINER_LEARNING_RATE         = 1e-2
 ### For ShapeNet
 __C.TRAIN.ENCODER_LR_MILESTONES         = [150]
 __C.TRAIN.DECODER_LR_MILESTONES         = [150]
