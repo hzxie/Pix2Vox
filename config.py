@@ -25,7 +25,7 @@ __C.CONST.CROP_IMG_H                    = 210       # Dummy property for Pascal 
 # For ShapeNet
 __C.CONST.BATCH_SIZE                    = 64
 # For Pascal3D
-__C.CONST.BATCH_SIZE                    = 24
+# __C.CONST.BATCH_SIZE                  = 24
 # For ShapeNet
 __C.CONST.CROP_IMG_C                    = 4
 # For Pascal3D
