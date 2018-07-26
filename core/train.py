@@ -196,7 +196,7 @@ def train_net(cfg):
             # Append loss to TensorBoard
             n_itr = epoch_idx * n_batches + batch_idx
             train_writer.add_scalar('EncoderDecoder/BatchLoss', encoder_loss.item(), n_itr)
-            train_writer.add_scalar('Refiner/BatchLoss', encoder_loss.item(), n_itr)
+            train_writer.add_scalar('Refiner/BatchLoss', refiner_loss.item(), n_itr)
             # Append rendering images of voxels to TensorBoard
             if n_itr > 0 and n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
                 gtv          = ground_truth_voxels.cpu().data[:8].numpy()
