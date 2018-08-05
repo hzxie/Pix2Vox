@@ -18,17 +18,20 @@ __C.CONST.IMG_W                         = 224       # Image width for input
 __C.CONST.IMG_H                         = 224       # Image height for input
 __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
+# For ShapeNet
 __C.CONST.N_VIEWS                       = 20        # Dummy property for Pascal 3D
+# For ModelNet40
+# __C.CONST.N_VIEWS                     = 12
 __C.CONST.N_VIEWS_RENDERING             = 1         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                    = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                    = 210       # Dummy property for Pascal 3D
-# For ShapeNet
+# For ShapeNet and ModelNet40
 __C.CONST.BATCH_SIZE                    = 64
 # For Pascal3D
 # __C.CONST.BATCH_SIZE                  = 24
 # For ShapeNet
 __C.CONST.CROP_IMG_C                    = 4
-# For Pascal3D
+# For Pascal3D and ModelNet40
 # __C.CONST.CROP_IMG_C                  = 3
 
 #
@@ -45,6 +48,10 @@ __C.DIR.RENDERING_PATH                  = '/home/hzxie/Datasets/ShapeNet/ShapeNe
 # __C.DIR.VOXEL_PATH                    = '/home/hzxie/Datasets/PASCAL3D/CAD/%s/%02d.binvox'
 # __C.DIR.ANNOTATION_PATH               = '/home/hzxie/Datasets/PASCAL3D/Annotations/%s_imagenet/%s.mat'
 # __C.DIR.RENDERING_PATH                = '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG'
+# For ModelNet40
+# __C.DIR.DATASET_TAXONOMY_FILE_PATH    = './datasets/ModelNet40.json'
+# __C.DIR.VOXEL_PATH                    = '/home/hzxie/Datasets/ModelNet40/%s/%s/%s.binvox'
+# __C.DIR.RENDERING_PATH                = '/home/hzxie/Datasets/ModelNet40/%s/%s/%s_%03d.png'
 
 #
 # Dataset
@@ -58,6 +65,10 @@ __C.DATASET.STD                         = [0.0676, 0.0618, 0.0598, 1]
 # __C.DATASET.DATASET_NAME              = 'Pascal3D'
 # __C.DATASET.MEAN                      = [121.7832, 118.1967, 113.1437]
 # __C.DATASET.STD                       = [0.4232, 0.4206, 0.4345]
+### For ModelNet40
+# __C.DATASET.DATASET_NAME              = 'ModelNet40'
+# __C.DATASET.MEAN                      = [223.1698, 223.1698, 223.1698]
+# __C.DATASET.STD                       = [0.2642, 0.2642, 0.2642]
 
 #
 # Network
@@ -74,7 +85,7 @@ __C.NETWORK.USE_REFINER                 = True
 __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
 __C.TRAIN.NUM_WORKER                    = 4             # number of data workers
-### For ShapeNet
+### For ShapeNet and ModelNet40
 __C.TRAIN.NUM_EPOCHES                   = 250           # maximum number of epoches
 ### For Pascal 3D
 # __C.TRAIN.NUM_EPOCHES                 = 100           # maximum number of epoches
@@ -92,7 +103,7 @@ __C.TRAIN.EPOCH_START_USE_REFINER       = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.DECODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.REFINER_LEARNING_RATE         = 1e-2
-### For ShapeNet
+### For ShapeNet and ModelNet40
 __C.TRAIN.ENCODER_LR_MILESTONES         = [150]
 __C.TRAIN.DECODER_LR_MILESTONES         = [150]
 __C.TRAIN.REFINER_LR_MILESTONES         = [150]
