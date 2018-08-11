@@ -394,6 +394,7 @@ class ModelNet40DataLoader:
         return files_of_taxonomy
 
 # /////////////////////////////// = End of ModelNet40DataLoader Class Definition = /////////////////////////////// #
+
 DATASET_LOADER_MAPPING = {
     'ShapeNet': ShapeNetDataLoader,
     'Pascal3D': Pascal3dDataLoader,

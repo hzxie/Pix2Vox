@@ -10,7 +10,7 @@ from datetime import datetime as dt
 
 def var_or_cuda(x):
     if torch.cuda.is_available():
-        x = x.cuda(async=True)
+        x = x.cuda(non_blocking=True)
     
     return x
 
