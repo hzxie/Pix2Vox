@@ -20,19 +20,19 @@ class Encoder(torch.nn.Module):
         self.layer1 = torch.nn.Sequential(
             torch.nn.Conv2d(512, 512, kernel_size=3),
             torch.nn.BatchNorm2d(512),
-            torch.nn.ELU(inplace=True),
+            torch.nn.ELU(),
             torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE)
         )
         self.layer2 = torch.nn.Sequential(
             torch.nn.Conv2d(512, 512, kernel_size=3),
             torch.nn.BatchNorm2d(512),
-            torch.nn.ELU(inplace=True),
-            torch.nn.MaxPool2d(kernel_size=3)
+            torch.nn.ELU()
         )
         self.layer3 = torch.nn.Sequential(
             torch.nn.Conv2d(512, 256, kernel_size=1),
             torch.nn.BatchNorm2d(256),
-            torch.nn.ELU(inplace=True)
+            torch.nn.ELU(),
+            torch.nn.MaxPool2d(kernel_size=3)
         )
 
         # Don't update params in VGG16
@@ -51,7 +51,7 @@ class Encoder(torch.nn.Module):
             features = self.layer1(features)
             # print(features.size())    # torch.Size([batch_size, 512, 26, 26])
             features = self.layer2(features)
-            # print(features.size())    # torch.Size([batch_size, 512, 8, 8])
+            # print(features.size())    # torch.Size([batch_size, 512, 24, 24])
             features = self.layer3(features)
             # print(features.size())    # torch.Size([batch_size, 256, 8, 8])
             image_features.append(features)

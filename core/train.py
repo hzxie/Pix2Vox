@@ -23,6 +23,7 @@ from core.test import test_net
 from models.encoder import Encoder
 from models.decoder import Decoder
 from models.refiner import Refiner
+from models.merger import Merger
 
 def train_net(cfg):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
@@ -61,39 +62,43 @@ def train_net(cfg):
     encoder      = Encoder(cfg)
     decoder      = Decoder(cfg)
     refiner      = Refiner(cfg)
+    merger       = Merger(cfg)
     print('[DEBUG] %s Parameters in Encoder: %d.' % (dt.now(), utils.network_utils.count_parameters(encoder)))
     print('[DEBUG] %s Parameters in Decoder: %d.' % (dt.now(), utils.network_utils.count_parameters(decoder)))
     print('[DEBUG] %s Parameters in Refiner: %d.' % (dt.now(), utils.network_utils.count_parameters(refiner)))
+    print('[DEBUG] %s Parameters in Merger: %d.' % (dt.now(), utils.network_utils.count_parameters(merger)))
 
     # Initialize weights of networks
     encoder.apply(utils.network_utils.init_weights)
     decoder.apply(utils.network_utils.init_weights)
     refiner.apply(utils.network_utils.init_weights)
+    merger.apply(utils.network_utils.init_weights)
 
     # Set up solver
-    decoder_solver = None
-    encoder_solver = None
-    refiner_solver = None
     if cfg.TRAIN.POLICY == 'adam':
-        encoder_solver = torch.optim.Adam(filter(lambda p: p.requires_grad, encoder.parameters()), lr=cfg.TRAIN.ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
-        decoder_solver = torch.optim.Adam(decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
-        refiner_solver = torch.optim.Adam(refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        encoder_solver  = torch.optim.Adam(filter(lambda p: p.requires_grad, encoder.parameters()), lr=cfg.TRAIN.ENCODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        decoder_solver  = torch.optim.Adam(decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        refiner_solver  = torch.optim.Adam(refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        merger_solver   = torch.optim.Adam(merger.parameters(), lr=cfg.TRAIN.MERGER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     elif cfg.TRAIN.POLICY == 'sgd':
         encoder_solver = torch.optim.SGD(filter(lambda p: p.requires_grad, encoder.parameters()), lr=cfg.TRAIN.ENCODER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
         decoder_solver = torch.optim.SGD(decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
         refiner_solver = torch.optim.SGD(refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
+        merger_solver  = torch.optim.SGD(merger.parameters(), lr=cfg.TRAIN.MERGER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
     else:
         raise Exception('[FATAL] %s Unknown optimizer %s.' % (dt.now(), cfg.TRAIN.POLICY))
 
     # Set up learning rate scheduler to decay learning rates dynamically
-    encoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(encoder_solver, milestones=cfg.TRAIN.ENCODER_LR_MILESTONES, gamma=0.1)
-    decoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(decoder_solver, milestones=cfg.TRAIN.DECODER_LR_MILESTONES, gamma=0.1)
-    refiner_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(refiner_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=0.1)
+    encoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(encoder_solver, milestones=cfg.TRAIN.ENCODER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
+    decoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(decoder_solver, milestones=cfg.TRAIN.DECODER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
+    refiner_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(refiner_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
+    merger_lr_scheduler  = torch.optim.lr_scheduler.MultiStepLR(merger_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
 
     if torch.cuda.is_available():
         torch.nn.DataParallel(encoder).cuda()
         torch.nn.DataParallel(decoder).cuda()
         torch.nn.DataParallel(refiner).cuda()
+        torch.nn.DataParallel(merger).cuda()
 
     # Set up loss functions
     bce_loss   = torch.nn.BCELoss()
@@ -117,6 +122,9 @@ def train_net(cfg):
         if cfg.NETWORK.USE_REFINER:
             refiner.load_state_dict(checkpoint['refiner_state_dict'])
             refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
+        if cfg.NETWORK.USE_MERGER:
+            merger.load_state_dict(checkpoint['merger_state_dict'])
+            merger_solver.load_state_dict(checkpoint['merger_solver_state_dict'])
         
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
@@ -144,6 +152,7 @@ def train_net(cfg):
         encoder_lr_scheduler.step()
         decoder_lr_scheduler.step()
         refiner_lr_scheduler.step()
+        merger_lr_scheduler.step()
 
         batch_end_time = time()
         n_batches      = len(train_data_loader)
@@ -159,27 +168,35 @@ def train_net(cfg):
             # switch models to training mode
             encoder.train();
             decoder.train();
+            merger.train()
             # refiner.train();
 
             # Get data from data loader
-            rendering_images     = utils.network_utils.var_or_cuda(rendering_images)
-            ground_truth_voxels  = utils.network_utils.var_or_cuda(ground_truth_voxels)
+            rendering_images                = utils.network_utils.var_or_cuda(rendering_images)
+            ground_truth_voxels             = utils.network_utils.var_or_cuda(ground_truth_voxels)
 
-            # Train the encoder, decoder and refiner
-            image_features       = encoder(rendering_images)
-            generated_voxels     = decoder(image_features)
-            encoder_loss         = bce_loss(generated_voxels, ground_truth_voxels) * 10
+            # Train the encoder, decoder, refiner, and merger
+            image_features                  = encoder(rendering_images)
+            raw_features, generated_voxels  = decoder(image_features)
+            
+            if cfg.NETWORK.USE_MERGER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_MERGER:
+                generated_voxels            = merger(raw_features, generated_voxels)
+            else:
+                generated_voxels            = torch.mean(generated_voxels, dim=1)
+            encoder_loss                    = bce_loss(generated_voxels, ground_truth_voxels) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxels = refiner(generated_voxels)
-                refiner_loss     = bce_loss(generated_voxels, ground_truth_voxels) * 10
+                generated_voxels            = refiner(generated_voxels)
+                refiner_loss                = bce_loss(generated_voxels, ground_truth_voxels) * 10
             else:
-                refiner_loss     = encoder_loss
+                refiner_loss                = encoder_loss
             
             # Gradient decent
             encoder.zero_grad()
             decoder.zero_grad()
             refiner.zero_grad()
+            merger.zero_grad()
+            
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
                 encoder_loss.backward(retain_graph=True)
                 refiner_loss.backward()
@@ -189,6 +206,7 @@ def train_net(cfg):
             encoder_solver.step()
             decoder_solver.step()
             refiner_solver.step()
+            merger_solver.step()
             
             # Append loss to average metrics
             encoder_losses.update(encoder_loss.item())
@@ -224,7 +242,7 @@ def train_net(cfg):
                 encoder_losses.avg, refiner_losses.avg))
 
         # Validate the training models
-        iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder, refiner)
+        iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder, refiner, merger)
 
         # Save weights to file
         if (epoch_idx + 1) % cfg.TRAIN.SAVE_FREQ == 0:
@@ -234,7 +252,7 @@ def train_net(cfg):
             utils.network_utils.save_checkpoints(cfg, \
                     os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
-                    refiner, refiner_solver, best_iou, best_epoch)
+                    refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
         if iou > best_iou:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
@@ -244,7 +262,7 @@ def train_net(cfg):
             utils.network_utils.save_checkpoints(cfg, \
                     os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
-                    refiner, refiner_solver, best_iou, best_epoch)
+                    refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()

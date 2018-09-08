@@ -24,8 +24,10 @@ from time import time
 from models.encoder import Encoder
 from models.decoder import Decoder
 from models.refiner import Refiner
+from models.merger import Merger
 
-def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_writer=None, encoder=None, decoder=None, refiner=None):
+def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
+        test_writer=None, encoder=None, decoder=None, refiner=None, merger=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark  = True
 
@@ -59,11 +61,13 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         encoder     = Encoder(cfg)
         decoder     = Decoder(cfg)
         refiner     = Refiner(cfg)
+        merger      = Merger(cfg)
 
         if torch.cuda.is_available():
             encoder.cuda()
             decoder.cuda()
             refiner.cuda()
+            merger.cuda()
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
@@ -73,6 +77,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
 
         if cfg.NETWORK.USE_REFINER:
             refiner.load_state_dict(checkpoint['refiner_state_dict'])
+        if cfg.NETWORK.USE_MEASURER:
+            merger.load_state_dict(checkpoint['merger_state_dict'])
 
     # Set up loss functions
     bce_loss = torch.nn.BCELoss()
@@ -90,22 +96,28 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, test_wri
         encoder.eval();
         decoder.eval();
         refiner.eval();
+        merger.eval();
 
         with torch.no_grad():
             # Get data from data loader
-            rendering_images    = utils.network_utils.var_or_cuda(rendering_images)
-            ground_truth_voxel  = utils.network_utils.var_or_cuda(ground_truth_voxel)
+            rendering_images              = utils.network_utils.var_or_cuda(rendering_images)
+            ground_truth_voxel            = utils.network_utils.var_or_cuda(ground_truth_voxel)
 
-            # Test the decoder
-            image_features      = encoder(rendering_images)
-            generated_voxel     = decoder(image_features)
-            encoder_loss        = bce_loss(generated_voxel, ground_truth_voxel) * 10
+            # Test the encoder, decoder, refiner and merger
+            image_features                = encoder(rendering_images)
+            raw_features, generated_voxel = decoder(image_features)
+            
+            if cfg.NETWORK.USE_MERGER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_MERGER:
+                generated_voxel           = merger(raw_features, generated_voxel)
+            else:
+                generated_voxel           = torch.mean(generated_voxel, dim=1)
+            encoder_loss                  = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxel = refiner(generated_voxel)
-                refiner_loss    = bce_loss(generated_voxel, ground_truth_voxel) * 10
+                generated_voxel           = refiner(generated_voxel)
+                refiner_loss              = bce_loss(generated_voxel, ground_truth_voxel) * 10
             else:
-                refiner_loss    = encoder_loss
+                refiner_loss              = encoder_loss
 
             # Append loss and accuracy to average metrics
             encoder_losses.update(encoder_loss.item())

@@ -78,6 +78,7 @@ __C.NETWORK.LEAKY_VALUE                 = .2
 __C.NETWORK.DROPOUT_RATE                = .2
 __C.NETWORK.TCONV_USE_BIAS              = False
 __C.NETWORK.USE_REFINER                 = True
+__C.NETWORK.USE_MERGER                  = True
 
 #
 # Training
@@ -100,19 +101,24 @@ __C.TRAIN.HUE                           = .25
 __C.TRAIN.RANDOM_BG_COLOR_RANGE         = [[225, 255], [225, 255], [225, 255]]
 __C.TRAIN.POLICY                        = 'adam'        # available options: sgd, adam
 __C.TRAIN.EPOCH_START_USE_REFINER       = 0
+__C.TRAIN.EPOCH_START_USE_MERGER        = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.DECODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.REFINER_LEARNING_RATE         = 1e-2
+__C.TRAIN.MERGER_LEARNING_RATE          = 1e-2
 ### For ShapeNet and ModelNet40
 __C.TRAIN.ENCODER_LR_MILESTONES         = [150]
 __C.TRAIN.DECODER_LR_MILESTONES         = [150]
 __C.TRAIN.REFINER_LR_MILESTONES         = [150]
+__C.TRAIN.MERGER_LR_MILESTONES          = [150]
 ### For Pascal 3D
 # __C.TRAIN.ENCODER_LR_MILESTONES       = [50]
 # __C.TRAIN.DECODER_LR_MILESTONES       = [50]
 # __C.TRAIN.REFINER_LR_MILESTONES       = [50]
+# __C.TRAIN.MERGER_LR_MILESTONES        = [50]
 __C.TRAIN.BETAS                         = (.5, .5)
 __C.TRAIN.MOMENTUM                      = .9
+__C.TRAIN.GAMMA                         = .1
 __C.TRAIN.VISUALIZATION_FREQ            = 10000         # visualization reconstruction voxels every visualization_freq batch
 __C.TRAIN.SAVE_FREQ                     = 10            # weights will be overwritten every save_freq epoch
 
