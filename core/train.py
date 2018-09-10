@@ -48,13 +48,12 @@ def train_net(cfg):
     
     # Set up data loader
     dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-    n_rendering_views = np.random.randint(cfg.CONST.N_VIEWS_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS_RENDERING
     train_data_loader = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS, n_rendering_views, train_transforms),
+        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS, cfg.CONST.N_VIEWS_RENDERING, train_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER, pin_memory=True, shuffle=True)
     val_data_loader   = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS, n_rendering_views, val_transforms),
+        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS, cfg.CONST.N_VIEWS_RENDERING, val_transforms),
         batch_size=1,
         num_workers=1, pin_memory=True, shuffle=False)
 
