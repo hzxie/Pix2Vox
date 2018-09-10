@@ -9,6 +9,71 @@ __C     = edict()
 cfg     = __C
 
 #
+# Dataset Config
+#
+DATASET_CONFIG                          = {
+    'ShapeNet': {
+        'CONST.N_VIEWS':                20,
+        'CONST.BATCH_SIZE':             64,
+        'CONST.CROP_IMG_C':             4,
+        'DATASET.TAXONOMY_FILE_PATH':   './datasets/ShapeNet.json',
+        'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png',
+        'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat',
+        'DATASET.MEAN':                 [26.2284, 22.7098, 20.8072, 0],
+        'DATASET.STD':                  [0.0676, 0.0618, 0.0598, 1],
+        'TRAIN.NUM_EPOCHES':            250,
+        'TRAIN.ENCODER_LR_MILESTONES':  [150],
+        'TRAIN.DECODER_LR_MILESTONES':  [150],
+        'TRAIN.REFINER_LR_MILESTONES':  [150],
+        'TRAIN.MERGER_LR_MILESTONES':   [150]
+    },
+    'Pascal3D': {
+        'CONST.N_VIEWS':                0,
+        'CONST.BATCH_SIZE':             24,
+        'CONST.CROP_IMG_C':             3,
+        'DATASET.TAXONOMY_FILE_PATH':   './datasets/Pascal3D.json',
+        'DATASET.ANNOTATION_PATH':      '/home/hzxie/Datasets/PASCAL3D/Annotations/%s_imagenet/%s.mat',
+        'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG',
+        'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/PASCAL3D/CAD/%s/%02d.binvox',
+        'DATASET.MEAN':                 [121.7832, 118.1967, 113.1437],
+        'DATASET.STD':                  [0.4232, 0.4206, 0.4345],
+        'TRAIN.NUM_EPOCHES':            100,
+        'TRAIN.ENCODER_LR_MILESTONES':  [50],
+        'TRAIN.DECODER_LR_MILESTONES':  [50],
+        'TRAIN.REFINER_LR_MILESTONES':  [50],
+        'TRAIN.MERGER_LR_MILESTONES':   [50]
+    },
+    'ModelNet40': {
+        'CONST.N_VIEWS':                12,
+        'CONST.BATCH_SIZE':             64,
+        'CONST.CROP_IMG_C':             4,
+        'DATASET.TAXONOMY_FILE_PATH':   './datasets/ModelNet40.json',
+        'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/ModelNet40/%s/%s/%s_%03d.png',
+        'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/ModelNet40/%s/%s/%s.binvox',
+        'DATASET.MEAN':                 [223.1698, 223.1698, 223.1698],
+        'DATASET.STD':                  [0.2642, 0.2642, 0.2642],
+        'TRAIN.NUM_EPOCHES':            250,
+        'TRAIN.ENCODER_LR_MILESTONES':  [150],
+        'TRAIN.DECODER_LR_MILESTONES':  [150],
+        'TRAIN.REFINER_LR_MILESTONES':  [150],
+        'TRAIN.MERGER_LR_MILESTONES':   [150]
+    }
+}
+
+#
+# Dataset
+#
+__C.DATASET                             = edict()
+__C.DATASET.DATASET_NAME                = 'ShapeNet'
+# __C.DATASET.DATASET_NAME              = 'Pascal3D'
+# __C.DATASET.DATASET_NAME              = 'ModelNet40'
+__C.DATASET.TAXONOMY_FILE_PATH          = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.TAXONOMY_FILE_PATH']
+__C.DATASET.RENDERING_PATH              = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.RENDERING_PATH']
+__C.DATASET.VOXEL_PATH                  = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.VOXEL_PATH']
+__C.DATASET.MEAN                        = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.MEAN']
+__C.DATASET.STD                         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.STD']
+
+#
 # Common
 #
 __C.CONST                               = edict()
@@ -18,57 +83,18 @@ __C.CONST.IMG_W                         = 224       # Image width for input
 __C.CONST.IMG_H                         = 224       # Image height for input
 __C.CONST.IMG_C                         = 3         # Image channels for input
 __C.CONST.N_VOX                         = 32
-# For ShapeNet
-__C.CONST.N_VIEWS                       = 20        # Dummy property for Pascal 3D
-# For ModelNet40
-# __C.CONST.N_VIEWS                     = 12
+__C.CONST.BATCH_SIZE                    = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['CONST.BATCH_SIZE']
+__C.CONST.N_VIEWS                       = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['CONST.N_VIEWS']
 __C.CONST.N_VIEWS_RENDERING             = 1         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                    = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                    = 210       # Dummy property for Pascal 3D
-# For ShapeNet and ModelNet40
-__C.CONST.BATCH_SIZE                    = 64
-# For Pascal3D
-# __C.CONST.BATCH_SIZE                  = 24
-# For ShapeNet
-__C.CONST.CROP_IMG_C                    = 4
-# For Pascal3D and ModelNet40
-# __C.CONST.CROP_IMG_C                  = 3
+__C.CONST.CROP_IMG_C                    = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['CONST.CROP_IMG_C']
 
 #
 # Directories
 #
 __C.DIR                                 = edict()
 __C.DIR.OUT_PATH                        = './output'
-# For ShapeNet
-__C.DIR.DATASET_TAXONOMY_FILE_PATH      = './datasets/ShapeNet.json'
-__C.DIR.VOXEL_PATH                      = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
-__C.DIR.RENDERING_PATH                  = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
-# For Pascal 3D
-# __C.DIR.DATASET_TAXONOMY_FILE_PATH    = './datasets/Pascal3D.json'
-# __C.DIR.VOXEL_PATH                    = '/home/hzxie/Datasets/PASCAL3D/CAD/%s/%02d.binvox'
-# __C.DIR.ANNOTATION_PATH               = '/home/hzxie/Datasets/PASCAL3D/Annotations/%s_imagenet/%s.mat'
-# __C.DIR.RENDERING_PATH                = '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG'
-# For ModelNet40
-# __C.DIR.DATASET_TAXONOMY_FILE_PATH    = './datasets/ModelNet40.json'
-# __C.DIR.VOXEL_PATH                    = '/home/hzxie/Datasets/ModelNet40/%s/%s/%s.binvox'
-# __C.DIR.RENDERING_PATH                = '/home/hzxie/Datasets/ModelNet40/%s/%s/%s_%03d.png'
-
-#
-# Dataset
-#
-__C.DATASET                             = edict()
-### For ShapeNet
-__C.DATASET.DATASET_NAME                = 'ShapeNet'
-__C.DATASET.MEAN                        = [26.2284, 22.7098, 20.8072, 0]
-__C.DATASET.STD                         = [0.0676, 0.0618, 0.0598, 1]
-### For Pascal 3D
-# __C.DATASET.DATASET_NAME              = 'Pascal3D'
-# __C.DATASET.MEAN                      = [121.7832, 118.1967, 113.1437]
-# __C.DATASET.STD                       = [0.4232, 0.4206, 0.4345]
-### For ModelNet40
-# __C.DATASET.DATASET_NAME              = 'ModelNet40'
-# __C.DATASET.MEAN                      = [223.1698, 223.1698, 223.1698]
-# __C.DATASET.STD                       = [0.2642, 0.2642, 0.2642]
 
 #
 # Network
@@ -86,11 +112,7 @@ __C.NETWORK.USE_MERGER                  = True
 __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
 __C.TRAIN.NUM_WORKER                    = 4             # number of data workers
-### For ShapeNet and ModelNet40
-__C.TRAIN.NUM_EPOCHES                   = 250           # maximum number of epoches
-### For Pascal 3D
-# __C.TRAIN.NUM_EPOCHES                 = 100           # maximum number of epoches
-__C.TRAIN.RANDOM_NUM_VIEWS              = False         # feed in random #views if n_views > 1
+__C.TRAIN.NUM_EPOCHES                   = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.NUM_EPOCHES']
 __C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15)     # range of degrees to select from
 __C.TRAIN.TRANSLATE_RANGE               = (.1, .1)      # tuple of maximum absolute fraction for horizontal and vertical translations
 __C.TRAIN.SCALE_RANGE                   = (.75, 1.5)    # tuple of scaling factor interval
@@ -105,18 +127,12 @@ __C.TRAIN.EPOCH_START_USE_MERGER        = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.DECODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.REFINER_LEARNING_RATE         = 1e-2
-__C.TRAIN.MERGER_LEARNING_RATE          = 1e-2
-### For ShapeNet and ModelNet40
-__C.TRAIN.ENCODER_LR_MILESTONES         = [150]
-__C.TRAIN.DECODER_LR_MILESTONES         = [150]
-__C.TRAIN.REFINER_LR_MILESTONES         = [150]
-__C.TRAIN.MERGER_LR_MILESTONES          = [150]
-### For Pascal 3D
-# __C.TRAIN.ENCODER_LR_MILESTONES       = [50]
-# __C.TRAIN.DECODER_LR_MILESTONES       = [50]
-# __C.TRAIN.REFINER_LR_MILESTONES       = [50]
-# __C.TRAIN.MERGER_LR_MILESTONES        = [50]
-__C.TRAIN.BETAS                         = (.5, .5)
+__C.TRAIN.MERGER_LEARNING_RATE          = 1e-3
+__C.TRAIN.ENCODER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.ENCODER_LR_MILESTONES']
+__C.TRAIN.DECODER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.DECODER_LR_MILESTONES']
+__C.TRAIN.REFINER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.REFINER_LR_MILESTONES']
+__C.TRAIN.MERGER_LR_MILESTONES          = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.MERGER_LR_MILESTONES']
+__C.TRAIN.BETAS                         = (.9, .999)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.GAMMA                         = .1
 __C.TRAIN.VISUALIZATION_FREQ            = 10000         # visualization reconstruction voxels every visualization_freq batch

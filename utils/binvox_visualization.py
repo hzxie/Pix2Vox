@@ -3,11 +3,11 @@
 # 
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
+import cv2
 import numpy as np
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import os
-import scipy.ndimage
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -32,4 +32,4 @@ def get_voxel_views(voxels, save_dir, n_itr):
     save_path = os.path.join(save_dir, 'voxels-%06d.png' % n_itr)
     plt.savefig(save_path, bbox_inches='tight')
     plt.close()
-    return scipy.ndimage.imread(save_path)
+    return cv2.imread(save_path)

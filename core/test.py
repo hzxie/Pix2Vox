@@ -33,7 +33,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
     # Load taxonomies of dataset
     taxonomies = []
-    with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+    with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
         taxonomies = json.loads(file.read())
     taxonomies = { t['taxonomy_id']: t for t in taxonomies }
 
@@ -50,9 +50,8 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         ])
 
         dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-        n_rendering_views = np.random.randint(cfg.CONST.N_VIEWS_RENDERING) + 1 if cfg.TRAIN.RANDOM_NUM_VIEWS else cfg.CONST.N_VIEWS_RENDERING
         test_data_loader  = torch.utils.data.DataLoader(
-            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS, n_rendering_views, test_transforms),
+            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS, cfg.CONST.N_VIEWS_RENDERING, test_transforms),
             batch_size=1,
             num_workers=1, pin_memory=True, shuffle=False)
 
@@ -77,7 +76,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
         if cfg.NETWORK.USE_REFINER:
             refiner.load_state_dict(checkpoint['refiner_state_dict'])
-        if cfg.NETWORK.USE_MEASURER:
+        if cfg.NETWORK.USE_MERGER:
             merger.load_state_dict(checkpoint['merger_state_dict'])
 
     # Set up loss functions

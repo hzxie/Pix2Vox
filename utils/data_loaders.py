@@ -74,11 +74,11 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
 class ShapeNetDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
-        self.rendering_image_path_template = cfg.DIR.RENDERING_PATH
-        self.voxel_path_template = cfg.DIR.VOXEL_PATH
+        self.rendering_image_path_template = cfg.DATASET.RENDERING_PATH
+        self.voxel_path_template = cfg.DATASET.VOXEL_PATH
 
         # Load all taxonomies of the dataset
-        with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+        with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
@@ -187,12 +187,12 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
 class Pascal3dDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
-        self.voxel_path_template = cfg.DIR.VOXEL_PATH
-        self.annotation_path_template = cfg.DIR.ANNOTATION_PATH
-        self.rendering_image_path_template = cfg.DIR.RENDERING_PATH
+        self.voxel_path_template = cfg.DATASET.VOXEL_PATH
+        self.annotation_path_template = cfg.DATASET.ANNOTATION_PATH
+        self.rendering_image_path_template = cfg.DATASET.RENDERING_PATH
 
         # Load all taxonomies of the dataset
-        with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+        with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
@@ -324,11 +324,11 @@ class ModelNet40Dataset(torch.utils.data.dataset.Dataset):
 class ModelNet40DataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
-        self.rendering_image_path_template = cfg.DIR.RENDERING_PATH
-        self.voxel_path_template = cfg.DIR.VOXEL_PATH
+        self.rendering_image_path_template = cfg.DATASET.RENDERING_PATH
+        self.voxel_path_template = cfg.DATASET.VOXEL_PATH
 
         # Load all taxonomies of the dataset
-        with open(cfg.DIR.DATASET_TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+        with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
