@@ -17,6 +17,7 @@ DATASET_CONFIG                          = {
         'CONST.BATCH_SIZE':             64,
         'CONST.CROP_IMG_C':             4,
         'DATASET.TAXONOMY_FILE_PATH':   './datasets/ShapeNet.json',
+        'DATASET.ANNOTATION_PATH':      'Dummy Property. DO NOT USE IT',
         'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png',
         'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat',
         'DATASET.MEAN':                 [26.2284, 22.7098, 20.8072, 0],
@@ -48,6 +49,7 @@ DATASET_CONFIG                          = {
         'CONST.BATCH_SIZE':             64,
         'CONST.CROP_IMG_C':             4,
         'DATASET.TAXONOMY_FILE_PATH':   './datasets/ModelNet40.json',
+        'DATASET.ANNOTATION_PATH':      'Dummy Property. DO NOT USE IT',
         'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/ModelNet40/%s/%s/%s_%03d.png',
         'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/ModelNet40/%s/%s/%s.binvox',
         'DATASET.MEAN':                 [223.1698, 223.1698, 223.1698],
@@ -56,7 +58,7 @@ DATASET_CONFIG                          = {
         'TRAIN.ENCODER_LR_MILESTONES':  [150],
         'TRAIN.DECODER_LR_MILESTONES':  [150],
         'TRAIN.REFINER_LR_MILESTONES':  [150],
-        'TRAIN.MERGER_LR_MILESTONES':   [150]
+        'TRAIN.MERGER_LR_MILESTONES':   [150],
     }
 }
 
@@ -70,6 +72,7 @@ __C.DATASET.DATASET_NAME                = 'ShapeNet'
 __C.DATASET.TAXONOMY_FILE_PATH          = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.TAXONOMY_FILE_PATH']
 __C.DATASET.RENDERING_PATH              = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.RENDERING_PATH']
 __C.DATASET.VOXEL_PATH                  = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.VOXEL_PATH']
+__C.DATASET.ANNOTATION_PATH             = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.ANNOTATION_PATH']
 __C.DATASET.MEAN                        = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.MEAN']
 __C.DATASET.STD                         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.STD']
 
