@@ -62,6 +62,16 @@ class Normalize(object):
         return rendering_images, voxel
 
 
+class RandomPermuteRGB(object):
+    def __call__(self, rendering_images, voxel):
+        assert(isinstance(rendering_images, np.ndarray))
+        for img_idx, img in enumerate(rendering_images):
+            random_permutation        = np.random.permutation(3)
+            rendering_images[img_idx] = img[..., random_permutation]
+
+        return rendering_images, voxel
+
+
 class CenterCrop(object):
     def __init__(self, img_size, crop_size):
         """Set the height and weight before and after cropping"""

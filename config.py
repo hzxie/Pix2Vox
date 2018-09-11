@@ -134,7 +134,7 @@ __C.TRAIN.REFINER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAM
 __C.TRAIN.MERGER_LR_MILESTONES          = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.MERGER_LR_MILESTONES']
 __C.TRAIN.BETAS                         = (.9, .999)
 __C.TRAIN.MOMENTUM                      = .9
-__C.TRAIN.GAMMA                         = .1
+__C.TRAIN.GAMMA                         = .5
 __C.TRAIN.VISUALIZATION_FREQ            = 10000         # visualization reconstruction voxels every visualization_freq batch
 __C.TRAIN.SAVE_FREQ                     = 10            # weights will be overwritten every save_freq epoch
 
