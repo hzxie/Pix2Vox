@@ -65,8 +65,9 @@ class Normalize(object):
 class RandomPermuteRGB(object):
     def __call__(self, rendering_images, voxel):
         assert(isinstance(rendering_images, np.ndarray))
+        
+        random_permutation = np.random.permutation(3)
         for img_idx, img in enumerate(rendering_images):
-            random_permutation        = np.random.permutation(3)
             rendering_images[img_idx] = img[..., random_permutation]
 
         return rendering_images, voxel
