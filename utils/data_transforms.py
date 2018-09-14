@@ -244,6 +244,17 @@ class RandomAffine(object):
         return processed_images, voxel
 
 
+class RandomFlip(object):
+    def __call__(self, rendering_images, voxel):
+        assert(isinstance(rendering_images, np.ndarray))
+
+        for img_idx, img in enumerate(rendering_images):
+            if random() > 0.5:
+                rendering_images[img_idx] = np.fliplr(img)
+
+        return rendering_images, voxel
+
+
 class ColorJitter(object):
     def __init__(self, brightness, contrast, saturation, hue):
         self._color_jitter = torchvision.transforms.ColorJitter(brightness, contrast, saturation, hue)
