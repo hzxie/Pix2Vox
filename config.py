@@ -21,12 +21,7 @@ DATASET_CONFIG                          = {
         'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png',
         'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat',
         'DATASET.MEAN':                 [26.2284, 22.7098, 20.8072, 0],
-        'DATASET.STD':                  [0.0676, 0.0618, 0.0598, 1],
-        'TRAIN.NUM_EPOCHES':            250,
-        'TRAIN.ENCODER_LR_MILESTONES':  [150],
-        'TRAIN.DECODER_LR_MILESTONES':  [150],
-        'TRAIN.REFINER_LR_MILESTONES':  [150],
-        'TRAIN.MERGER_LR_MILESTONES':   [150]
+        'DATASET.STD':                  [0.0676, 0.0618, 0.0598, 1]
     },
     'Pascal3D': {
         'CONST.N_VIEWS':                0,
@@ -37,28 +32,7 @@ DATASET_CONFIG                          = {
         'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG',
         'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/PASCAL3D/CAD/%s/%02d.binvox',
         'DATASET.MEAN':                 [121.7832, 118.1967, 113.1437],
-        'DATASET.STD':                  [0.4232, 0.4206, 0.4345],
-        'TRAIN.NUM_EPOCHES':            100,
-        'TRAIN.ENCODER_LR_MILESTONES':  [50],
-        'TRAIN.DECODER_LR_MILESTONES':  [50],
-        'TRAIN.REFINER_LR_MILESTONES':  [50],
-        'TRAIN.MERGER_LR_MILESTONES':   [50]
-    },
-    'ModelNet40': {
-        'CONST.N_VIEWS':                12,
-        'CONST.BATCH_SIZE':             64,
-        'CONST.CROP_IMG_C':             4,
-        'DATASET.TAXONOMY_FILE_PATH':   './datasets/ModelNet40.json',
-        'DATASET.ANNOTATION_PATH':      'Dummy Property. DO NOT USE IT',
-        'DATASET.RENDERING_PATH':       '/home/hzxie/Datasets/ModelNet40/%s/%s/%s_%03d.png',
-        'DATASET.VOXEL_PATH':           '/home/hzxie/Datasets/ModelNet40/%s/%s/%s.binvox',
-        'DATASET.MEAN':                 [223.1698, 223.1698, 223.1698],
-        'DATASET.STD':                  [0.2642, 0.2642, 0.2642],
-        'TRAIN.NUM_EPOCHES':            250,
-        'TRAIN.ENCODER_LR_MILESTONES':  [150],
-        'TRAIN.DECODER_LR_MILESTONES':  [150],
-        'TRAIN.REFINER_LR_MILESTONES':  [150],
-        'TRAIN.MERGER_LR_MILESTONES':   [150],
+        'DATASET.STD':                  [0.4232, 0.4206, 0.4345]
     }
 }
 
@@ -68,7 +42,6 @@ DATASET_CONFIG                          = {
 __C.DATASET                             = edict()
 __C.DATASET.DATASET_NAME                = 'ShapeNet'
 # __C.DATASET.DATASET_NAME              = 'Pascal3D'
-# __C.DATASET.DATASET_NAME              = 'ModelNet40'
 __C.DATASET.TAXONOMY_FILE_PATH          = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.TAXONOMY_FILE_PATH']
 __C.DATASET.RENDERING_PATH              = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.RENDERING_PATH']
 __C.DATASET.VOXEL_PATH                  = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['DATASET.VOXEL_PATH']
@@ -115,7 +88,7 @@ __C.NETWORK.USE_MERGER                  = True
 __C.TRAIN                               = edict()
 __C.TRAIN.RESUME_TRAIN                  = False
 __C.TRAIN.NUM_WORKER                    = 4             # number of data workers
-__C.TRAIN.NUM_EPOCHES                   = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.NUM_EPOCHES']
+__C.TRAIN.NUM_EPOCHES                   = 250
 __C.TRAIN.ROTATE_DEGREE_RANGE           = (-15, 15)     # range of degrees to select from
 __C.TRAIN.TRANSLATE_RANGE               = (.1, .1)      # tuple of maximum absolute fraction for horizontal and vertical translations
 __C.TRAIN.SCALE_RANGE                   = (.75, 1.5)    # tuple of scaling factor interval
@@ -130,11 +103,11 @@ __C.TRAIN.EPOCH_START_USE_MERGER        = 0
 __C.TRAIN.ENCODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.DECODER_LEARNING_RATE         = 1e-3
 __C.TRAIN.REFINER_LEARNING_RATE         = 1e-2
-__C.TRAIN.MERGER_LEARNING_RATE          = 1e-3
-__C.TRAIN.ENCODER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.ENCODER_LR_MILESTONES']
-__C.TRAIN.DECODER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.DECODER_LR_MILESTONES']
-__C.TRAIN.REFINER_LR_MILESTONES         = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.REFINER_LR_MILESTONES']
-__C.TRAIN.MERGER_LR_MILESTONES          = DATASET_CONFIG[cfg.DATASET.DATASET_NAME]['TRAIN.MERGER_LR_MILESTONES']
+__C.TRAIN.MERGER_LEARNING_RATE          = 1e-4
+__C.TRAIN.ENCODER_LR_MILESTONES         = [150]
+__C.TRAIN.DECODER_LR_MILESTONES         = [150]
+__C.TRAIN.REFINER_LR_MILESTONES         = [150]
+__C.TRAIN.MERGER_LR_MILESTONES          = [150]
 __C.TRAIN.BETAS                         = (.9, .999)
 __C.TRAIN.MOMENTUM                      = .9
 __C.TRAIN.GAMMA                         = .5
