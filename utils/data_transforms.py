@@ -269,7 +269,7 @@ class ColorJitter(object):
             processed_image  = np.array(self._color_jitter(Image.fromarray(np.uint8(img * 255))))
             processed_images = np.append(processed_images, [processed_image], axis=0)
         
-        return rendering_images, voxel
+        return processed_images, voxel
 
 
 class RandomBackground(object):
