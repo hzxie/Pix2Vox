@@ -94,10 +94,10 @@ def train_net(cfg):
     merger_lr_scheduler  = torch.optim.lr_scheduler.MultiStepLR(merger_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
 
     if torch.cuda.is_available():
-        torch.nn.DataParallel(encoder).cuda()
-        torch.nn.DataParallel(decoder).cuda()
-        torch.nn.DataParallel(refiner).cuda()
-        torch.nn.DataParallel(merger).cuda()
+        encoder = torch.nn.DataParallel(encoder).cuda()
+        decoder = torch.nn.DataParallel(decoder).cuda()
+        refiner = torch.nn.DataParallel(refiner).cuda()
+        merger = torch.nn.DataParallel(merger).cuda()
 
     # Set up loss functions
     bce_loss   = torch.nn.BCELoss()
@@ -153,6 +153,12 @@ def train_net(cfg):
         refiner_lr_scheduler.step()
         merger_lr_scheduler.step()
 
+        # switch models to training mode
+        encoder.train();
+        decoder.train();
+        merger.train()
+        # refiner.train();
+
         batch_end_time = time()
         n_batches      = len(train_data_loader)
         for batch_idx, (taxonomy_names, sample_names, rendering_images, ground_truth_voxels) in enumerate(train_data_loader):
@@ -163,12 +169,6 @@ def train_net(cfg):
             # Ignore imcomplete batches at the end of each epoch
             if not n_samples == cfg.CONST.BATCH_SIZE:
                 continue
-
-            # switch models to training mode
-            encoder.train();
-            decoder.train();
-            merger.train()
-            # refiner.train();
 
             # Get data from data loader
             rendering_images                = utils.network_utils.var_or_cuda(rendering_images)
