@@ -88,7 +88,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
     encoder_losses    = utils.network_utils.AverageMeter()
     refiner_losses    = utils.network_utils.AverageMeter()
 
-    # Switch models to training mode
+    # Switch models to evaluation mode
     encoder.eval();
     decoder.eval();
     refiner.eval();
