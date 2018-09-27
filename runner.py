@@ -21,7 +21,7 @@ from core.train import train_net
 from core.test import test_net
 
 def get_args_from_command_line():
-    parser = ArgumentParser(description='Parser of Runner of Weighted-Voxel')
+    parser = ArgumentParser(description='Parser of Runner of Pix2Vox')
     parser.add_argument(
         '--gpu',
         dest='gpu_id',
@@ -90,7 +90,7 @@ def main():
 if __name__ == '__main__':
     # Check python version
     if sys.version_info < (3, 0):
-        raise Exception("Please follow the installation instruction on 'https://github.com/hzxie/Pixel2Voxel'")
+        raise Exception("Please follow the installation instruction on 'https://github.com/hzxie/Pix2Vox'")
 
     # Setup logger
     mp.log_to_stderr()

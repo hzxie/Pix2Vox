@@ -266,4 +266,3 @@ def train_net(cfg):
     # Close SummaryWriter for TensorBoard
     train_writer.close()
     val_writer.close()
-
