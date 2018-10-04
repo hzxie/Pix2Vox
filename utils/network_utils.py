@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# 
+#
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import os
@@ -8,10 +8,11 @@ import torch
 
 from datetime import datetime as dt
 
+
 def var_or_cuda(x):
     if torch.cuda.is_available():
         x = x.cuda(non_blocking=True)
-    
+
     return x
 
 
@@ -58,6 +59,7 @@ def count_parameters(model):
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 

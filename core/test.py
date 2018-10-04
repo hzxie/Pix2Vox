@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# 
+#
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import json
@@ -29,38 +29,41 @@ from models.merger import Merger
 def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         test_writer=None, encoder=None, decoder=None, refiner=None, merger=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
-    torch.backends.cudnn.benchmark  = True
+    torch.backends.cudnn.benchmark = True
 
     # Load taxonomies of dataset
     taxonomies = []
     with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
         taxonomies = json.loads(file.read())
-    taxonomies = { t['taxonomy_id']: t for t in taxonomies }
+    taxonomies = {t['taxonomy_id']: t for t in taxonomies}
 
     # Set up data loader
     if test_data_loader is None:
         # Set up data augmentation
-        IMG_SIZE  = cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C
+        IMG_SIZE = cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C
         CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W, cfg.CONST.CROP_IMG_C
-        test_transforms  = utils.data_transforms.Compose([
+        test_transforms = utils.data_transforms.Compose([
             utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
             utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
             utils.data_transforms.RandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
             utils.data_transforms.ToTensor(),
         ])
 
-        dataset_loader    = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
-        test_data_loader  = torch.utils.data.DataLoader(
-            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS, cfg.CONST.N_VIEWS_RENDERING, test_transforms),
+        dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
+        test_data_loader = torch.utils.data.DataLoader(
+            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS,
+                                               cfg.CONST.N_VIEWS_RENDERING, test_transforms),
             batch_size=1,
-            num_workers=1, pin_memory=True, shuffle=False)
+            num_workers=1,
+            pin_memory=True,
+            shuffle=False)
 
     # Set up networks
     if decoder is None or encoder is None:
-        encoder     = Encoder(cfg)
-        decoder     = Decoder(cfg)
-        refiner     = Refiner(cfg)
-        merger      = Merger(cfg)
+        encoder = Encoder(cfg)
+        decoder = Decoder(cfg)
+        refiner = Refiner(cfg)
+        merger = Merger(cfg)
 
         if torch.cuda.is_available():
             encoder.cuda()
@@ -70,7 +73,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
-        epoch_idx  = checkpoint['epoch_idx']
+        epoch_idx = checkpoint['epoch_idx']
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
 
@@ -84,40 +87,40 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
     # Testing loop
     n_samples = len(test_data_loader)
-    test_iou  = dict()
-    encoder_losses    = utils.network_utils.AverageMeter()
-    refiner_losses    = utils.network_utils.AverageMeter()
+    test_iou = dict()
+    encoder_losses = utils.network_utils.AverageMeter()
+    refiner_losses = utils.network_utils.AverageMeter()
 
     # Switch models to evaluation mode
-    encoder.eval();
-    decoder.eval();
-    refiner.eval();
-    merger.eval();
-        
+    encoder.eval()
+    decoder.eval()
+    refiner.eval()
+    merger.eval()
+
     for sample_idx, (taxonomy_id, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
-        taxonomy_id   = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
-        sample_name   = sample_name[0]
+        taxonomy_id = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
+        sample_name = sample_name[0]
 
         with torch.no_grad():
             # Get data from data loader
-            rendering_images              = utils.network_utils.var_or_cuda(rendering_images)
-            ground_truth_voxel            = utils.network_utils.var_or_cuda(ground_truth_voxel)
+            rendering_images = utils.network_utils.var_or_cuda(rendering_images)
+            ground_truth_voxel = utils.network_utils.var_or_cuda(ground_truth_voxel)
 
             # Test the encoder, decoder, refiner and merger
-            image_features                = encoder(rendering_images)
+            image_features = encoder(rendering_images)
             raw_features, generated_voxel = decoder(image_features)
-            
+
             if cfg.NETWORK.USE_MERGER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_MERGER:
-                generated_voxel           = merger(raw_features, generated_voxel)
+                generated_voxel = merger(raw_features, generated_voxel)
             else:
-                generated_voxel           = torch.mean(generated_voxel, dim=1)
-            encoder_loss                  = bce_loss(generated_voxel, ground_truth_voxel) * 10
+                generated_voxel = torch.mean(generated_voxel, dim=1)
+            encoder_loss = bce_loss(generated_voxel, ground_truth_voxel) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxel           = refiner(generated_voxel)
-                refiner_loss              = bce_loss(generated_voxel, ground_truth_voxel) * 10
+                generated_voxel = refiner(generated_voxel)
+                refiner_loss = bce_loss(generated_voxel, ground_truth_voxel) * 10
             else:
-                refiner_loss              = encoder_loss
+                refiner_loss = encoder_loss
 
             # Append loss and accuracy to average metrics
             encoder_losses.update(encoder_loss.item())
@@ -126,17 +129,14 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             # IoU per sample
             sample_iou = []
             for th in cfg.TEST.VOXEL_THRESH:
-                _voxel       = torch.ge(generated_voxel, th).float()
+                _voxel = torch.ge(generated_voxel, th).float()
                 intersection = torch.sum(_voxel.mul(ground_truth_voxel)).float()
-                union        = torch.sum(torch.ge(_voxel.add(ground_truth_voxel), 1)).float()
+                union = torch.sum(torch.ge(_voxel.add(ground_truth_voxel), 1)).float()
                 sample_iou.append((intersection / union).item())
 
             # IoU per taxonomy
             if not taxonomy_id in test_iou:
-                test_iou[taxonomy_id] = {
-                    'n_samples': 0,
-                    'iou': []
-                }
+                test_iou[taxonomy_id] = {'n_samples': 0, 'iou': []}
             test_iou[taxonomy_id]['n_samples'] += 1
             test_iou[taxonomy_id]['iou'].append(sample_iou)
 
@@ -168,7 +168,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             print('%.4f' % taxonomies[taxonomy_id]['baseline']['%d-view' % cfg.CONST.N_VIEWS_RENDERING], end='\t\t')
         else:
             print('N/a', end='\t\t')
-        
+
         for ti in test_iou[taxonomy_id]['iou']:
             print('%.4f' % ti, end='\t')
         print()

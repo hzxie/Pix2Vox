@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# 
+#
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import cv2
@@ -17,16 +17,20 @@ from enum import Enum, unique
 
 import utils.binvox_rw
 
+
 @unique
 class DatasetType(Enum):
     TRAIN = 0
-    TEST  = 1
-    VAL   = 2
+    TEST = 1
+    VAL = 2
+
 
 # //////////////////////////////// = End of DatasetType Class Definition = ///////////////////////////////// #
 
+
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     """ShapeNetDataset class used for PyTorch DataLoader"""
+
     def __init__(self, file_list_with_metadata, n_rendering_views, transforms=None):
         self.file_list = file_list_with_metadata
         self.transforms = transforms
@@ -40,22 +44,25 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
 
         if self.transforms:
             rendering_images, voxel = self.transforms(rendering_images, voxel)
-        
+
         return taxonomy_name, sample_name, rendering_images, voxel
 
     def get_datum(self, idx):
-        taxonomy_name         = self.file_list[idx]['taxonomy_name']
-        sample_name           = self.file_list[idx]['sample_name']
+        taxonomy_name = self.file_list[idx]['taxonomy_name']
+        sample_name = self.file_list[idx]['sample_name']
         rendering_image_paths = self.file_list[idx]['rendering_images']
-        voxel_path            = self.file_list[idx]['voxel']
+        voxel_path = self.file_list[idx]['voxel']
 
         # Get data of rendering images
         rendering_images = []
-        selected_rendering_image_paths = [rendering_image_paths[i] for i in random.sample(range(len(rendering_image_paths)), self.n_rendering_views)]
+        selected_rendering_image_paths = [
+            rendering_image_paths[i] for i in random.sample(range(len(rendering_image_paths)), self.n_rendering_views)
+        ]
         for image_path in selected_rendering_image_paths:
             rendering_image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
             if len(rendering_image.shape) < 3:
-                print('[FATAL] %s It seems that there is something wrong with the image file %s' % (dt.now(), rendering_image_path))
+                print('[FATAL] %s It seems that there is something wrong with the image file %s' %
+                      (dt.now(), rendering_image_path))
                 sys.exit(2)
 
             rendering_images.append(rendering_image)
@@ -69,7 +76,9 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         voxel = voxel['Volume'].astype(np.float32)
         return taxonomy_name, sample_name, np.asarray(rendering_images), voxel
 
+
 # //////////////////////////////// = End of ShapeNetDataset Class Definition = ///////////////////////////////// #
+
 
 class ShapeNetDataLoader:
     def __init__(self, cfg):
@@ -83,11 +92,12 @@ class ShapeNetDataLoader:
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
         files = []
-        
+
         # Load data for each category
         for taxonomy in self.dataset_taxonomy:
             taxonomy_folder_name = taxonomy['taxonomy_id']
-            print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' % (dt.now(), taxonomy['taxonomy_id'], taxonomy['taxonomy_name']))
+            print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' % (dt.now(), taxonomy['taxonomy_id'],
+                                                                              taxonomy['taxonomy_name']))
 
             samples = []
             if dataset_type == DatasetType.TRAIN:
@@ -96,7 +106,7 @@ class ShapeNetDataLoader:
                 samples = taxonomy['test']
             elif dataset_type == DatasetType.VAL:
                 samples = taxonomy['val']
-            
+
             files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, samples, total_views))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
@@ -110,7 +120,8 @@ class ShapeNetDataLoader:
             # Get file path of voxels
             voxel_file_path = self.voxel_path_template % (taxonomy_folder_name, sample_name)
             if not os.path.exists(voxel_file_path):
-                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_folder_name, sample_name))
+                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_folder_name,
+                                                                                      sample_name))
                 continue
 
             # Get file list of rendering images
@@ -138,10 +149,13 @@ class ShapeNetDataLoader:
 
         return files_of_taxonomy
 
+
 # /////////////////////////////// = End of ShapeNetDataLoader Class Definition = /////////////////////////////// #
+
 
 class Pascal3dDataset(torch.utils.data.dataset.Dataset):
     """Pascal3D class used for PyTorch DataLoader"""
+
     def __init__(self, file_list_with_metadata, transforms=None):
         self.file_list = file_list_with_metadata
         self.transforms = transforms
@@ -154,22 +168,22 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
 
         if self.transforms:
             rendering_images, voxel = self.transforms(rendering_images, voxel, bounding_box)
-        
+
         return taxonomy_name, sample_name, rendering_images, voxel
 
     def get_datum(self, idx):
-        taxonomy_name         = self.file_list[idx]['taxonomy_name']
-        sample_name           = self.file_list[idx]['sample_name']
-        rendering_image_path  = self.file_list[idx]['rendering_image']
-        bounding_box          = self.file_list[idx]['bounding_box']
-        voxel_path            = self.file_list[idx]['voxel']
+        taxonomy_name = self.file_list[idx]['taxonomy_name']
+        sample_name = self.file_list[idx]['sample_name']
+        rendering_image_path = self.file_list[idx]['rendering_image']
+        bounding_box = self.file_list[idx]['bounding_box']
+        voxel_path = self.file_list[idx]['voxel']
 
         # Get data of rendering images
-        rendering_image       = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+        rendering_image = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
 
         if len(rendering_image.shape) < 3:
             print('[WARN] %s It seems the image file %s is grayscale.' % (dt.now(), rendering_image_path))
-            rendering_image = np.stack((rendering_image,) * 3, -1)
+            rendering_image = np.stack((rendering_image, ) * 3, -1)
 
         # Get data of voxel
         with open(voxel_path, 'rb') as f:
@@ -182,7 +196,9 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
 
         return taxonomy_name, sample_name, np.asarray([rendering_image]), voxel, bounding_box
 
+
 # //////////////////////////////// = End of Pascal3dDataset Class Definition = ///////////////////////////////// #
+
 
 class Pascal3dDataLoader:
     def __init__(self, cfg):
@@ -197,7 +213,7 @@ class Pascal3dDataLoader:
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
         files = []
-        
+
         # Load data for each category
         for taxonomy in self.dataset_taxonomy:
             taxonomy_name = taxonomy['taxonomy_name']
@@ -210,7 +226,7 @@ class Pascal3dDataLoader:
                 samples = taxonomy['test']
             elif dataset_type == DatasetType.VAL:
                 samples = taxonomy['test']
-            
+
             files.extend(self.get_files_of_taxonomy(taxonomy_name, samples))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
@@ -225,39 +241,40 @@ class Pascal3dDataLoader:
             rendering_image_file_path = self.rendering_image_path_template % (taxonomy_name, sample_name)
             # if not os.path.exists(rendering_image_file_path):
             #     continue
-            
+
             # Get image annotations
             annotations_file_path = self.annotation_path_template % (taxonomy_name, sample_name)
-            annotations_mat       = scipy.io.loadmat(annotations_file_path, squeeze_me=True, struct_as_record=False)
-            annotations           = annotations_mat['record'].objects
+            annotations_mat = scipy.io.loadmat(annotations_file_path, squeeze_me=True, struct_as_record=False)
+            annotations = annotations_mat['record'].objects
 
             cad_index = -1
-            bbox      = None
-            if ( type(annotations) == np.ndarray ):
-                max_bbox_aera     = -1
-                
-                for i in range(len(annotations)):
-                    _cad_index    = annotations[i].cad_index
-                    _bbox         = annotations[i].__dict__['bbox']
+            bbox = None
+            if (type(annotations) == np.ndarray):
+                max_bbox_aera = -1
 
-                    bbox_xmin     = _bbox[0]
-                    bbox_ymin     = _bbox[1]
-                    bbox_xmax     = _bbox[2]
-                    bbox_ymax     = _bbox[3]
-                    _bbox_area    = (bbox_xmax - bbox_xmin) * (bbox_ymax - bbox_ymin)
+                for i in range(len(annotations)):
+                    _cad_index = annotations[i].cad_index
+                    _bbox = annotations[i].__dict__['bbox']
+
+                    bbox_xmin = _bbox[0]
+                    bbox_ymin = _bbox[1]
+                    bbox_xmax = _bbox[2]
+                    bbox_ymax = _bbox[3]
+                    _bbox_area = (bbox_xmax - bbox_xmin) * (bbox_ymax - bbox_ymin)
 
                     if _bbox_area > max_bbox_aera:
-                        bbox          = _bbox
-                        cad_index     = _cad_index
+                        bbox = _bbox
+                        cad_index = _cad_index
                         max_bbox_aera = _bbox_area
             else:
                 cad_index = annotations.cad_index
-                bbox      = annotations.bbox
+                bbox = annotations.bbox
 
             # Get file path of voxels
             voxel_file_path = self.voxel_path_template % (taxonomy_name, cad_index)
             if not os.path.exists(voxel_file_path):
-                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_name, sample_name))
+                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_name,
+                                                                                      sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -268,12 +285,13 @@ class Pascal3dDataLoader:
                 'bounding_box': bbox,
                 'voxel': voxel_file_path,
             })
-        
+
         return files_of_taxonomy
+
 
 # /////////////////////////////// = End of Pascal3dDataLoader Class Definition = /////////////////////////////// #
 
 DATASET_LOADER_MAPPING = {
-    'ShapeNet': ShapeNetDataLoader,
+    'ShapeNet': ShapeNetDataLoader, 
     'Pascal3D': Pascal3dDataLoader
 }
