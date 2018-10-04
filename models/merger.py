@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# 
+#
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import torch
+
 
 class Merger(torch.nn.Module):
     def __init__(self, cfg):
@@ -38,13 +39,13 @@ class Merger(torch.nn.Module):
         )
 
     def forward(self, raw_features, coarse_voxels):
-        raw_features     = torch.split(raw_features, 1, dim=1)
-        voxel_weights    = []
-        
+        raw_features = torch.split(raw_features, 1, dim=1)
+        voxel_weights = []
+
         for i in range(self.cfg.CONST.N_VIEWS_RENDERING):
-            raw_feature  = torch.squeeze(raw_features[i], dim=1)
+            raw_feature = torch.squeeze(raw_features[i], dim=1)
             # print(raw_feature.size())       # torch.Size([batch_size, 9, 32, 32, 32])
-            
+
             voxel_weight = self.layer1(raw_feature)
             # print(voxel_weight.size())      # torch.Size([batch_size, 16, 32, 32, 32])
             voxel_weight = self.layer2(voxel_weight)
@@ -60,11 +61,11 @@ class Merger(torch.nn.Module):
             # print(voxel_weight.size())      # torch.Size([batch_size, 32, 32, 32])
             voxel_weights.append(voxel_weight)
 
-        voxel_weights    = torch.stack(voxel_weights).permute(1, 0, 2, 3, 4).contiguous()
-        voxel_weights    = torch.softmax(voxel_weights, dim=1)
+        voxel_weights = torch.stack(voxel_weights).permute(1, 0, 2, 3, 4).contiguous()
+        voxel_weights = torch.softmax(voxel_weights, dim=1)
         # print(voxel_weights.size())         # torch.Size([batch_size, n_views, 32, 32, 32])
         # print(coarse_voxels.size())         # torch.Size([batch_size, n_views, 32, 32, 32])
-        coarse_voxels    = coarse_voxels * voxel_weights
-        coarse_voxels    = torch.sum(coarse_voxels, dim=1)
+        coarse_voxels = coarse_voxels * voxel_weights
+        coarse_voxels = torch.sum(coarse_voxels, dim=1)
 
         return torch.clamp(coarse_voxels, min=0, max=1)
