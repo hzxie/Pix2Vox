@@ -65,10 +65,10 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         merger = Merger(cfg)
 
         if torch.cuda.is_available():
-            encoder.cuda()
-            decoder.cuda()
-            refiner.cuda()
-            merger.cuda()
+            encoder = torch.nn.DataParallel(encoder).cuda()
+            decoder = torch.nn.DataParallel(decoder).cuda()
+            refiner = torch.nn.DataParallel(refiner).cuda()
+            merger = torch.nn.DataParallel(merger).cuda()
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
