@@ -21,7 +21,6 @@ class Encoder(torch.nn.Module):
             torch.nn.Conv2d(512, 512, kernel_size=3),
             torch.nn.BatchNorm2d(512),
             torch.nn.ELU(),
-            torch.nn.Dropout(p=cfg.NETWORK.DROPOUT_RATE)
         )
         self.layer2 = torch.nn.Sequential(
             torch.nn.Conv2d(512, 512, kernel_size=3),

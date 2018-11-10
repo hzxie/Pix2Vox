@@ -58,8 +58,9 @@ class Normalize(object):
 
     def __call__(self, rendering_images, voxel):
         assert (isinstance(rendering_images, np.ndarray))
-        rendering_images -= self.mean
         rendering_images /= self.std
+        rendering_images -= self.mean
+        rendering_images *= 2
 
         return rendering_images, voxel
 
