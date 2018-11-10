@@ -82,11 +82,11 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
 class ShapeNetDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
-        self.rendering_image_path_template = cfg.DATASET.RENDERING_PATH
-        self.voxel_path_template = cfg.DATASET.VOXEL_PATH
+        self.rendering_image_path_template = cfg.DATASETS.SHAPENET.RENDERING_PATH
+        self.voxel_path_template = cfg.DATASETS.SHAPENET.VOXEL_PATH
 
         # Load all taxonomies of the dataset
-        with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+        with open(cfg.DATASETS.SHAPENET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
@@ -202,12 +202,12 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
 class Pascal3dDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
-        self.voxel_path_template = cfg.DATASET.VOXEL_PATH
-        self.annotation_path_template = cfg.DATASET.ANNOTATION_PATH
-        self.rendering_image_path_template = cfg.DATASET.RENDERING_PATH
+        self.voxel_path_template = cfg.DATASETS.PASCAL3D.VOXEL_PATH
+        self.annotation_path_template = cfg.DATASETS.PASCAL3D.ANNOTATION_PATH
+        self.rendering_image_path_template = cfg.DATASETS.PASCAL3D.RENDERING_PATH
 
         # Load all taxonomies of the dataset
-        with open(cfg.DATASET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+        with open(cfg.DATASETS.PASCAL3D.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
     def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
