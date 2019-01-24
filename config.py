@@ -12,16 +12,19 @@ cfg                                         = __C
 #
 __C.DATASETS                                = edict()
 __C.DATASETS.SHAPENET                       = edict()
-__C.DATASETS.SHAPENET.CROP_IMG_C            = 4
 __C.DATASETS.SHAPENET.TAXONOMY_FILE_PATH    = './datasets/ShapeNet.json'
 __C.DATASETS.SHAPENET.RENDERING_PATH        = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
 __C.DATASETS.SHAPENET.VOXEL_PATH            = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
 __C.DATASETS.PASCAL3D                       = edict()
-__C.DATASETS.PASCAL3D.CROP_IMG_C            = 3
 __C.DATASETS.PASCAL3D.TAXONOMY_FILE_PATH    = './datasets/Pascal3D.json'
 __C.DATASETS.PASCAL3D.ANNOTATION_PATH       = '/home/hzxie/Datasets/PASCAL3D/Annotations/%s_imagenet/%s.mat'
 __C.DATASETS.PASCAL3D.RENDERING_PATH        = '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG'
 __C.DATASETS.PASCAL3D.VOXEL_PATH            = '/home/hzxie/Datasets/PASCAL3D/CAD/%s/%02d.binvox'
+__C.DATASETS.PIX3D                          = edict()
+__C.DATASETS.PIX3D.TAXONOMY_FILE_PATH       = './datasets/Pix3D.json'
+__C.DATASETS.PIX3D.ANNOTATION_PATH          = '/home/hzxie/Datasets/Pix3D/pix3d.json'
+__C.DATASETS.PIX3D.RENDERING_PATH           = '/home/hzxie/Datasets/Pix3D/img/%s/%s.%s'
+__C.DATASETS.PIX3D.VOXEL_PATH               = '/home/hzxie/Datasets/Pix3D/model/%s/%s/%s.binvox'
 
 #
 # Dataset
@@ -29,6 +32,7 @@ __C.DATASETS.PASCAL3D.VOXEL_PATH            = '/home/hzxie/Datasets/PASCAL3D/CAD
 __C.DATASET                                 = edict()
 __C.DATASET.DATASET_NAME                    = 'ShapeNet'
 # __C.DATASET.DATASET_NAME                  = 'Pascal3D'
+# __C.DATASET.DATASET_NAME                  = 'Pix3D'
 __C.DATASET.MEAN                            = [0.5, 0.5, 0.5]
 __C.DATASET.STD                             = [255, 255, 255]
 
@@ -44,10 +48,10 @@ __C.CONST.IMG_C                             = 3         # Image channels for inp
 __C.CONST.N_VOX                             = 32
 __C.CONST.BATCH_SIZE                        = 64
 __C.CONST.N_VIEWS                           = 20        # Dummy property for Pascal 3D
-__C.CONST.N_VIEWS_RENDERING                 = 1         # Dummy property for Pascal 3D
+__C.CONST.N_VIEWS_RENDERING                 = 2         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                        = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                        = 210       # Dummy property for Pascal 3D
-__C.CONST.CROP_IMG_C                        = __C.DATASETS[__C.DATASET.DATASET_NAME.upper()].CROP_IMG_C
+__C.CONST.CROP_IMG_C                        = 3
 
 #
 # Directories

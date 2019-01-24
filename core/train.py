@@ -33,16 +33,16 @@ def train_net(cfg):
     IMG_SIZE = cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C
     CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W, cfg.CONST.CROP_IMG_C
     train_transforms = utils.data_transforms.Compose([
-        utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.RandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE),
+        utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.RandomPermuteRGB(),
         utils.data_transforms.RandomFlip(),
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.ToTensor(),
     ])
     val_transforms = utils.data_transforms.Compose([
-        utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.RandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
+        utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
         utils.data_transforms.ToTensor(),
     ])
