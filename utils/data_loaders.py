@@ -8,6 +8,7 @@ import numpy as np
 import os
 import random
 import scipy.io
+import scipy.ndimage
 import sys
 import torch.utils.data.dataset
 
@@ -290,7 +291,137 @@ class Pascal3dDataLoader:
 
 # /////////////////////////////// = End of Pascal3dDataLoader Class Definition = /////////////////////////////// #
 
+
+class Pix3dDataset(torch.utils.data.dataset.Dataset):
+    """Pix3D class used for PyTorch DataLoader"""
+
+    def __init__(self, file_list_with_metadata, transforms=None):
+        self.file_list = file_list_with_metadata
+        self.transforms = transforms
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, idx):
+        taxonomy_name, sample_name, rendering_images, voxel, bounding_box = self.get_datum(idx)
+
+        if self.transforms:
+            rendering_images, voxel = self.transforms(rendering_images, voxel, bounding_box)
+
+        return taxonomy_name, sample_name, rendering_images, voxel
+
+    def get_datum(self, idx):
+        taxonomy_name = self.file_list[idx]['taxonomy_name']
+        sample_name = self.file_list[idx]['sample_name']
+        rendering_image_path = self.file_list[idx]['rendering_image']
+        bounding_box = self.file_list[idx]['bounding_box']
+        voxel_path = self.file_list[idx]['voxel']
+
+        # Get data of rendering images
+        rendering_image = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+
+        if len(rendering_image.shape) < 3:
+            print('[WARN] %s It seems the image file %s is grayscale.' % (dt.now(), rendering_image_path))
+            rendering_image = np.stack((rendering_image, ) * 3, -1)
+
+        # Get data of voxel
+        with open(voxel_path, 'rb') as f:
+            voxel = utils.binvox_rw.read_as_3d_array(f)
+
+        if not voxel:
+            print('[FATAL] %s Failed to get voxel data from file %s' % (dt.now(), voxel_path))
+            sys.exit(2)
+        voxel = voxel.data.astype(np.float32)
+
+        return taxonomy_name, sample_name, np.asarray([rendering_image]), voxel, bounding_box
+
+
+# //////////////////////////////// = End of Pascal3dDataset Class Definition = ///////////////////////////////// #
+
+
+class Pix3dDataLoader:
+    def __init__(self, cfg):
+        self.dataset_taxonomy = None
+        self.annotations = dict()
+        self.voxel_path_template = cfg.DATASETS.PIX3D.VOXEL_PATH
+        self.rendering_image_path_template = cfg.DATASETS.PIX3D.RENDERING_PATH
+
+        # Load all taxonomies of the dataset
+        with open(cfg.DATASETS.PIX3D.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+            self.dataset_taxonomy = json.loads(file.read())
+
+        # Load all annotations of the dataset
+        _annotations = None
+        with open(cfg.DATASETS.PIX3D.ANNOTATION_PATH, encoding='utf-8') as file:
+            _annotations = json.loads(file.read())
+
+        for anno in _annotations:
+            filename, _ = os.path.splitext(anno['img'])
+            anno_key = filename[4:]
+            self.annotations[anno_key] = anno
+
+    def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
+        files = []
+
+        # Load data for each category
+        for taxonomy in self.dataset_taxonomy:
+            taxonomy_name = taxonomy['taxonomy_name']
+            print('[INFO] %s Collecting files of Taxonomy[Name=%s]' % (dt.now(), taxonomy_name))
+
+            samples = []
+            if dataset_type == DatasetType.TRAIN:
+                samples = taxonomy['train']
+            elif dataset_type == DatasetType.TEST:
+                samples = taxonomy['test']
+            elif dataset_type == DatasetType.VAL:
+                samples = taxonomy['test']
+
+            files.extend(self.get_files_of_taxonomy(taxonomy_name, samples))
+
+        print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
+        return Pix3dDataset(files, transforms)
+
+    def get_files_of_taxonomy(self, taxonomy_name, samples):
+        files_of_taxonomy = []
+        n_samples = len(samples)
+
+        for sample_idx, sample_name in enumerate(samples):
+            # Get image annotations
+            anno_key = '%s/%s' % (taxonomy_name, sample_name)
+            annotations = self.annotations[anno_key]
+
+            # Get file list of rendering images
+            _, img_file_suffix = os.path.splitext(annotations['img'])
+            rendering_image_file_path = self.rendering_image_path_template % (taxonomy_name, sample_name, img_file_suffix[1:])
+
+            # Get the bounding box of the image
+            bbox = annotations['bbox']
+            model_name_parts = annotations['voxel'].split('/')
+            model_name = model_name_parts[2]
+            voxel_file_name = model_name_parts[3][:-4].replace('voxel', 'model')
+
+            # Get file path of voxels
+            voxel_file_path = self.voxel_path_template % (taxonomy_name, model_name, voxel_file_name)
+            if not os.path.exists(voxel_file_path):
+                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_name, sample_name))
+                continue
+
+            # Append to the list of rendering images
+            files_of_taxonomy.append({
+                'taxonomy_name': taxonomy_name,
+                'sample_name': sample_name,
+                'rendering_image': rendering_image_file_path,
+                'bounding_box': bbox,
+                'voxel': voxel_file_path,
+            })
+
+        return files_of_taxonomy
+
+
+# /////////////////////////////// = End of Pascal3dDataLoader Class Definition = /////////////////////////////// #
+
 DATASET_LOADER_MAPPING = {
     'ShapeNet': ShapeNetDataLoader, 
-    'Pascal3D': Pascal3dDataLoader
+    'Pascal3D': Pascal3dDataLoader,
+    'Pix3D': Pix3dDataLoader
 }
