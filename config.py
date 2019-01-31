@@ -30,11 +30,12 @@ __C.DATASETS.PIX3D.VOXEL_PATH               = '/home/hzxie/Datasets/Pix3D/model/
 # Dataset
 #
 __C.DATASET                                 = edict()
-__C.DATASET.DATASET_NAME                    = 'ShapeNet'
-# __C.DATASET.DATASET_NAME                  = 'Pascal3D'
-# __C.DATASET.DATASET_NAME                  = 'Pix3D'
 __C.DATASET.MEAN                            = [0.5, 0.5, 0.5]
 __C.DATASET.STD                             = [255, 255, 255]
+__C.DATASET.TRAIN_DATASET                   = 'ShapeNet'
+__C.DATASET.TEST_DATASET                    = 'ShapeNet'
+# __C.DATASET.TEST_DATASET                  = 'Pascal3D'
+# __C.DATASET.TEST_DATASET                  = 'Pix3D'
 
 #
 # Common
@@ -48,7 +49,7 @@ __C.CONST.IMG_C                             = 3         # Image channels for inp
 __C.CONST.N_VOX                             = 32
 __C.CONST.BATCH_SIZE                        = 64
 __C.CONST.N_VIEWS                           = 20        # Dummy property for Pascal 3D
-__C.CONST.N_VIEWS_RENDERING                 = 2         # Dummy property for Pascal 3D
+__C.CONST.N_VIEWS_RENDERING                 = 1         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                        = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                        = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_C                        = 3
@@ -58,6 +59,7 @@ __C.CONST.CROP_IMG_C                        = 3
 #
 __C.DIR                                     = edict()
 __C.DIR.OUT_PATH                            = './output'
+__C.DIR.RANDOM_BG_PATH                      = '/home/hzxie/Datasets/SUN2012/JPEGImages'
 
 #
 # Network

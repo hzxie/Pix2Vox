@@ -32,7 +32,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
     # Load taxonomies of dataset
     taxonomies = []
-    with open(cfg.DATASETS[cfg.DATASET.DATASET_NAME.upper()].TAXONOMY_FILE_PATH, encoding='utf-8') as file:
+    with open(cfg.DATASETS[cfg.DATASET.TEST_DATASET.upper()].TAXONOMY_FILE_PATH, encoding='utf-8') as file:
         taxonomies = json.loads(file.read())
     taxonomies = {t['taxonomy_id']: t for t in taxonomies}
 
@@ -48,7 +48,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             utils.data_transforms.ToTensor(),
         ])
 
-        dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
+        dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
         test_data_loader = torch.utils.data.DataLoader(
             dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS,
                                                cfg.CONST.N_VIEWS_RENDERING, test_transforms),
