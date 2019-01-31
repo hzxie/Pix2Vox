@@ -33,7 +33,7 @@ def train_net(cfg):
     IMG_SIZE = cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C
     CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W, cfg.CONST.CROP_IMG_C
     train_transforms = utils.data_transforms.Compose([
-        utils.data_transforms.RandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE),
+        utils.data_transforms.RandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE, cfg.DIR.RANDOM_BG_PATH),
         utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.RandomPermuteRGB(),
         utils.data_transforms.RandomFlip(),
@@ -48,17 +48,18 @@ def train_net(cfg):
     ])
 
     # Set up data loader
-    dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.DATASET_NAME](cfg)
+    train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](cfg)
+    val_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
     train_data_loader = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS,
-                                           cfg.CONST.N_VIEWS_RENDERING, train_transforms),
+        dataset=train_dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS,
+                                                 cfg.CONST.N_VIEWS_RENDERING, train_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER,
         pin_memory=True,
         shuffle=True)
     val_data_loader = torch.utils.data.DataLoader(
-        dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS,
-                                           cfg.CONST.N_VIEWS_RENDERING, val_transforms),
+        dataset=val_dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS,
+                                               cfg.CONST.N_VIEWS_RENDERING, val_transforms),
         batch_size=1,
         num_workers=1,
         pin_memory=True,

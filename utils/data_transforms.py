@@ -6,11 +6,12 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+import os
+import random
 import torch
 import torchvision.transforms
 
 from PIL import Image
-from random import random
 
 
 class Compose(object):
@@ -161,7 +162,7 @@ class RandomCrop(object):
             if not bounding_box is None:
                 # Random move bounding boxes
                 for i in range(4):
-                    bounding_box[i] += random() * 100 - 50
+                    bounding_box[i] += random.random() * 100 - 50
                     if bounding_box[i] < 0:
                         bounding_box[i] = 0
                     if (i == 0 or i == 2) and bounding_box[i] > img_width:
@@ -204,9 +205,9 @@ class RandomCrop(object):
                     y_bottom = img_height
             else:
                 if img_height > self.crop_size_h and img_width > self.crop_size_w:
-                    x_left = (img_width - self.crop_size_w) * random()
+                    x_left = (img_width - self.crop_size_w) * random.random()
                     x_right = x_left + self.crop_size_w
-                    y_top = (img_height - self.crop_size_h) * random()
+                    y_top = (img_height - self.crop_size_h) * random.random()
                     y_bottom = y_top + self.crop_size_h
                 else:
                     x_left = 0
@@ -254,7 +255,7 @@ class RandomFlip(object):
         assert (isinstance(rendering_images, np.ndarray))
 
         for img_idx, img in enumerate(rendering_images):
-            if random() > 0.5:
+            if random.randint(0, 1):
                 rendering_images[img_idx] = np.fliplr(img)
 
         return rendering_images, voxel
@@ -278,27 +279,37 @@ class ColorJitter(object):
 
 
 class RandomBackground(object):
-    def __init__(self, random_bg_color_range):
+    def __init__(self, random_bg_color_range, random_bg_folder_path=None):
         self.random_bg_color_range = random_bg_color_range
+        self.random_bg_files = []
+        if not random_bg_folder_path is None:
+            self.random_bg_files = os.listdir(random_bg_folder_path)
+            self.random_bg_files = [os.path.join(random_bg_folder_path, rbf) for rbf in self.random_bg_files]
 
     def __call__(self, rendering_images, voxel):
         if len(rendering_images) == 0:
             return rendering_images, voxel
 
         img_height, img_width, img_channels = rendering_images[0].shape
+        # If the image has the alpha channel, add the background
         if not img_channels == 4:
             return rendering_images, voxel
 
+        # Generate random background
+        r, g, b = [
+            np.random.randint(self.random_bg_color_range[i][0], self.random_bg_color_range[i][1] + 1)
+            for i in range(3)
+        ]
+        random_bg_file_path = random.choice(self.random_bg_files)
+        random_bg = cv2.imread(random_bg_file_path).astype(np.float32)
+        random_bg = cv2.resize(random_bg, (img_width, img_height))
+        
+        # Apply random background
         processed_images = np.empty(shape=(0, img_height, img_width, img_channels - 1))
         for img_idx, img in enumerate(rendering_images):
-            # If the image has the alpha channel, add the background
-            r, g, b = [
-                np.random.randint(self.random_bg_color_range[i][0], self.random_bg_color_range[i][1] + 1)
-                for i in range(3)
-            ]
             alpha = (np.expand_dims(img[:, :, 3], axis=2) == 0).astype(np.float32)
             img = img[:, :, :3]
-            bg_color = np.array([[[r, g, b]]])
+            bg_color = np.array([[[r, g, b]]]) if random.randint(0, 1) else random_bg
             img = alpha * bg_color + (1 - alpha) * img
 
             processed_images = np.append(processed_images, [img], axis=0)
