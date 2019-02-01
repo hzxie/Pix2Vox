@@ -96,28 +96,28 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
     refiner.eval()
     merger.eval()
 
-    for sample_idx, (taxonomy_id, sample_name, rendering_images, ground_truth_voxel) in enumerate(test_data_loader):
+    for sample_idx, (taxonomy_id, sample_name, rendering_images, ground_truth_volume) in enumerate(test_data_loader):
         taxonomy_id = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
         sample_name = sample_name[0]
 
         with torch.no_grad():
             # Get data from data loader
             rendering_images = utils.network_utils.var_or_cuda(rendering_images)
-            ground_truth_voxel = utils.network_utils.var_or_cuda(ground_truth_voxel)
+            ground_truth_volume = utils.network_utils.var_or_cuda(ground_truth_volume)
 
             # Test the encoder, decoder, refiner and merger
             image_features = encoder(rendering_images)
-            raw_features, generated_voxel = decoder(image_features)
+            raw_features, generated_volume = decoder(image_features)
 
             if cfg.NETWORK.USE_MERGER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_MERGER:
-                generated_voxel = merger(raw_features, generated_voxel)
+                generated_volume = merger(raw_features, generated_volume)
             else:
-                generated_voxel = torch.mean(generated_voxel, dim=1)
-            encoder_loss = bce_loss(generated_voxel, ground_truth_voxel) * 10
+                generated_volume = torch.mean(generated_volume, dim=1)
+            encoder_loss = bce_loss(generated_volume, ground_truth_volume) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxel = refiner(generated_voxel)
-                refiner_loss = bce_loss(generated_voxel, ground_truth_voxel) * 10
+                generated_volume = refiner(generated_volume)
+                refiner_loss = bce_loss(generated_volume, ground_truth_volume) * 10
             else:
                 refiner_loss = encoder_loss
 
@@ -128,9 +128,9 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             # IoU per sample
             sample_iou = []
             for th in cfg.TEST.VOXEL_THRESH:
-                _voxel = torch.ge(generated_voxel, th).float()
-                intersection = torch.sum(_voxel.mul(ground_truth_voxel)).float()
-                union = torch.sum(torch.ge(_voxel.add(ground_truth_voxel), 1)).float()
+                _volume = torch.ge(generated_volume, th).float()
+                intersection = torch.sum(_volume.mul(ground_truth_volume)).float()
+                union = torch.sum(torch.ge(_volume.add(ground_truth_volume), 1)).float()
                 sample_iou.append((intersection / union).item())
 
             # IoU per taxonomy
@@ -138,6 +138,19 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
                 test_iou[taxonomy_id] = {'n_samples': 0, 'iou': []}
             test_iou[taxonomy_id]['n_samples'] += 1
             test_iou[taxonomy_id]['iou'].append(sample_iou)
+
+            # Append generated volumes to TensorBoard
+            if output_dir and sample_idx < 3:
+                img_dir = output_dir % 'images'
+                # Volume Visualization
+                gv = generated_volume.cpu().numpy()
+                rendering_views = utils.binvox_visualization.get_volume_views(gv, os.path.join(img_dir, 'test'),
+                                                                              epoch_idx)
+                test_writer.add_image('Test Sample#%02d/Volume Reconstructed' % sample_idx, rendering_views, epoch_idx)
+                gtv = ground_truth_volume.cpu().numpy()
+                rendering_views = utils.binvox_visualization.get_volume_views(gtv, os.path.join(img_dir, 'test'),
+                                                                              epoch_idx)
+                test_writer.add_image('Test Sample#%02d/Volume GroundTruth' % sample_idx, rendering_views, epoch_idx)
 
             # Print sample loss and IoU
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f RLoss = %.4f IoU = %s' % \

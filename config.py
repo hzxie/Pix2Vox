@@ -30,8 +30,8 @@ __C.DATASETS.PIX3D.VOXEL_PATH               = '/home/hzxie/Datasets/Pix3D/model/
 # Dataset
 #
 __C.DATASET                                 = edict()
-__C.DATASET.MEAN                            = [0.5, 0.5, 0.5]
-__C.DATASET.STD                             = [255, 255, 255]
+__C.DATASET.MEAN                            = [0.406, 0.456, 0.485] # BGR
+__C.DATASET.STD                             = [0.225, 0.224, 0.229] # BGR
 __C.DATASET.TRAIN_DATASET                   = 'ShapeNet'
 __C.DATASET.TEST_DATASET                    = 'ShapeNet'
 # __C.DATASET.TEST_DATASET                  = 'Pascal3D'
@@ -81,10 +81,10 @@ __C.TRAIN.NUM_EPOCHES                       = 250
 __C.TRAIN.ROTATE_DEGREE_RANGE               = (-15, 15)     # range of degrees to select from
 __C.TRAIN.TRANSLATE_RANGE                   = (.1, .1)      # tuple of maximum absolute fraction for horizontal and vertical translations
 __C.TRAIN.SCALE_RANGE                       = (.75, 1.5)    # tuple of scaling factor interval
-__C.TRAIN.BRIGHTNESS                        = .25
-__C.TRAIN.CONTRAST                          = .25
-__C.TRAIN.SATURATION                        = .25
-__C.TRAIN.HUE                               = .25
+__C.TRAIN.BRIGHTNESS                        = .4
+__C.TRAIN.CONTRAST                          = .4
+__C.TRAIN.SATURATION                        = .4
+__C.TRAIN.NOISE_STD                         = .1
 __C.TRAIN.RANDOM_BG_COLOR_RANGE             = [[225, 255], [225, 255], [225, 255]]
 __C.TRAIN.POLICY                            = 'adam'        # available options: sgd, adam
 __C.TRAIN.EPOCH_START_USE_REFINER           = 0
@@ -100,7 +100,6 @@ __C.TRAIN.MERGER_LR_MILESTONES              = [150]
 __C.TRAIN.BETAS                             = (.9, .999)
 __C.TRAIN.MOMENTUM                          = .9
 __C.TRAIN.GAMMA                             = .5
-__C.TRAIN.VISUALIZATION_FREQ                = 10000         # visualization reconstruction voxels every visualization_freq batch
 __C.TRAIN.SAVE_FREQ                         = 10            # weights will be overwritten every save_freq epoch
 
 #
