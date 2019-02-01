@@ -50,7 +50,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
         dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
         test_data_loader = torch.utils.data.DataLoader(
-            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS,
+            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST,
                                                cfg.CONST.N_VIEWS_RENDERING, test_transforms),
             batch_size=1,
             num_workers=1,

@@ -68,12 +68,13 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             rendering_images.append(rendering_image)
 
         # Get data of volume
-        volume = scipy.io.loadmat(volume_path)
+        with open(volume_path, 'rb') as f:
+            volume = utils.binvox_rw.read_as_3d_array(f)
+
         if not volume:
             print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
             sys.exit(2)
-
-        volume = volume['Volume'].astype(np.float32)
+        volume = volume.data.astype(np.float32)
         return taxonomy_name, sample_name, np.asarray(rendering_images), volume
 
 
@@ -90,7 +91,7 @@ class ShapeNetDataLoader:
         with open(cfg.DATASETS.SHAPENET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, n_rendering_views, transforms=None):
         files = []
 
         # Load data for each category
@@ -106,12 +107,12 @@ class ShapeNetDataLoader:
             elif dataset_type == DatasetType.VAL:
                 samples = taxonomy['val']
 
-            files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, samples, total_views))
+            files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, samples))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
         return ShapeNetDataset(files, n_rendering_views, transforms)
 
-    def get_files_of_taxonomy(self, taxonomy_folder_name, samples, total_views):
+    def get_files_of_taxonomy(self, taxonomy_folder_name, samples):
         files_of_taxonomy = []
         n_samples = len(samples)
 
@@ -124,15 +125,22 @@ class ShapeNetDataLoader:
                 continue
 
             # Get file list of rendering images
+            img_file_path = self.rendering_image_path_template % (taxonomy_folder_name, sample_name, 0)
+            img_folder = os.path.dirname(img_file_path)
+            total_views = len(os.listdir(img_folder))
             rendering_image_indexes = range(total_views)
             rendering_images_file_path = []
             for image_idx in rendering_image_indexes:
                 img_file_path = self.rendering_image_path_template % (taxonomy_folder_name, sample_name, image_idx)
-                # if not os.path.exists(img_file_path):
-                #     print('[WARN] %s Ignore rendering image of sample %s/%s/%d since file not exists.' % \
-                #         (dt.now(), taxonomy_folder_name, sample_name, image_idx))
-                #     continue
+                if not os.path.exists(img_file_path):
+                    continue
+
                 rendering_images_file_path.append(img_file_path)
+
+            if len(rendering_images_file_path) == 0:
+                print('[WARN] %s Ignore sample %s/%s since image files not exists.' % (dt.now(), taxonomy_folder_name,
+                                                                                       sample_name))
+                continue
 
             # Append to the list of rendering images
             files_of_taxonomy.append({
@@ -210,7 +218,7 @@ class Pascal3dDataLoader:
         with open(cfg.DATASETS.PASCAL3D.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, n_rendering_views, transforms=None):
         files = []
 
         # Load data for each category
@@ -359,7 +367,7 @@ class Pix3dDataLoader:
             anno_key = filename[4:]
             self.annotations[anno_key] = anno
 
-    def get_dataset(self, dataset_type, total_views, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, n_rendering_views, transforms=None):
         files = []
 
         # Load data for each category
