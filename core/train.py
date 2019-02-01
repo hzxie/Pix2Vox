@@ -53,7 +53,7 @@ def train_net(cfg):
     train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](cfg)
     val_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
     train_data_loader = torch.utils.data.DataLoader(
-        dataset=train_dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS,
+        dataset=train_dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN,
                                                  cfg.CONST.N_VIEWS_RENDERING, train_transforms),
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER,
@@ -61,7 +61,7 @@ def train_net(cfg):
         shuffle=True,
         drop_last=True)
     val_data_loader = torch.utils.data.DataLoader(
-        dataset=val_dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS,
+        dataset=val_dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL,
                                                cfg.CONST.N_VIEWS_RENDERING, val_transforms),
         batch_size=1,
         num_workers=1,
@@ -140,16 +140,11 @@ def train_net(cfg):
         best_epoch = checkpoint['best_epoch']
 
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
-        encoder_solver.load_state_dict(checkpoint['encoder_solver_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
-        decoder_solver.load_state_dict(checkpoint['decoder_solver_state_dict'])
-
         if cfg.NETWORK.USE_REFINER:
             refiner.load_state_dict(checkpoint['refiner_state_dict'])
-            refiner_solver.load_state_dict(checkpoint['refiner_solver_state_dict'])
         if cfg.NETWORK.USE_MERGER:
             merger.load_state_dict(checkpoint['merger_state_dict'])
-            merger_solver.load_state_dict(checkpoint['merger_solver_state_dict'])
 
         print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
                  % (dt.now(), init_epoch, best_iou, best_epoch))
@@ -157,7 +152,6 @@ def train_net(cfg):
     # Summary writer for TensorBoard
     output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
     log_dir = output_dir % 'logs'
-    img_dir = output_dir % 'images'
     ckpt_dir = output_dir % 'checkpoints'
     train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
     val_writer = SummaryWriter(os.path.join(log_dir, 'test'))
@@ -183,7 +177,7 @@ def train_net(cfg):
         encoder.train()
         decoder.train()
         merger.train()
-        # refiner.train()
+        refiner.train()
 
         batch_end_time = time()
         n_batches = len(train_data_loader)
