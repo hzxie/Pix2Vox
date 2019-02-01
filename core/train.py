@@ -34,16 +34,18 @@ def train_net(cfg):
     CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W, cfg.CONST.CROP_IMG_C
     train_transforms = utils.data_transforms.Compose([
         utils.data_transforms.RandomBackground(cfg.TRAIN.RANDOM_BG_COLOR_RANGE, cfg.DIR.RANDOM_BG_PATH),
-        utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
-        utils.data_transforms.RandomPermuteRGB(),
-        utils.data_transforms.RandomFlip(),
+        utils.data_transforms.ColorJitter(cfg.TRAIN.BRIGHTNESS, cfg.TRAIN.CONTRAST, cfg.TRAIN.SATURATION),
+        utils.data_transforms.RandomNoise(cfg.TRAIN.NOISE_STD),
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
+        utils.data_transforms.RandomCrop(IMG_SIZE, CROP_SIZE),
+        utils.data_transforms.RandomFlip(),
+        utils.data_transforms.RandomPermuteRGB(),
         utils.data_transforms.ToTensor(),
     ])
     val_transforms = utils.data_transforms.Compose([
         utils.data_transforms.RandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
-        utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
+        utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
         utils.data_transforms.ToTensor(),
     ])
 
@@ -56,7 +58,8 @@ def train_net(cfg):
         batch_size=cfg.CONST.BATCH_SIZE,
         num_workers=cfg.TRAIN.NUM_WORKER,
         pin_memory=True,
-        shuffle=True)
+        shuffle=True,
+        drop_last=True)
     val_data_loader = torch.utils.data.DataLoader(
         dataset=val_dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS,
                                                cfg.CONST.N_VIEWS_RENDERING, val_transforms),
@@ -180,37 +183,32 @@ def train_net(cfg):
         encoder.train()
         decoder.train()
         merger.train()
-        # refiner.train();
+        # refiner.train()
 
         batch_end_time = time()
         n_batches = len(train_data_loader)
         for batch_idx, (taxonomy_names, sample_names, rendering_images,
-                        ground_truth_voxels) in enumerate(train_data_loader):
+                        ground_truth_volumes) in enumerate(train_data_loader):
             # Measure data time
             data_time.update(time() - batch_end_time)
 
-            n_samples = len(ground_truth_voxels)
-            # Ignore imcomplete batches at the end of each epoch
-            if not n_samples == cfg.CONST.BATCH_SIZE:
-                continue
-
             # Get data from data loader
             rendering_images = utils.network_utils.var_or_cuda(rendering_images)
-            ground_truth_voxels = utils.network_utils.var_or_cuda(ground_truth_voxels)
+            ground_truth_volumes = utils.network_utils.var_or_cuda(ground_truth_volumes)
 
             # Train the encoder, decoder, refiner, and merger
             image_features = encoder(rendering_images)
-            raw_features, generated_voxels = decoder(image_features)
+            raw_features, generated_volumes = decoder(image_features)
 
             if cfg.NETWORK.USE_MERGER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_MERGER:
-                generated_voxels = merger(raw_features, generated_voxels)
+                generated_volumes = merger(raw_features, generated_volumes)
             else:
-                generated_voxels = torch.mean(generated_voxels, dim=1)
-            encoder_loss = bce_loss(generated_voxels, ground_truth_voxels) * 10
+                generated_volumes = torch.mean(generated_volumes, dim=1)
+            encoder_loss = bce_loss(generated_volumes, ground_truth_volumes) * 10
 
             if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_voxels = refiner(generated_voxels)
-                refiner_loss = bce_loss(generated_voxels, ground_truth_voxels) * 10
+                generated_volumes = refiner(generated_volumes)
+                refiner_loss = bce_loss(generated_volumes, ground_truth_volumes) * 10
             else:
                 refiner_loss = encoder_loss
 
@@ -238,14 +236,6 @@ def train_net(cfg):
             n_itr = epoch_idx * n_batches + batch_idx
             train_writer.add_scalar('EncoderDecoder/BatchLoss', encoder_loss.item(), n_itr)
             train_writer.add_scalar('Refiner/BatchLoss', refiner_loss.item(), n_itr)
-            # Append rendering images of voxels to TensorBoard
-            if n_itr > 0 and n_itr % cfg.TRAIN.VISUALIZATION_FREQ == 0:
-                gtv = ground_truth_voxels.cpu().data[:8].numpy()
-                voxel_views = utils.binvox_visualization.get_voxel_views(gtv, os.path.join(img_dir, 'train'), n_itr)
-                train_writer.add_image('Ground Truth Voxels', voxel_views, n_itr)
-                gv = generated_voxels.cpu().data[:8].numpy()
-                voxel_views = utils.binvox_visualization.get_voxel_views(gv, os.path.join(img_dir, 'train'), n_itr)
-                train_writer.add_image('Reconstructed Voxels', voxel_views, n_itr)
 
             # Tick / tock
             batch_time.update(time() - batch_end_time)

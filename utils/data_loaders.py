@@ -40,18 +40,18 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        taxonomy_name, sample_name, rendering_images, voxel = self.get_datum(idx)
+        taxonomy_name, sample_name, rendering_images, volume = self.get_datum(idx)
 
         if self.transforms:
-            rendering_images, voxel = self.transforms(rendering_images, voxel)
+            rendering_images = self.transforms(rendering_images)
 
-        return taxonomy_name, sample_name, rendering_images, voxel
+        return taxonomy_name, sample_name, rendering_images, volume
 
     def get_datum(self, idx):
         taxonomy_name = self.file_list[idx]['taxonomy_name']
         sample_name = self.file_list[idx]['sample_name']
         rendering_image_paths = self.file_list[idx]['rendering_images']
-        voxel_path = self.file_list[idx]['voxel']
+        volume_path = self.file_list[idx]['volume']
 
         # Get data of rendering images
         rendering_images = []
@@ -59,7 +59,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             rendering_image_paths[i] for i in random.sample(range(len(rendering_image_paths)), self.n_rendering_views)
         ]
         for image_path in selected_rendering_image_paths:
-            rendering_image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+            rendering_image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 255.
             if len(rendering_image.shape) < 3:
                 print('[FATAL] %s It seems that there is something wrong with the image file %s' %
                       (dt.now(), rendering_image_path))
@@ -67,14 +67,14 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
 
             rendering_images.append(rendering_image)
 
-        # Get data of voxel
-        voxel = scipy.io.loadmat(voxel_path)
-        if not voxel:
-            print('[FATAL] %s Failed to get voxel data from file %s' % (dt.now(), voxel_path))
+        # Get data of volume
+        volume = scipy.io.loadmat(volume_path)
+        if not volume:
+            print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
             sys.exit(2)
 
-        voxel = voxel['Volume'].astype(np.float32)
-        return taxonomy_name, sample_name, np.asarray(rendering_images), voxel
+        volume = volume['Volume'].astype(np.float32)
+        return taxonomy_name, sample_name, np.asarray(rendering_images), volume
 
 
 # //////////////////////////////// = End of ShapeNetDataset Class Definition = ///////////////////////////////// #
@@ -84,7 +84,7 @@ class ShapeNetDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
         self.rendering_image_path_template = cfg.DATASETS.SHAPENET.RENDERING_PATH
-        self.voxel_path_template = cfg.DATASETS.SHAPENET.VOXEL_PATH
+        self.volume_path_template = cfg.DATASETS.SHAPENET.VOXEL_PATH
 
         # Load all taxonomies of the dataset
         with open(cfg.DATASETS.SHAPENET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
@@ -98,7 +98,6 @@ class ShapeNetDataLoader:
             taxonomy_folder_name = taxonomy['taxonomy_id']
             print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' % (dt.now(), taxonomy['taxonomy_id'],
                                                                               taxonomy['taxonomy_name']))
-
             samples = []
             if dataset_type == DatasetType.TRAIN:
                 samples = taxonomy['train']
@@ -117,10 +116,10 @@ class ShapeNetDataLoader:
         n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
-            # Get file path of voxels
-            voxel_file_path = self.voxel_path_template % (taxonomy_folder_name, sample_name)
-            if not os.path.exists(voxel_file_path):
-                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_folder_name,
+            # Get file path of volumes
+            volume_file_path = self.volume_path_template % (taxonomy_folder_name, sample_name)
+            if not os.path.exists(volume_file_path):
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_folder_name,
                                                                                       sample_name))
                 continue
 
@@ -140,7 +139,7 @@ class ShapeNetDataLoader:
                 'taxonomy_name': taxonomy_folder_name,
                 'sample_name': sample_name,
                 'rendering_images': rendering_images_file_path,
-                'voxel': voxel_file_path,
+                'volume': volume_file_path,
             })
 
             # Report the progress of reading dataset
@@ -164,37 +163,37 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        taxonomy_name, sample_name, rendering_images, voxel, bounding_box = self.get_datum(idx)
+        taxonomy_name, sample_name, rendering_images, volume, bounding_box = self.get_datum(idx)
 
         if self.transforms:
-            rendering_images, voxel = self.transforms(rendering_images, voxel, bounding_box)
+            rendering_images = self.transforms(rendering_images, bounding_box)
 
-        return taxonomy_name, sample_name, rendering_images, voxel
+        return taxonomy_name, sample_name, rendering_images, volume
 
     def get_datum(self, idx):
         taxonomy_name = self.file_list[idx]['taxonomy_name']
         sample_name = self.file_list[idx]['sample_name']
         rendering_image_path = self.file_list[idx]['rendering_image']
         bounding_box = self.file_list[idx]['bounding_box']
-        voxel_path = self.file_list[idx]['voxel']
+        volume_path = self.file_list[idx]['volume']
 
         # Get data of rendering images
-        rendering_image = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+        rendering_image = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 255.
 
         if len(rendering_image.shape) < 3:
             print('[WARN] %s It seems the image file %s is grayscale.' % (dt.now(), rendering_image_path))
             rendering_image = np.stack((rendering_image, ) * 3, -1)
 
-        # Get data of voxel
-        with open(voxel_path, 'rb') as f:
-            voxel = utils.binvox_rw.read_as_3d_array(f)
+        # Get data of volume
+        with open(volume_path, 'rb') as f:
+            volume = utils.binvox_rw.read_as_3d_array(f)
 
-        if not voxel:
-            print('[FATAL] %s Failed to get voxel data from file %s' % (dt.now(), voxel_path))
+        if not volume:
+            print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
             sys.exit(2)
-        voxel = voxel.data.astype(np.float32)
+        volume = volume.data.astype(np.float32)
 
-        return taxonomy_name, sample_name, np.asarray([rendering_image]), voxel, bounding_box
+        return taxonomy_name, sample_name, np.asarray([rendering_image]), volume, bounding_box
 
 
 # //////////////////////////////// = End of Pascal3dDataset Class Definition = ///////////////////////////////// #
@@ -203,7 +202,7 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
 class Pascal3dDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
-        self.voxel_path_template = cfg.DATASETS.PASCAL3D.VOXEL_PATH
+        self.volume_path_template = cfg.DATASETS.PASCAL3D.VOXEL_PATH
         self.annotation_path_template = cfg.DATASETS.PASCAL3D.ANNOTATION_PATH
         self.rendering_image_path_template = cfg.DATASETS.PASCAL3D.RENDERING_PATH
 
@@ -270,10 +269,10 @@ class Pascal3dDataLoader:
                 cad_index = annotations.cad_index
                 bbox = annotations.bbox
 
-            # Get file path of voxels
-            voxel_file_path = self.voxel_path_template % (taxonomy_name, cad_index)
-            if not os.path.exists(voxel_file_path):
-                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_name,
+            # Get file path of volumes
+            volume_file_path = self.volume_path_template % (taxonomy_name, cad_index)
+            if not os.path.exists(volume_file_path):
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name,
                                                                                       sample_name))
                 continue
 
@@ -283,7 +282,7 @@ class Pascal3dDataLoader:
                 'sample_name': sample_name,
                 'rendering_image': rendering_image_file_path,
                 'bounding_box': bbox,
-                'voxel': voxel_file_path,
+                'volume': volume_file_path,
             })
 
         return files_of_taxonomy
@@ -303,37 +302,37 @@ class Pix3dDataset(torch.utils.data.dataset.Dataset):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        taxonomy_name, sample_name, rendering_images, voxel, bounding_box = self.get_datum(idx)
+        taxonomy_name, sample_name, rendering_images, volume, bounding_box = self.get_datum(idx)
 
         if self.transforms:
-            rendering_images, voxel = self.transforms(rendering_images, voxel, bounding_box)
+            rendering_images = self.transforms(rendering_images, bounding_box)
 
-        return taxonomy_name, sample_name, rendering_images, voxel
+        return taxonomy_name, sample_name, rendering_images, volume
 
     def get_datum(self, idx):
         taxonomy_name = self.file_list[idx]['taxonomy_name']
         sample_name = self.file_list[idx]['sample_name']
         rendering_image_path = self.file_list[idx]['rendering_image']
         bounding_box = self.file_list[idx]['bounding_box']
-        voxel_path = self.file_list[idx]['voxel']
+        volume_path = self.file_list[idx]['volume']
 
         # Get data of rendering images
-        rendering_image = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+        rendering_image = cv2.imread(rendering_image_path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 255.
 
         if len(rendering_image.shape) < 3:
             print('[WARN] %s It seems the image file %s is grayscale.' % (dt.now(), rendering_image_path))
             rendering_image = np.stack((rendering_image, ) * 3, -1)
 
-        # Get data of voxel
-        with open(voxel_path, 'rb') as f:
-            voxel = utils.binvox_rw.read_as_3d_array(f)
+        # Get data of volume
+        with open(volume_path, 'rb') as f:
+            volume = utils.binvox_rw.read_as_3d_array(f)
 
-        if not voxel:
-            print('[FATAL] %s Failed to get voxel data from file %s' % (dt.now(), voxel_path))
+        if not volume:
+            print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
             sys.exit(2)
-        voxel = voxel.data.astype(np.float32)
+        volume = volume.data.astype(np.float32)
 
-        return taxonomy_name, sample_name, np.asarray([rendering_image]), voxel, bounding_box
+        return taxonomy_name, sample_name, np.asarray([rendering_image]), volume, bounding_box
 
 
 # //////////////////////////////// = End of Pascal3dDataset Class Definition = ///////////////////////////////// #
@@ -343,7 +342,7 @@ class Pix3dDataLoader:
     def __init__(self, cfg):
         self.dataset_taxonomy = None
         self.annotations = dict()
-        self.voxel_path_template = cfg.DATASETS.PIX3D.VOXEL_PATH
+        self.volume_path_template = cfg.DATASETS.PIX3D.VOXEL_PATH
         self.rendering_image_path_template = cfg.DATASETS.PIX3D.RENDERING_PATH
 
         # Load all taxonomies of the dataset
@@ -396,14 +395,14 @@ class Pix3dDataLoader:
 
             # Get the bounding box of the image
             bbox = annotations['bbox']
-            model_name_parts = annotations['voxel'].split('/')
+            model_name_parts = annotations['volume'].split('/')
             model_name = model_name_parts[2]
-            voxel_file_name = model_name_parts[3][:-4].replace('voxel', 'model')
+            volume_file_name = model_name_parts[3][:-4].replace('volume', 'model')
 
-            # Get file path of voxels
-            voxel_file_path = self.voxel_path_template % (taxonomy_name, model_name, voxel_file_name)
-            if not os.path.exists(voxel_file_path):
-                print('[WARN] %s Ignore sample %s/%s since voxel file not exists.' % (dt.now(), taxonomy_name, sample_name))
+            # Get file path of volumes
+            volume_file_path = self.volume_path_template % (taxonomy_name, model_name, volume_file_name)
+            if not os.path.exists(volume_file_path):
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name, sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -412,7 +411,7 @@ class Pix3dDataLoader:
                 'sample_name': sample_name,
                 'rendering_image': rendering_image_file_path,
                 'bounding_box': bbox,
-                'voxel': voxel_file_path,
+                'volume': volume_file_path,
             })
 
         return files_of_taxonomy
