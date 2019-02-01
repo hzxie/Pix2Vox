@@ -395,9 +395,9 @@ class Pix3dDataLoader:
 
             # Get the bounding box of the image
             bbox = annotations['bbox']
-            model_name_parts = annotations['volume'].split('/')
+            model_name_parts = annotations['voxel'].split('/')
             model_name = model_name_parts[2]
-            volume_file_name = model_name_parts[3][:-4].replace('volume', 'model')
+            volume_file_name = model_name_parts[3][:-4].replace('voxel', 'model')
 
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_name, model_name, volume_file_name)
