@@ -30,11 +30,10 @@ class DatasetType(Enum):
 
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     """ShapeNetDataset class used for PyTorch DataLoader"""
-
-    def __init__(self, file_list_with_metadata, n_rendering_views, transforms=None):
-        self.file_list = file_list_with_metadata
+    def __init__(self, file_list, n_views_rendering, transforms=None):
+        self.file_list = file_list
         self.transforms = transforms
-        self.n_rendering_views = n_rendering_views
+        self.n_views_rendering = n_views_rendering
 
     def __len__(self):
         return len(self.file_list)
@@ -47,6 +46,9 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
 
         return taxonomy_name, sample_name, rendering_images, volume
 
+    def set_n_views_rendering(self, n_views_rendering):
+        self.n_views_rendering = n_views_rendering
+
     def get_datum(self, idx):
         taxonomy_name = self.file_list[idx]['taxonomy_name']
         sample_name = self.file_list[idx]['sample_name']
@@ -56,7 +58,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         # Get data of rendering images
         rendering_images = []
         selected_rendering_image_paths = [
-            rendering_image_paths[i] for i in random.sample(range(len(rendering_image_paths)), self.n_rendering_views)
+            rendering_image_paths[i] for i in random.sample(range(len(rendering_image_paths)), self.n_views_rendering)
         ]
         for image_path in selected_rendering_image_paths:
             rendering_image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 255.
@@ -91,7 +93,7 @@ class ShapeNetDataLoader:
         with open(cfg.DATASETS.SHAPENET.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def get_dataset(self, dataset_type, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, n_views_rendering, transforms=None):
         files = []
 
         # Load data for each category
@@ -110,7 +112,7 @@ class ShapeNetDataLoader:
             files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, samples))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
-        return ShapeNetDataset(files, n_rendering_views, transforms)
+        return ShapeNetDataset(files, n_views_rendering, transforms)
 
     def get_files_of_taxonomy(self, taxonomy_folder_name, samples):
         files_of_taxonomy = []
@@ -163,8 +165,8 @@ class ShapeNetDataLoader:
 class Pascal3dDataset(torch.utils.data.dataset.Dataset):
     """Pascal3D class used for PyTorch DataLoader"""
 
-    def __init__(self, file_list_with_metadata, transforms=None):
-        self.file_list = file_list_with_metadata
+    def __init__(self, file_list, transforms=None):
+        self.file_list = file_list
         self.transforms = transforms
 
     def __len__(self):
@@ -218,7 +220,7 @@ class Pascal3dDataLoader:
         with open(cfg.DATASETS.PASCAL3D.TAXONOMY_FILE_PATH, encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def get_dataset(self, dataset_type, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, n_views_rendering, transforms=None):
         files = []
 
         # Load data for each category
@@ -302,8 +304,8 @@ class Pascal3dDataLoader:
 class Pix3dDataset(torch.utils.data.dataset.Dataset):
     """Pix3D class used for PyTorch DataLoader"""
 
-    def __init__(self, file_list_with_metadata, transforms=None):
-        self.file_list = file_list_with_metadata
+    def __init__(self, file_list, transforms=None):
+        self.file_list = file_list
         self.transforms = transforms
 
     def __len__(self):
@@ -367,7 +369,7 @@ class Pix3dDataLoader:
             anno_key = filename[4:]
             self.annotations[anno_key] = anno
 
-    def get_dataset(self, dataset_type, n_rendering_views, transforms=None):
+    def get_dataset(self, dataset_type, n_views_rendering, transforms=None):
         files = []
 
         # Load data for each category
