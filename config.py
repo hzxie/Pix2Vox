@@ -102,6 +102,7 @@ __C.TRAIN.BETAS                             = (.9, .999)
 __C.TRAIN.MOMENTUM                          = .9
 __C.TRAIN.GAMMA                             = .5
 __C.TRAIN.SAVE_FREQ                         = 10            # weights will be overwritten every save_freq epoch
+__C.TRAIN.UPDATE_N_VIEWS_RENDERING          = True
 
 #
 # Testing options

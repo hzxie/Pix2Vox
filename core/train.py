@@ -5,6 +5,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import random
 import torch
 import torch.backends.cudnn
 import torch.utils.data
@@ -247,6 +248,13 @@ def train_net(cfg):
         print('[INFO] %s Epoch [%d/%d] EpochTime = %.3f (s) EDLoss = %.4f RLoss = %.4f' %
             (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, \
                 encoder_losses.avg, refiner_losses.avg))
+
+        # Update Rendering Views
+        if cfg.TRAIN.UPDATE_N_VIEWS_RENDERING:
+            n_views_rendering = random.randint(1, cfg.CONST.N_VIEWS_RENDERING)
+            train_data_loader.dataset.set_n_views_rendering(n_views_rendering)
+            print('[INFO] %s Epoch [%d/%d] Update #RenderingViews to %d' % \
+                (dt.now(), epoch_idx + 2, cfg.TRAIN.NUM_EPOCHES, n_views_rendering))
 
         # Validate the training models
         iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder, refiner, merger)
