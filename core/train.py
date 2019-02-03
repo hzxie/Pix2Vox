@@ -117,7 +117,7 @@ def train_net(cfg):
     refiner_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         refiner_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
     merger_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        merger_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
+        merger_solver, milestones=cfg.TRAIN.MERGER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
 
     if torch.cuda.is_available():
         encoder = torch.nn.DataParallel(encoder).cuda()
