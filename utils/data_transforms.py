@@ -93,6 +93,13 @@ class CenterCrop(object):
             img_height, img_width, _ = img.shape
 
             if not bounding_box is None:
+                bounding_box = [
+                    bounding_box[0] * img_width,
+                    bounding_box[1] * img_height,
+                    bounding_box[2] * img_width,
+                    bounding_box[3] * img_height
+                ] # yapf: disable
+
                 # Calculate the size of bounding boxes
                 bbox_width = bounding_box[2] - bounding_box[0]
                 bbox_height = bounding_box[3] - bounding_box[1]
@@ -159,6 +166,13 @@ class RandomCrop(object):
             img_height, img_width, _ = img.shape
 
             if not bounding_box is None:
+                bounding_box = [
+                    bounding_box[0] * img_width,
+                    bounding_box[1] * img_height,
+                    bounding_box[2] * img_width,
+                    bounding_box[3] * img_height
+                ] # yapf: disable
+
                 # Random move bounding boxes
                 for i in range(4):
                     bounding_box[i] += random.random() * 100 - 50
