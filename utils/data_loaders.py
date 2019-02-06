@@ -254,6 +254,7 @@ class Pascal3dDataLoader:
             # Get image annotations
             annotations_file_path = self.annotation_path_template % (taxonomy_name, sample_name)
             annotations_mat = scipy.io.loadmat(annotations_file_path, squeeze_me=True, struct_as_record=False)
+            img_width, img_height, _ = annotations_mat['record'].imgsize
             annotations = annotations_mat['record'].objects
 
             cad_index = -1
@@ -279,6 +280,13 @@ class Pascal3dDataLoader:
                 cad_index = annotations.cad_index
                 bbox = annotations.bbox
 
+            # Convert the coordinates of bounding boxes to percentages
+            bbox = [
+                bbox[0] / img_width,
+                bbox[1] / img_height,
+                bbox[2] / img_width,
+                bbox[3] / img_height
+            ]
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_name, cad_index)
             if not os.path.exists(volume_file_path):
@@ -404,7 +412,13 @@ class Pix3dDataLoader:
             rendering_image_file_path = self.rendering_image_path_template % (taxonomy_name, sample_name, img_file_suffix[1:])
 
             # Get the bounding box of the image
-            bbox = annotations['bbox']
+            img_width, img_height = annotations['img_size']
+            bbox = [
+                annotations['bbox'][0] / img_width,
+                annotations['bbox'][1] / img_height,
+                annotations['bbox'][2] / img_width,
+                annotations['bbox'][3] / img_height
+            ]
             model_name_parts = annotations['voxel'].split('/')
             model_name = model_name_parts[2]
             volume_file_name = model_name_parts[3][:-4].replace('voxel', 'model')

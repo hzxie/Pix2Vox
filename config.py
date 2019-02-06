@@ -67,7 +67,6 @@ __C.DIR.RANDOM_BG_PATH                      = '/home/hzxie/Datasets/SUN2012/JPEG
 #
 __C.NETWORK                                 = edict()
 __C.NETWORK.LEAKY_VALUE                     = .2
-__C.NETWORK.DROPOUT_RATE                    = .2
 __C.NETWORK.TCONV_USE_BIAS                  = False
 __C.NETWORK.USE_REFINER                     = True
 __C.NETWORK.USE_MERGER                      = True
@@ -79,9 +78,6 @@ __C.TRAIN                                   = edict()
 __C.TRAIN.RESUME_TRAIN                      = False
 __C.TRAIN.NUM_WORKER                        = 4             # number of data workers
 __C.TRAIN.NUM_EPOCHES                       = 250
-__C.TRAIN.ROTATE_DEGREE_RANGE               = (-15, 15)     # range of degrees to select from
-__C.TRAIN.TRANSLATE_RANGE                   = (.1, .1)      # tuple of maximum absolute fraction for horizontal and vertical translations
-__C.TRAIN.SCALE_RANGE                       = (.75, 1.5)    # tuple of scaling factor interval
 __C.TRAIN.BRIGHTNESS                        = .4
 __C.TRAIN.CONTRAST                          = .4
 __C.TRAIN.SATURATION                        = .4
@@ -102,7 +98,7 @@ __C.TRAIN.BETAS                             = (.9, .999)
 __C.TRAIN.MOMENTUM                          = .9
 __C.TRAIN.GAMMA                             = .5
 __C.TRAIN.SAVE_FREQ                         = 10            # weights will be overwritten every save_freq epoch
-__C.TRAIN.UPDATE_N_VIEWS_RENDERING          = True
+__C.TRAIN.UPDATE_N_VIEWS_RENDERING          = False
 
 #
 # Testing options
