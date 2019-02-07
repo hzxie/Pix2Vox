@@ -38,10 +38,11 @@ class Merger(torch.nn.Module):
         )
 
     def forward(self, raw_features, coarse_volumes):
+        n_views_rendering = coarse_volumes.size(1)
         raw_features = torch.split(raw_features, 1, dim=1)
         volume_weights = []
 
-        for i in range(self.cfg.CONST.N_VIEWS_RENDERING):
+        for i in range(n_views_rendering):
             raw_feature = torch.squeeze(raw_features[i], dim=1)
             # print(raw_feature.size())       # torch.Size([batch_size, 9, 32, 32, 32])
 
