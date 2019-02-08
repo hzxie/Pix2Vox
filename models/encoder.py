@@ -18,19 +18,19 @@ class Encoder(torch.nn.Module):
         vgg16_bn = torchvision.models.vgg16_bn(pretrained=True)
         self.vgg = torch.nn.Sequential(*list(vgg16_bn.features.children()))[:27]
         self.layer1 = torch.nn.Sequential(
-            torch.nn.Conv2d(512, 512, kernel_size=3),
+            torch.nn.Conv2d(512, 512, kernel_size=1),
             torch.nn.BatchNorm2d(512),
             torch.nn.ELU(),
         )
         self.layer2 = torch.nn.Sequential(
-            torch.nn.Conv2d(512, 512, kernel_size=3),
-            torch.nn.BatchNorm2d(512),
+            torch.nn.Conv2d(512, 256, kernel_size=3),
+            torch.nn.BatchNorm2d(256),
             torch.nn.ELU(),
-            torch.nn.MaxPool2d(kernel_size=3)
+            torch.nn.MaxPool2d(kernel_size=4)
         )
         self.layer3 = torch.nn.Sequential(
-            torch.nn.Conv2d(512, 256, kernel_size=1),
-            torch.nn.BatchNorm2d(256),
+            torch.nn.Conv2d(256, 128, kernel_size=3),
+            torch.nn.BatchNorm2d(128),
             torch.nn.ELU()
         )
 
@@ -48,13 +48,14 @@ class Encoder(torch.nn.Module):
             features = self.vgg(img.squeeze(dim=0))
             # print(features.size())    # torch.Size([batch_size, 512, 28, 28])
             features = self.layer1(features)
-            # print(features.size())    # torch.Size([batch_size, 512, 26, 26])
+            # print(features.size())    # torch.Size([batch_size, 512, 28, 28])
             features = self.layer2(features)
-            # print(features.size())    # torch.Size([batch_size, 512, 24, 24])
+            # print(features.size())    # torch.Size([batch_size, 256, 6, 6])
             features = self.layer3(features)
-            # print(features.size())    # torch.Size([batch_size, 256, 8, 8])
+            # print(features.size())    # torch.Size([batch_size, 128, 4, 4])
             image_features.append(features)
 
         image_features = torch.stack(image_features).permute(1, 0, 2, 3, 4).contiguous()
-        # print(image_features.size())  # torch.Size([batch_size, n_views, 256, 8, 8])
+        # print(image_features.size())  # torch.Size([batch_size, n_views, 128, 4, 4])
         return image_features
+

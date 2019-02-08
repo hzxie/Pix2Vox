@@ -18,7 +18,6 @@ from datetime import datetime as dt
 
 from models.encoder import Encoder
 from models.decoder import Decoder
-from models.refiner import Refiner
 from models.merger import Merger
 
 
@@ -29,7 +28,6 @@ def test_net(cfg,
              test_writer=None,
              encoder=None,
              decoder=None,
-             refiner=None,
              merger=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark = True
@@ -64,13 +62,11 @@ def test_net(cfg,
     if decoder is None or encoder is None:
         encoder = Encoder(cfg)
         decoder = Decoder(cfg)
-        refiner = Refiner(cfg)
         merger = Merger(cfg)
 
         if torch.cuda.is_available():
             encoder = torch.nn.DataParallel(encoder).cuda()
             decoder = torch.nn.DataParallel(decoder).cuda()
-            refiner = torch.nn.DataParallel(refiner).cuda()
             merger = torch.nn.DataParallel(merger).cuda()
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
@@ -79,8 +75,6 @@ def test_net(cfg,
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
 
-        if cfg.NETWORK.USE_REFINER:
-            refiner.load_state_dict(checkpoint['refiner_state_dict'])
         if cfg.NETWORK.USE_MERGER:
             merger.load_state_dict(checkpoint['merger_state_dict'])
 
@@ -91,12 +85,10 @@ def test_net(cfg,
     n_samples = len(test_data_loader)
     test_iou = dict()
     encoder_losses = utils.network_utils.AverageMeter()
-    refiner_losses = utils.network_utils.AverageMeter()
 
     # Switch models to evaluation mode
     encoder.eval()
     decoder.eval()
-    refiner.eval()
     merger.eval()
 
     for sample_idx, (taxonomy_id, sample_name, rendering_images, ground_truth_volume) in enumerate(test_data_loader):
@@ -108,7 +100,7 @@ def test_net(cfg,
             rendering_images = utils.network_utils.var_or_cuda(rendering_images)
             ground_truth_volume = utils.network_utils.var_or_cuda(ground_truth_volume)
 
-            # Test the encoder, decoder, refiner and merger
+            # Test the encoder, decoder and merger
             image_features = encoder(rendering_images)
             raw_features, generated_volume = decoder(image_features)
 
@@ -116,17 +108,11 @@ def test_net(cfg,
                 generated_volume = merger(raw_features, generated_volume)
             else:
                 generated_volume = torch.mean(generated_volume, dim=1)
-            encoder_loss = bce_loss(generated_volume, ground_truth_volume) * 10
 
-            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
-                generated_volume = refiner(generated_volume)
-                refiner_loss = bce_loss(generated_volume, ground_truth_volume) * 10
-            else:
-                refiner_loss = encoder_loss
+            encoder_loss = bce_loss(generated_volume, ground_truth_volume) * 10
 
             # Append loss and accuracy to average metrics
             encoder_losses.update(encoder_loss.item())
-            refiner_losses.update(refiner_loss.item())
 
             # IoU per sample
             sample_iou = []
@@ -156,9 +142,9 @@ def test_net(cfg,
                 test_writer.add_image('Test Sample#%02d/Volume GroundTruth' % sample_idx, rendering_views, epoch_idx)
 
             # Print sample loss and IoU
-            print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f RLoss = %.4f IoU = %s' %
+            print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f IoU = %s' %
                   (dt.now(), sample_idx + 1, n_samples, taxonomy_id, sample_name, encoder_loss.item(),
-                   refiner_loss.item(), ['%.4f' % si for si in sample_iou]))
+                   ['%.4f' % si for si in sample_iou]))
 
     # Output testing results
     mean_iou = []
@@ -197,7 +183,6 @@ def test_net(cfg,
     max_iou = np.max(mean_iou)
     if test_writer is not None:
         test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx)
-        test_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx)
-        test_writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)
+        test_writer.add_scalar('EncoderDecoder/IoU', max_iou, epoch_idx)
 
     return max_iou
