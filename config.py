@@ -66,7 +66,6 @@ __C.DIR.RANDOM_BG_PATH                      = '/home/hzxie/Datasets/SUN2012/JPEG
 __C.NETWORK                                 = edict()
 __C.NETWORK.LEAKY_VALUE                     = .2
 __C.NETWORK.TCONV_USE_BIAS                  = False
-__C.NETWORK.USE_REFINER                     = True
 __C.NETWORK.USE_MERGER                      = True
 
 #
