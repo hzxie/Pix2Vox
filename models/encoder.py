@@ -45,7 +45,7 @@ class Encoder(torch.nn.Module):
         image_features = []
 
         for img in rendering_images:
-            features = self.vgg(img.view(-1, self.cfg.CONST.IMG_C, self.cfg.CONST.IMG_H, self.cfg.CONST.IMG_W))
+            features = self.vgg(img.squeeze(dim=0))
             # print(features.size())    # torch.Size([batch_size, 512, 28, 28])
             features = self.layer1(features)
             # print(features.size())    # torch.Size([batch_size, 512, 26, 26])

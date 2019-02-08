@@ -16,7 +16,7 @@ __C.DATASETS.SHAPENET.TAXONOMY_FILE_PATH    = './datasets/ShapeNet.json'
 # __C.DATASETS.SHAPENET.TAXONOMY_FILE_PATH  = './datasets/PascalShapeNet.json'
 __C.DATASETS.SHAPENET.RENDERING_PATH        = '/home/hzxie/Datasets/ShapeNet/ShapeNetRendering/%s/%s/render_%s.png'
 # __C.DATASETS.SHAPENET.RENDERING_PATH      = '/home/hzxie/Datasets/ShapeNet/PascalShapeNetRendering/%s/%s/render_%04d.jpg'
-__C.DATASETS.SHAPENET.VOXEL_PATH            = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.binvox'
+__C.DATASETS.SHAPENET.VOXEL_PATH            = '/home/hzxie/Datasets/ShapeNet/ShapeNetVox32/%s/%s.mat'
 __C.DATASETS.PASCAL3D                       = edict()
 __C.DATASETS.PASCAL3D.TAXONOMY_FILE_PATH    = './datasets/Pascal3D.json'
 __C.DATASETS.PASCAL3D.ANNOTATION_PATH       = '/home/hzxie/Datasets/PASCAL3D/Annotations/%s_imagenet/%s.mat'
@@ -32,8 +32,8 @@ __C.DATASETS.PIX3D.VOXEL_PATH               = '/home/hzxie/Datasets/Pix3D/model/
 # Dataset
 #
 __C.DATASET                                 = edict()
-__C.DATASET.MEAN                            = [0.406, 0.456, 0.485] # BGR
-__C.DATASET.STD                             = [0.225, 0.224, 0.229] # BGR
+__C.DATASET.MEAN                            = [0.5, 0.5, 0.5]
+__C.DATASET.STD                             = [0.5, 0.5, 0.5]
 __C.DATASET.TRAIN_DATASET                   = 'ShapeNet'
 __C.DATASET.TEST_DATASET                    = 'ShapeNet'
 # __C.DATASET.TEST_DATASET                  = 'Pascal3D'
@@ -47,13 +47,11 @@ __C.CONST.DEVICE                            = '0'
 __C.CONST.RNG_SEED                          = 0
 __C.CONST.IMG_W                             = 224       # Image width for input
 __C.CONST.IMG_H                             = 224       # Image height for input
-__C.CONST.IMG_C                             = 3         # Image channels for input
 __C.CONST.N_VOX                             = 32
 __C.CONST.BATCH_SIZE                        = 64
 __C.CONST.N_VIEWS_RENDERING                 = 1         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                        = 210       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                        = 210       # Dummy property for Pascal 3D
-__C.CONST.CROP_IMG_C                        = 3
 
 #
 # Directories

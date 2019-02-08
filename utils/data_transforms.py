@@ -82,13 +82,13 @@ class CenterCrop(object):
         self.img_size_w = img_size[1]
         self.crop_size_h = crop_size[0]
         self.crop_size_w = crop_size[1]
-        self.crop_size_c = crop_size[2]
 
     def __call__(self, rendering_images, bounding_box=None):
         if len(rendering_images) == 0:
             return rendering_images
 
-        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, self.crop_size_c))
+        crop_size_c = rendering_images[0].shape[2]
+        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, crop_size_c))
         for img_idx, img in enumerate(rendering_images):
             img_height, img_width, _ = img.shape
 
@@ -141,10 +141,19 @@ class CenterCrop(object):
                     y_bottom = img_height
 
             processed_image = cv2.resize(
-                img[int(y_top):int(y_bottom), int(x_left):int(x_right)], (self.img_size_w, self.img_size_h),
-                interpolation=cv2.INTER_CUBIC)
+                img[int(y_top):int(y_bottom), int(x_left):int(x_right)], (self.img_size_w, self.img_size_h))
             processed_images = np.append(processed_images, [processed_image], axis=0)
+            # Debug
+            # fig = plt.figure()
+            # ax1 = fig.add_subplot(1, 2, 1)
+            # ax1.imshow(img)
+            # if not bounding_box is None:
+            #     rect = patches.Rectangle((bounding_box[0], bounding_box[1]), bbox_width, bbox_height, linewidth=1, edgecolor='r', facecolor='none')
+            #     ax1.add_patch(rect)
 
+            # ax2 = fig.add_subplot(1, 2, 2)
+            # ax2.imshow(processed_image)
+            # plt.show()
         return processed_images
 
 
@@ -155,13 +164,13 @@ class RandomCrop(object):
         self.img_size_w = img_size[1]
         self.crop_size_h = crop_size[0]
         self.crop_size_w = crop_size[1]
-        self.crop_size_c = crop_size[2]
 
     def __call__(self, rendering_images, bounding_box=None):
         if len(rendering_images) == 0:
             return rendering_images
 
-        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, self.crop_size_c))
+        crop_size_c = rendering_images[0].shape[2]
+        processed_images = np.empty(shape=(0, self.img_size_h, self.img_size_w, crop_size_c))
         for img_idx, img in enumerate(rendering_images):
             img_height, img_width, _ = img.shape
 
@@ -229,8 +238,7 @@ class RandomCrop(object):
                     y_bottom = img_height
 
             processed_image = cv2.resize(
-                img[int(y_top):int(y_bottom), int(x_left):int(x_right)], (self.img_size_w, self.img_size_h),
-                interpolation=cv2.INTER_CUBIC)
+                img[int(y_top):int(y_bottom), int(x_left):int(x_right)], (self.img_size_w, self.img_size_h))
             processed_images = np.append(processed_images, [processed_image], axis=0)
 
         return processed_images
@@ -424,8 +432,7 @@ class RandomBackground(object):
         random_bg = None
         if len(self.random_bg_files) > 0:
             random_bg_file_path = random.choice(self.random_bg_files)
-            random_bg = cv2.imread(random_bg_file_path).astype(np.float32)
-            random_bg = cv2.resize(random_bg, (img_width, img_height), interpolation=cv2.INTER_CUBIC) / 255.
+            random_bg = cv2.imread(random_bg_file_path).astype(np.float32) / 255.
 
         # Apply random background
         processed_images = np.empty(shape=(0, img_height, img_width, img_channels - 1))

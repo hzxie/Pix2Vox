@@ -39,11 +39,11 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
     # Set up data loader
     if test_data_loader is None:
         # Set up data augmentation
-        IMG_SIZE = cfg.CONST.IMG_H, cfg.CONST.IMG_W, cfg.CONST.IMG_C
-        CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W, cfg.CONST.CROP_IMG_C
+        IMG_SIZE = cfg.CONST.IMG_H, cfg.CONST.IMG_W
+        CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W
         test_transforms = utils.data_transforms.Compose([
-            utils.data_transforms.RandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
             utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
+            utils.data_transforms.RandomBackground(cfg.TEST.RANDOM_BG_COLOR_RANGE),
             utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
             utils.data_transforms.ToTensor(),
         ])
