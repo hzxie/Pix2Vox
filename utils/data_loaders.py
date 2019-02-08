@@ -70,13 +70,12 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             rendering_images.append(rendering_image)
 
         # Get data of volume
-        with open(volume_path, 'rb') as f:
-            volume = utils.binvox_rw.read_as_3d_array(f)
+        volume = scipy.io.loadmat(volume_path)
 
         if not volume:
             print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
             sys.exit(2)
-        volume = volume.data.astype(np.float32)
+        volume = volume['Volume'].astype(np.float32)
         return taxonomy_name, sample_name, np.asarray(rendering_images), volume
 
 
