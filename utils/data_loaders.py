@@ -30,6 +30,7 @@ class DatasetType(Enum):
 
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     """ShapeNetDataset class used for PyTorch DataLoader"""
+
     def __init__(self, file_list, n_views_rendering, transforms=None):
         self.file_list = file_list
         self.transforms = transforms
@@ -70,12 +71,16 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             rendering_images.append(rendering_image)
 
         # Get data of volume
-        volume = scipy.io.loadmat(volume_path)
+        _, suffix = os.path.splitext(volume_path)
 
-        if not volume:
-            print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
-            sys.exit(2)
-        volume = volume['Volume'].astype(np.float32)
+        if suffix == '.mat':
+            volume = scipy.io.loadmat(volume_path)
+            volume = volume['Volume'].astype(np.float32)
+        elif suffix == '.binvox':
+            with open(volume_path, 'rb') as f:
+                volume = utils.binvox_rw.read_as_3d_array(f)
+                volume = volume.data.astype(np.float32)
+
         return taxonomy_name, sample_name, np.asarray(rendering_images), volume
 
 
@@ -122,7 +127,7 @@ class ShapeNetDataLoader:
             volume_file_path = self.volume_path_template % (taxonomy_folder_name, sample_name)
             if not os.path.exists(volume_file_path):
                 print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_folder_name,
-                                                                                      sample_name))
+                                                                                       sample_name))
                 continue
 
             # Get file list of rendering images
@@ -196,11 +201,7 @@ class Pascal3dDataset(torch.utils.data.dataset.Dataset):
         # Get data of volume
         with open(volume_path, 'rb') as f:
             volume = utils.binvox_rw.read_as_3d_array(f)
-
-        if not volume:
-            print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
-            sys.exit(2)
-        volume = volume.data.astype(np.float32)
+            volume = volume.data.astype(np.float32)
 
         return taxonomy_name, sample_name, np.asarray([rendering_image]), volume, bounding_box
 
@@ -280,17 +281,12 @@ class Pascal3dDataLoader:
                 bbox = annotations.bbox
 
             # Convert the coordinates of bounding boxes to percentages
-            bbox = [
-                bbox[0] / img_width,
-                bbox[1] / img_height,
-                bbox[2] / img_width,
-                bbox[3] / img_height
-            ]
+            bbox = [bbox[0] / img_width, bbox[1] / img_height, bbox[2] / img_width, bbox[3] / img_height]
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_name, cad_index)
             if not os.path.exists(volume_file_path):
                 print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name,
-                                                                                      sample_name))
+                                                                                       sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -343,11 +339,7 @@ class Pix3dDataset(torch.utils.data.dataset.Dataset):
         # Get data of volume
         with open(volume_path, 'rb') as f:
             volume = utils.binvox_rw.read_as_3d_array(f)
-
-        if not volume:
-            print('[FATAL] %s Failed to get volume data from file %s' % (dt.now(), volume_path))
-            sys.exit(2)
-        volume = volume.data.astype(np.float32)
+            volume = volume.data.astype(np.float32)
 
         return taxonomy_name, sample_name, np.asarray([rendering_image]), volume, bounding_box
 
@@ -408,7 +400,8 @@ class Pix3dDataLoader:
 
             # Get file list of rendering images
             _, img_file_suffix = os.path.splitext(annotations['img'])
-            rendering_image_file_path = self.rendering_image_path_template % (taxonomy_name, sample_name, img_file_suffix[1:])
+            rendering_image_file_path = self.rendering_image_path_template % (taxonomy_name, sample_name,
+                                                                              img_file_suffix[1:])
 
             # Get the bounding box of the image
             img_width, img_height = annotations['img_size']
@@ -417,7 +410,7 @@ class Pix3dDataLoader:
                 annotations['bbox'][1] / img_height,
                 annotations['bbox'][2] / img_width,
                 annotations['bbox'][3] / img_height
-            ]
+            ] # yapf: disable
             model_name_parts = annotations['voxel'].split('/')
             model_name = model_name_parts[2]
             volume_file_name = model_name_parts[3][:-4].replace('voxel', 'model')
@@ -425,7 +418,8 @@ class Pix3dDataLoader:
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_name, model_name, volume_file_name)
             if not os.path.exists(volume_file_path):
-                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name, sample_name))
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name,
+                                                                                       sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -443,7 +437,7 @@ class Pix3dDataLoader:
 # /////////////////////////////// = End of Pascal3dDataLoader Class Definition = /////////////////////////////// #
 
 DATASET_LOADER_MAPPING = {
-    'ShapeNet': ShapeNetDataLoader, 
+    'ShapeNet': ShapeNetDataLoader,
     'Pascal3D': Pascal3dDataLoader,
     'Pix3D': Pix3dDataLoader
-}
+} # yapf: disable
