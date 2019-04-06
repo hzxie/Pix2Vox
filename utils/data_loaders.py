@@ -31,7 +31,8 @@ class DatasetType(Enum):
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     """ShapeNetDataset class used for PyTorch DataLoader"""
 
-    def __init__(self, file_list, n_views_rendering, transforms=None):
+    def __init__(self, dataset_type, file_list, n_views_rendering, transforms=None):
+        self.dataset_type = dataset_type
         self.file_list = file_list
         self.transforms = transforms
         self.n_views_rendering = n_views_rendering
@@ -57,10 +58,15 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
         volume_path = self.file_list[idx]['volume']
 
         # Get data of rendering images
+        if self.dataset_type == DatasetType.TRAIN:
+            selected_rendering_image_paths = [
+                rendering_image_paths[i]
+                for i in random.sample(range(len(rendering_image_paths)), self.n_views_rendering)
+            ]
+        else:
+            selected_rendering_image_paths = [rendering_image_paths[i] for i in range(self.n_views_rendering)]
+
         rendering_images = []
-        selected_rendering_image_paths = [
-            rendering_image_paths[i] for i in random.sample(range(len(rendering_image_paths)), self.n_views_rendering)
-        ]
         for image_path in selected_rendering_image_paths:
             rendering_image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 255.
             if len(rendering_image.shape) < 3:
@@ -116,7 +122,7 @@ class ShapeNetDataLoader:
             files.extend(self.get_files_of_taxonomy(taxonomy_folder_name, samples))
 
         print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (dt.now(), len(files)))
-        return ShapeNetDataset(files, n_views_rendering, transforms)
+        return ShapeNetDataset(dataset_type, files, n_views_rendering, transforms)
 
     def get_files_of_taxonomy(self, taxonomy_folder_name, samples):
         files_of_taxonomy = []
