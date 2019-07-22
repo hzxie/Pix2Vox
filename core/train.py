@@ -265,7 +265,7 @@ def train_net(cfg):
                 os.makedirs(ckpt_dir)
 
             utils.network_utils.save_checkpoints(cfg, \
-                    os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth.tar' % (epoch_idx + 1)), \
+                    os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth' % (epoch_idx + 1)), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
                     refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
         if iou > best_iou:
@@ -275,7 +275,7 @@ def train_net(cfg):
             best_iou = iou
             best_epoch = epoch_idx + 1
             utils.network_utils.save_checkpoints(cfg, \
-                    os.path.join(ckpt_dir, 'best-ckpt.pth.tar'), \
+                    os.path.join(ckpt_dir, 'best-ckpt.pth'), \
                     epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
                     refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
 
