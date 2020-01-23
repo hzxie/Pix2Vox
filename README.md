@@ -1,19 +1,8 @@
 # Pix2Vox
 
-This repository contains the source code for the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153).
+This repository contains an implementation of the model from the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153).
 
 ![Overview](https://infinitescript.com/wordpress/wp-content/uploads/2019/04/Pix2Vox-Overview.jpg)
-
-## Cite this work
-
-```
-@inproceedings{xie2019pix2vox,
-  title={Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images},
-  author={Xie, Haozhe and Yao, Hongxun and Sun, Xiaoshuai and Zhou, Shangchen and Zhang, Shengping},
-  booktitle={ICCV},
-  year={2019}
-}
-```
 
 ## Datasets
 
@@ -35,7 +24,7 @@ The pretrained models on ShapeNet are available as follows:
 #### Clone the Code Repository
 
 ```
-git clone https://github.com/hzxie/Pix2Vox.git
+git clone https://github.com/roysidhartha/Pix2Vox.git
 ```
 
 #### Install Python Denpendencies

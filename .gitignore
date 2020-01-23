@@ -105,6 +105,10 @@ ENV/
 
 # Datasets
 datasets/
+LargeDatasets/
 
 # Output
 output/
+
+#pretrained models
+pretrained_models/
