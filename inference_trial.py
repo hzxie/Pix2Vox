@@ -32,9 +32,9 @@ from pprint import pprint
 
 from config import cfg
 from core.train import train_net
-from core.test import test_net
+#from core.test import test_net
 #from core.inference import inference_net
-from core.inference import inference_net
+from core.demo import test_net
 from torch.utils.tensorboard import SummaryWriter
 
 PATH = 'pretrained_models/Pix2Vox-A-ShapeNet.pth'
@@ -48,4 +48,4 @@ pprint(cfg)
 cfg.CONST.WEIGHTS = './pretrained_models/Pix2Vox-A-ShapeNet.pth'
 
 writer = SummaryWriter('./output/tensorboard')
-inference_net(cfg,output_dir='./output')
+test_net(cfg,output_dir='./output')

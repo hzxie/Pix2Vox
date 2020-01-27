@@ -30,6 +30,11 @@ __C.DATASETS.PIX3D.ANNOTATION_PATH          = '/home/sidroy/software/Pix2Vox/dat
 __C.DATASETS.PIX3D.RENDERING_PATH           = '/home/sidroy/software/Pix2Vox/datasets/Pix3D/img/%s/%s.%s'
 __C.DATASETS.PIX3D.VOXEL_PATH               = '/home/sidroy/software/Pix2Vox/datasets/Pix3D/model/%s/%s/%s.binvox'
 
+__C.DATASETS.INFERENCE                       = edict()
+__C.DATASETS.INFERENCE.TAXONOMY_FILE_PATH    = './datasets/DemoData.json'
+__C.DATASETS.INFERENCE.RENDERING_PATH        = './LargeDatasets/DemoImage/%s/%s/rendering/%02d.png'
+
+# __C.DATASETS.SHAPENET.TAXONOMY_FILE_PATH  = './datasets/PascalShapeNet.json'
 #
 # Dataset
 #
@@ -37,7 +42,8 @@ __C.DATASET                                 = edict()
 __C.DATASET.MEAN                            = [0.5, 0.5, 0.5]
 __C.DATASET.STD                             = [0.5, 0.5, 0.5]
 __C.DATASET.TRAIN_DATASET                   = 'ShapeNet'
-__C.DATASET.TEST_DATASET                    = 'ShapeNet'
+#__C.DATASET.TEST_DATASET                    = 'ShapeNet'
+__C.DATASET.TEST_DATASET                    = 'Inference'
 # __C.DATASET.TEST_DATASET                  = 'Pascal3D'
 # __C.DATASET.TEST_DATASET                  = 'Pix3D'
 

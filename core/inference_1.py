@@ -45,10 +45,23 @@ def inference_net(cfg,output_dir=None):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1)
     print(type(dataloader))
 
-    images = []
+    images = np.empty(shape=(0, 3, 224, 224))
     for image, label in dataloader:
-        images.append(image)
+        print("shape of image {}".format(image.shape))
+        #images.append(image)
+        images = np.append(images, [np.asarray(image.view(3, 224,224))], axis=0)
+
+    print("shape of images {}".format(images.shape))
+    images = np.reshape(images,(1,images.shape[0],3,224,224))
+    rendering_images = torch.from_numpy(images)
+    print("size of rendering images {}".format(rendering_images.shape))
+
+    """
+    rendering_images = np.asanyarray(images)
+    
+    processed_images = np.append(processed_images, [img], axis=0)
     print("size of all images {}".format(images.shape))
+    """
 
     images, label = next(iter(dataloader))
     print(type(images.size))
@@ -93,7 +106,7 @@ def inference_net(cfg,output_dir=None):
 
     with torch.no_grad():
         # Get data from data loader
-        rendering_image = utils.network_utils.var_or_cuda(rendering_image)
+        rendering_image = utils.network_utils.var_or_cuda(rendering_images)
         print("shape of rendering images after cuda {}".format(rendering_image.shape))
 
         # Test the encoder, decoder, refiner and merger
