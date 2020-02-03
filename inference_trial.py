@@ -45,7 +45,7 @@ checkpoint = (torch.load(PATH))
 print('Use config:')
 pprint(cfg)
 
-cfg.CONST.WEIGHTS = './pretrained_models/Pix2Vox-A-ShapeNet.pth'
+cfg.CONST.WEIGHTS = './pretrained_models/Pix2Vox-A-ShapeNet-118epoch.pth'
 
 writer = SummaryWriter('./output/tensorboard')
 test_net(cfg,output_dir='./output')

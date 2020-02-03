@@ -73,6 +73,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
         epoch_idx = checkpoint['epoch_idx']
+        print('Epoch ID of the current model is {}'.format(epoch_idx))
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
 
@@ -129,4 +130,4 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             #if sample_idx == 3:
             #    break
     print("gv shape is {}".format(gv.shape))
-    return gv
+    return gv, rendering_images
