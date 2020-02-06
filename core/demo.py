@@ -52,7 +52,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         test_data_loader = torch.utils.data.DataLoader(
             dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST,
                                                cfg.CONST.N_VIEWS_RENDERING, test_transforms),
-            batch_size=1,
+            batch_size=2,
             num_workers=1,
             pin_memory=True,
             shuffle=False)
@@ -107,17 +107,19 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             # Get data from data loader
             rendering_images = utils.network_utils.var_or_cuda(rendering_images)
 
+            print("Shape of the loaded images {}".format(rendering_images.shape))
+
             # Test the encoder, decoder, refiner and merger
             image_features = encoder(rendering_images)
             raw_features, generated_volume = decoder(image_features)
 
-            if cfg.NETWORK.USE_MERGER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_MERGER:
+            if cfg.NETWORK.USE_MERGER:
                 generated_volume = merger(raw_features, generated_volume)
             else:
                 generated_volume = torch.mean(generated_volume, dim=1)
 
 
-            if cfg.NETWORK.USE_REFINER and epoch_idx >= cfg.TRAIN.EPOCH_START_USE_REFINER:
+            if cfg.NETWORK.USE_REFINER:
                 generated_volume = refiner(generated_volume)
 
             print("vox shape {}".format(generated_volume.shape))
