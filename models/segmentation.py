@@ -70,7 +70,7 @@ class Segmentation():
 MASK_CATEGORY_MAPPING = {
         'TABLE': 11,
         'CHAIR': 7,
-        'Pix3D': Pix3dDataLoader
+        'CAR': 12
 }
 
 
