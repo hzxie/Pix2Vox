@@ -2,7 +2,7 @@ argparse
 easydict
 matplotlib
 numpy
-opencv-python
+opencv-python-headless
 pprint
 scipy
 torchvision
