@@ -7,3 +7,5 @@ pprint
 scipy
 torchvision
 tensorboardX
+streamlit
+plotly==4.5.0
