@@ -25,8 +25,8 @@ def generate_data():
     volume = volume.squeeze().__ge__(0.5)
     return volume
 
-MODEL_FILENAME = 'pretrained_model/Pix2Vox-A-ShapeNet.pth'
-MODEL_DIR = 'pretrained_model'
+MODEL_FILENAME = 'pretrained_models/Pix2Vox-A-ShapeNet.pth'
+MODEL_DIR = 'pretrained_models'
 
 @st.cache
 def download_model_from_web():
