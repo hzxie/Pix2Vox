@@ -1,20 +1,34 @@
 import torch
 import numpy as np
 import cv2
+import glob
+import os
 from PIL import Image
+
 
 class Segmentation():
     def __init__(self, seg_cfg):
         self.model_type = seg_cfg['type']
         self.base_network = seg_cfg['base network']
-        self.filename = seg_cfg['filename']
-        self.category = self.category(seg_cfg['mask category'])
+        self.folder_name = seg_cfg['folder name']
+        self.save_folder = seg_cfg['save folder']
+        print(self.folder_name)
+        self.category = MASK_CATEGORY_MAPPING[seg_cfg['mask category']]
         self.initialize_variables()
 
-    def segment_image(self):
-        self.load_image()
+        self.load_files()
+
         self.load_model()
+
         self.configure_transform()
+
+        for file_path in self.file_list:
+            self.segment_image(file_path)
+
+        self.write_file_list()
+
+    def segment_image(self, file_path):
+        self.load_image(file_path)
         self.input_tensor = self.transform(self.input_image)
         self.input_batch = self.input_tensor.unsqueeze(0)
 
@@ -24,14 +38,20 @@ class Segmentation():
             self.model.to('cuda')
 
         self.predict()
-        return self.output_predictions
+        print("Image category number {}".format(self.category))
+        self.get_RGBA_image()
+        self.image_count += 1
 
     def load_model(self):
         self.model = torch.hub.load(self.model_type, self.base_network, pretrained=True)
         self.model.eval()
 
-    def load_image(self):
-        img = cv2.imread(self.filename, cv2.IMREAD_UNCHANGED)
+    def load_files(self):
+        self.file_list = glob.glob(os.path.join(os.getcwd(), self.folder_name, "*.*"))
+        self.num_images = len(self.file_list)
+
+    def load_image(self,file_path):
+        img = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
         scale_percent = 100  # percent of original size
         width = int(img.shape[1] * scale_percent / 100)
         height = int(img.shape[0] * scale_percent / 100)
@@ -57,23 +77,36 @@ class Segmentation():
     def configure_transform(self):
         from torchvision import transforms
         self.transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
 
     def get_RGBA_image(self):
         image_array = np.array(self.input_image)
-        b_channel, g_channel, r_channel = cv2.split(self.image_array)
-        mask_array = np.where(self.mask != 11, 0, 255)
+        b_channel, g_channel, r_channel = cv2.split(image_array)
+        mask_array = np.where(self.mask != self.category, 0, 255)
         mask_array = mask_array.astype(np.uint8)
+        img_RGBA = cv2.merge((b_channel, g_channel, r_channel, mask_array))
 
-MASK_CATEGORY_MAPPING = {
-        'TABLE': 11,
-        'CHAIR': 7,
-        'CAR': 12
-}
+        # Extract image width and height for resizing it
+        image_width = img_RGBA.shape[1]
+        image_height = img_RGBA.shape[0]
+        scale_percent = 137 / image_width * 100
+        print(scale_percent)
+        width = int(img_RGBA.shape[1] * scale_percent / 100)
+        height = int(img_RGBA.shape[0] * scale_percent / 100)
+        dim = (width, height)
+        resized_RGBA = cv2.resize(img_RGBA, dim, interpolation=cv2.INTER_AREA)
+        img_name = '{:02d}'.format(self.image_count)
+        PATH = os.path.join(self.save_folder,img_name+'.png')
+        cv2.imwrite(PATH, resized_RGBA)
 
-
+    def write_file_list(self):
+        PATH = os.path.join(self.save_folder,'renderings.txt' )
+        with open(PATH, 'w') as filehandle:
+            for list_item in range(self.num_images):
+                img_name = '{:02d}'.format(list_item)+'.png'
+                filehandle.write('%s\n' % img_name)
 
     def initialize_variables(self):
         self.input_image = None
@@ -84,13 +117,22 @@ MASK_CATEGORY_MAPPING = {
         self.output = None
         self.output_predictions = None
         self.mask = None
+        self.num_images = None
+        self.file_list = None
+        self.image_count = 0
 
+
+MASK_CATEGORY_MAPPING = {
+    'AEROPLANE': 1, 'BICYCLE': 2, 'BIRD': 3, 'BOAT': 4, 'BOTTLE': 5, 'BUS': 6,'CAR': 7,
+    'CAT': 8, 'CHAIR': 9, 'COW': 10, 'TABLE': 11, 'DOG': 12, 'HORSE': 13, 'MOTOR BIKE': 14,
+    'PERSON': 15, 'PLANT': 16, 'SHEEP': 17, 'SOFA': 18, 'TRAIN': 19, 'TV': 20,
+}
 if __name__ == "__main__":
     SEG_CFG = {}
     SEG_CFG['type'] = 'pytorch/vision:v0.5.0'
     SEG_CFG['base network'] = 'deeplabv3_resnet101'
-    SEG_CFG['filename'] = '/home/sidroy/Downloads/table3.jpg'
-    SEG_CFG['mask category'] = 'TABLE'
+    SEG_CFG['folder name'] = "../load_images"
+    SEG_CFG['mask category'] = 'CHAIR'
+    SEG_CFG['save folder'] = '../LargeDatasets/DemoImage/car/car_subfolder/rendering'
 
     segment = Segmentation(SEG_CFG)
-    segment.segment_image()

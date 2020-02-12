@@ -9,3 +9,4 @@ torchvision
 tensorboardX
 streamlit
 plotly==4.5.0
+requests

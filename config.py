@@ -26,9 +26,10 @@ __C.DATASETS.PASCAL3D.RENDERING_PATH        = '/home/sidroy/software/Pix2Vox/dat
 __C.DATASETS.PASCAL3D.VOXEL_PATH            = '/home/sidroy/software/Pix2Vox/datasets/PASCAL3D/CAD/%s/%02d.binvox'
 __C.DATASETS.PIX3D                          = edict()
 __C.DATASETS.PIX3D.TAXONOMY_FILE_PATH       = './datasets/Pix3D.json'
-__C.DATASETS.PIX3D.ANNOTATION_PATH          = '/home/sidroy/software/Pix2Vox/datasets/Pix3D/pix3d.json'
-__C.DATASETS.PIX3D.RENDERING_PATH           = '/home/sidroy/software/Pix2Vox/datasets/Pix3D/img/%s/%s.%s'
-__C.DATASETS.PIX3D.VOXEL_PATH               = '/home/sidroy/software/Pix2Vox/datasets/Pix3D/model/%s/%s/%s.binvox'
+# The annotation file path right now is for images
+__C.DATASETS.PIX3D.ANNOTATION_PATH          = './LargeDatasets/Pix3D/pix3d.json'
+__C.DATASETS.PIX3D.RENDERING_PATH           = './LargeDatasets/Pix3D/img/%s/%s.%s'
+__C.DATASETS.PIX3D.VOXEL_PATH               = './LargeDatasets/Pix3D/model/%s/%s/%s.mat'
 
 __C.DATASETS.INFERENCE                       = edict()
 __C.DATASETS.INFERENCE.TAXONOMY_FILE_PATH    = './datasets/DemoData.json'
@@ -45,7 +46,7 @@ __C.DATASET.STD                             = [0.5, 0.5, 0.5]
 #__C.DATASET.TEST_DATASET                    = 'ShapeNet'
 __C.DATASET.TEST_DATASET                    = 'Inference'
 # __C.DATASET.TEST_DATASET                  = 'Pascal3D'
-# __C.DATASET.TEST_DATASET                  = 'Pix3D'
+#__C.DATASET.TEST_DATASET                  = 'Pix3D'
 
 #
 # Common
@@ -57,7 +58,7 @@ __C.CONST.IMG_W                             = 224       # Image width for input
 __C.CONST.IMG_H                             = 224       # Image height for input
 __C.CONST.N_VOX                             = 32
 __C.CONST.BATCH_SIZE                        = 64
-__C.CONST.N_VIEWS_RENDERING                 = 2         # Dummy property for Pascal 3D
+__C.CONST.N_VIEWS_RENDERING                 = 1         # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_W                        = 128       # Dummy property for Pascal 3D
 __C.CONST.CROP_IMG_H                        = 128       # Dummy property for Pascal 3D
 

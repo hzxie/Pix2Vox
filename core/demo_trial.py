@@ -41,6 +41,15 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         # Set up data augmentation
         IMG_SIZE = cfg.CONST.IMG_H, cfg.CONST.IMG_W
         CROP_SIZE = cfg.CONST.CROP_IMG_H, cfg.CONST.CROP_IMG_W
+        """
+        test_transforms = utils.data_transforms.Compose([
+            utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
+            utils.data_transforms.Normalize(mean=cfg.DATASET.MEAN, std=cfg.DATASET.STD),
+            utils.data_transforms.ToTensor(),
+        ])
+        """
+        sample_idx = 1
+        rendering_images = load_image()
 
         test_transforms = utils.data_transforms.Compose([
             utils.data_transforms.CenterCrop(IMG_SIZE, CROP_SIZE),
@@ -99,38 +108,53 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
     merger.eval()
 
     print("test data loader type is {}".format(type(test_data_loader)))
-    for sample_idx, (taxonomy_id, sample_name, rendering_images) in enumerate(test_data_loader):
-        taxonomy_id = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
-        sample_name = sample_name[0]
-        print("sample IDx {}".format(sample_idx))
-        print("taxonomy id {}".format(taxonomy_id))
-        with torch.no_grad():
-            # Get data from data loader
-            rendering_images = utils.network_utils.var_or_cuda(rendering_images)
 
-            print("Shape of the loaded images {}".format(rendering_images.shape))
+    with torch.no_grad():
+        # Get data from data loader
+        rendering_images = utils.network_utils.var_or_cuda(rendering_images)
 
-            # Test the encoder, decoder, refiner and merger
-            image_features = encoder(rendering_images)
-            raw_features, generated_volume = decoder(image_features)
+        print("Shape of the loaded images {}".format(rendering_images.shape))
 
-            if cfg.NETWORK.USE_MERGER:
-                generated_volume = merger(raw_features, generated_volume)
-            else:
-                generated_volume = torch.mean(generated_volume, dim=1)
+        # Test the encoder, decoder, refiner and merger
+        image_features = encoder(rendering_images)
+        raw_features, generated_volume = decoder(image_features)
+
+        if cfg.NETWORK.USE_MERGER:
+            generated_volume = merger(raw_features, generated_volume)
+        else:
+            generated_volume = torch.mean(generated_volume, dim=1)
 
 
-            if cfg.NETWORK.USE_REFINER:
-                generated_volume = refiner(generated_volume)
+        if cfg.NETWORK.USE_REFINER:
+            generated_volume = refiner(generated_volume)
 
-            print("vox shape {}".format(generated_volume.shape))
+        print("vox shape {}".format(generated_volume.shape))
 
-            gv = generated_volume.cpu().numpy()
+        gv = generated_volume.cpu().numpy()
 
-            rendering_views = utils.binvox_visualization.get_volume_views(gv, os.path.join(
-                './LargeDatasets/inference_images/', 'inference'),
-                                                                          sample_idx)
-            #if sample_idx == 3:
-            #    break
+        rendering_views = utils.binvox_visualization.get_volume_views(gv, os.path.join(
+            './LargeDatasets/inference_images/', 'inference'),
+                                                                      sample_idx)
+        #if sample_idx == 3:
+        #    break
     print("gv shape is {}".format(gv.shape))
     return gv, rendering_images
+
+def load_image():
+    import cv2
+    filename = './LargeDatasets/DemoImage/car/car_subfolder/rendering/black_chair.png'
+    img = cv2.imread(filename, cv2.IMREAD_UNCHANGED)
+    scale_percent = 100  # percent of original size
+    width = int(img.shape[1] * scale_percent / 100)
+    height = int(img.shape[0] * scale_percent / 100)
+    #dim = (width, height)
+    dim = (224, 224)
+    print("Dimensions of input to segmentation code {}".format(dim))
+    # resize image
+    img = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+    print("Image Shape = {}".format(img.shape))
+    img = img.reshape(1, 1, 3, img.shape[0], img.shape[1])
+    print("Image ReShaped = {}".format(img.shape))
+    img = torch.from_numpy(img)
+    img = img.float().div(255)
+    return img
