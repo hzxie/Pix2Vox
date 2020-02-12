@@ -9,6 +9,8 @@ import streamlit as st
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import requests
+import os
+import os.path
 
 title = st.title("3D Reconstruction")
 
