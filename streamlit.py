@@ -30,14 +30,15 @@ MODEL_DIR = 'pretrained_models'
 
 @st.cache
 def download_model_from_web():
-    if os.path.isfile(MODEL_FILENAME):
-        return
+    
+    #if os.path.isfile(MODEL_FILENAME):
+    #    return
 
     try:
         os.mkdir(MODEL_DIR)
     except FileExistsError:
         pass
-
+    
     MODEL_URL = (
         'https://2d-to-3d-pretrained-model.s3-us-west-2.amazonaws.com/Pix2Vox-A-ShapeNet.pth')
     resp = requests.get(MODEL_URL, stream=True)
