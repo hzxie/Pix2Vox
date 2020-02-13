@@ -18,7 +18,12 @@ title = st.title("3D Reconstruction")
 def generate_data():
     PATH = 'pretrained_models/Pix2Vox-A-ShapeNet.pth'
     torch.backends.cudnn.benchmark = True
-    checkpoint = (torch.load(PATH))
+    if torch.cuda.is_available():
+        checkpoint = torch.load(PATH)
+    else:
+        map_location = torch.device('cpu')
+        checkpoint = torch.load(PATH, map_location=map_location)
+
     cfg.CONST.WEIGHTS = './pretrained_models/Pix2Vox-A-ShapeNet.pth'
     generated_volume, rendering_images = test_net(cfg,output_dir='./output')
     volume = generated_volume.reshape(32,32,32)
