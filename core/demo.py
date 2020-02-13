@@ -76,7 +76,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
     if torch.cuda.is_available():
         checkpoint = torch.load(cfg.CONST.WEIGHTS)
     else:
-        map_location = 'cpu'
+        map_location = torch.device('cpu')
         checkpoint = torch.load(cfg.CONST.WEIGHTS, map_location=map_location)
 
         epoch_idx = checkpoint['epoch_idx']
