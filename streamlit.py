@@ -28,7 +28,7 @@ def generate_data():
 MODEL_FILENAME = 'pretrained_models/Pix2Vox-A-ShapeNet.pth'
 MODEL_DIR = 'pretrained_models'
 
-@st.cache
+#@st.cache
 def download_model_from_web():
     if os.path.isfile(MODEL_FILENAME):
         return
