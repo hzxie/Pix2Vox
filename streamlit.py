@@ -31,8 +31,8 @@ MODEL_DIR = 'pretrained_models'
 @st.cache
 def download_model_from_web():
     
-    #if os.path.isfile(MODEL_FILENAME):
-    #    return
+    if os.path.isfile(MODEL_FILENAME):
+        return
 
     try:
         os.mkdir(MODEL_DIR)

@@ -72,7 +72,13 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
             merger = torch.nn.DataParallel(merger).cuda()
 
         print('[INFO] %s Loading weights from %s ...' % (dt.now(), cfg.CONST.WEIGHTS))
-        checkpoint = torch.load(cfg.CONST.WEIGHTS)
+
+	if torch.cuda.is_available():
+	    checkpoint = torch.load(cfg.CONST.WEIGHTS)
+	else:
+	    map_location='cpu'
+	    checkpoint = torch.load(load_path, map_location=map_location)
+
         epoch_idx = checkpoint['epoch_idx']
         print('Epoch ID of the current model is {}'.format(epoch_idx))
         encoder.load_state_dict(checkpoint['encoder_state_dict'])
