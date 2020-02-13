@@ -28,7 +28,7 @@ def generate_data():
 MODEL_FILENAME = 'pretrained_models/Pix2Vox-A-ShapeNet.pth'
 MODEL_DIR = 'pretrained_models'
 
-#@st.cache
+@st.cache
 def download_model_from_web():
     if os.path.isfile(MODEL_FILENAME):
         return
@@ -39,7 +39,7 @@ def download_model_from_web():
         pass
 
     MODEL_URL = (
-        'https://drive.google.com/file/d/10s9zfALBfXwrXFsgakOnwLoIsc94M1CD/view?usp=sharing')
+        'https://2d-to-3d-pretrained-model.s3-us-west-2.amazonaws.com/Pix2Vox-A-ShapeNet.pth')
     resp = requests.get(MODEL_URL, stream=True)
 
     with open(MODEL_FILENAME, 'wb') as file_desc:
