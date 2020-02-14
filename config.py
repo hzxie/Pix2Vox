@@ -33,7 +33,7 @@ __C.DATASETS.PIX3D.VOXEL_PATH               = './LargeDatasets/Pix3D/model/%s/%s
 
 __C.DATASETS.INFERENCE                       = edict()
 __C.DATASETS.INFERENCE.TAXONOMY_FILE_PATH    = './datasets/DemoData.json'
-__C.DATASETS.INFERENCE.RENDERING_PATH        = './LargeDatasets/DemoImage/%s/%s/rendering/%02d.png'
+__C.DATASETS.INFERENCE.RENDERING_PATH        = './datasets/DemoImage/%s/%s/rendering/%02d.png'
 
 # __C.DATASETS.SHAPENET.TAXONOMY_FILE_PATH  = './datasets/PascalShapeNet.json'
 #

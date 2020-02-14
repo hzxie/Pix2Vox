@@ -1,0 +1,1 @@
+[{"taxonomy_id": "car", "taxonomy_name": "car", "baseline": {"1-view": 0.798, "2-view": 0.821, "3-view": 0.829, "4-view": 0.833, "5-view": 0.836}, "test": ["car_subfolder"]}]
