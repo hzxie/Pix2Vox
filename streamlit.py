@@ -14,7 +14,7 @@ import os.path
 
 title = st.title("3D Reconstruction")
 
-@st.cache
+#@st.cache
 def generate_data():
     PATH = 'pretrained_models/Pix2Vox-A-ShapeNet.pth'
     torch.backends.cudnn.benchmark = True
