@@ -3,13 +3,11 @@
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import json
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import torch
 import torch.backends.cudnn
 import torch.utils.data
-import torchvision.transforms
 
 import utils.binvox_visualization
 import utils.data_loaders
@@ -17,16 +15,22 @@ import utils.data_transforms
 import utils.network_utils
 
 from datetime import datetime as dt
-from tensorboardX import SummaryWriter
-from time import time
 
 from models.encoder import Encoder
 from models.decoder import Decoder
 from models.refiner import Refiner
 from models.merger import Merger
 
-def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
-        test_writer=None, encoder=None, decoder=None, refiner=None, merger=None):
+
+def test_net(cfg,
+             epoch_idx=-1,
+             output_dir=None,
+             test_data_loader=None,
+             test_writer=None,
+             encoder=None,
+             decoder=None,
+             refiner=None,
+             merger=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark = True
 
@@ -49,13 +53,12 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
         ])
 
         dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
-        test_data_loader = torch.utils.data.DataLoader(
-            dataset=dataset_loader.get_dataset(utils.data_loaders.DatasetType.TEST,
-                                               cfg.CONST.N_VIEWS_RENDERING, test_transforms),
-            batch_size=1,
-            num_workers=1,
-            pin_memory=True,
-            shuffle=False)
+        test_data_loader = torch.utils.data.DataLoader(dataset=dataset_loader.get_dataset(
+            utils.data_loaders.DatasetType.TEST, cfg.CONST.N_VIEWS_RENDERING, test_transforms),
+                                                       batch_size=1,
+                                                       num_workers=1,
+                                                       pin_memory=True,
+                                                       shuffle=False)
 
     # Set up networks
     if decoder is None or encoder is None:
@@ -134,7 +137,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
                 sample_iou.append((intersection / union).item())
 
             # IoU per taxonomy
-            if not taxonomy_id in test_iou:
+            if taxonomy_id not in test_iou:
                 test_iou[taxonomy_id] = {'n_samples': 0, 'iou': []}
             test_iou[taxonomy_id]['n_samples'] += 1
             test_iou[taxonomy_id]['iou'].append(sample_iou)
@@ -153,9 +156,9 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
                 test_writer.add_image('Test Sample#%02d/Volume GroundTruth' % sample_idx, rendering_views, epoch_idx)
 
             # Print sample loss and IoU
-            print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f RLoss = %.4f IoU = %s' % \
-                (dt.now(), sample_idx + 1, n_samples, taxonomy_id, sample_name, encoder_loss.item(), \
-                    refiner_loss.item(), ['%.4f' % si for si in sample_iou]))
+            print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f RLoss = %.4f IoU = %s' %
+                  (dt.now(), sample_idx + 1, n_samples, taxonomy_id, sample_name, encoder_loss.item(),
+                   refiner_loss.item(), ['%.4f' % si for si in sample_iou]))
 
     # Output testing results
     mean_iou = []
@@ -192,7 +195,7 @@ def test_net(cfg, epoch_idx=-1, output_dir=None, test_data_loader=None, \
 
     # Add testing results to TensorBoard
     max_iou = np.max(mean_iou)
-    if not test_writer is None:
+    if test_writer is not None:
         test_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx)
         test_writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)

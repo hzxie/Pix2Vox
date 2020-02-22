@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 from easydict import EasyDict as edict

@@ -23,12 +23,18 @@ from core.test import test_net
 
 def get_args_from_command_line():
     parser = ArgumentParser(description='Parser of Runner of Pix2Vox')
-    parser.add_argument(
-        '--gpu', dest='gpu_id', help='GPU device id to use [cuda0]', default=cfg.CONST.DEVICE, type=str)
+    parser.add_argument('--gpu',
+                        dest='gpu_id',
+                        help='GPU device id to use [cuda0]',
+                        default=cfg.CONST.DEVICE,
+                        type=str)
     parser.add_argument('--rand', dest='randomize', help='Randomize (do not use a fixed seed)', action='store_true')
     parser.add_argument('--test', dest='test', help='Test neural networks', action='store_true')
-    parser.add_argument(
-        '--batch-size', dest='batch_size', help='name of the net', default=cfg.CONST.BATCH_SIZE, type=int)
+    parser.add_argument('--batch-size',
+                        dest='batch_size',
+                        help='name of the net',
+                        default=cfg.CONST.BATCH_SIZE,
+                        type=int)
     parser.add_argument('--epoch', dest='epoch', help='number of epoches', default=cfg.TRAIN.NUM_EPOCHES, type=int)
     parser.add_argument('--weights', dest='weights', help='Initialize network from the weights file', default=None)
     parser.add_argument('--out', dest='out_path', help='Set output path', default=cfg.DIR.OUT_PATH)

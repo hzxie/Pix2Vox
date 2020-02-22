@@ -21,7 +21,6 @@ class Compose(object):
     >>>     transforms.CenterCrop(127, 127, 3),
     >>>  ])
     """
-
     def __init__(self, transforms):
         self.transforms = transforms
 
@@ -40,7 +39,6 @@ class ToTensor(object):
     Convert a PIL Image or numpy.ndarray to tensor.
     Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
     """
-
     def __call__(self, rendering_images):
         assert (isinstance(rendering_images, np.ndarray))
         array = np.transpose(rendering_images, (0, 3, 1, 2))
@@ -92,13 +90,13 @@ class CenterCrop(object):
         for img_idx, img in enumerate(rendering_images):
             img_height, img_width, _ = img.shape
 
-            if not bounding_box is None:
+            if bounding_box is not None:
                 bounding_box = [
                     bounding_box[0] * img_width,
                     bounding_box[1] * img_height,
                     bounding_box[2] * img_width,
                     bounding_box[3] * img_height
-                ] # yapf: disable
+                ]  # yapf: disable
 
                 # Calculate the size of bounding boxes
                 bbox_width = bounding_box[2] - bounding_box[0]
@@ -132,10 +130,9 @@ class CenterCrop(object):
                     y_bottom = img_height - 1
 
                 # Padding the image and resize the image
-                processed_image = np.pad(
-                    img[y_top:y_bottom + 1, x_left:x_right + 1], ((pad_y_top, pad_y_bottom), (pad_x_left, pad_x_right),
-                                                                  (0, 0)),
-                    mode='edge')
+                processed_image = np.pad(img[y_top:y_bottom + 1, x_left:x_right + 1],
+                                         ((pad_y_top, pad_y_bottom), (pad_x_left, pad_x_right), (0, 0)),
+                                         mode='edge')
                 processed_image = cv2.resize(processed_image, (self.img_size_w, self.img_size_h))
             else:
                 if img_height > self.crop_size_h and img_width > self.crop_size_w:
@@ -187,13 +184,13 @@ class RandomCrop(object):
         for img_idx, img in enumerate(rendering_images):
             img_height, img_width, _ = img.shape
 
-            if not bounding_box is None:
+            if bounding_box is not None:
                 bounding_box = [
                     bounding_box[0] * img_width,
                     bounding_box[1] * img_height,
                     bounding_box[2] * img_width,
                     bounding_box[3] * img_height
-                ] # yapf: disable
+                ]  # yapf: disable
 
                 # Calculate the size of bounding boxes
                 bbox_width = bounding_box[2] - bounding_box[0]
@@ -229,10 +226,9 @@ class RandomCrop(object):
                     y_bottom = img_height - 1
 
                 # Padding the image and resize the image
-                processed_image = np.pad(
-                    img[y_top:y_bottom + 1, x_left:x_right + 1], ((pad_y_top, pad_y_bottom), (pad_x_left, pad_x_right),
-                                                                  (0, 0)),
-                    mode='edge')
+                processed_image = np.pad(img[y_top:y_bottom + 1, x_left:x_right + 1],
+                                         ((pad_y_top, pad_y_bottom), (pad_x_left, pad_x_right), (0, 0)),
+                                         mode='edge')
                 processed_image = cv2.resize(processed_image, (self.img_size_w, self.img_size_h))
             else:
                 if img_height > self.crop_size_h and img_width > self.crop_size_w:
@@ -420,7 +416,7 @@ class RandomBackground(object):
     def __init__(self, random_bg_color_range, random_bg_folder_path=None):
         self.random_bg_color_range = random_bg_color_range
         self.random_bg_files = []
-        if not random_bg_folder_path is None:
+        if random_bg_folder_path is not None:
             self.random_bg_files = os.listdir(random_bg_folder_path)
             self.random_bg_files = [os.path.join(random_bg_folder_path, rbf) for rbf in self.random_bg_files]
 
@@ -448,7 +444,7 @@ class RandomBackground(object):
         for img_idx, img in enumerate(rendering_images):
             alpha = (np.expand_dims(img[:, :, 3], axis=2) == 0).astype(np.float32)
             img = img[:, :, :3]
-            bg_color = random_bg if random.randint(0, 1) and not random_bg is None else np.array([[[r, g, b]]])
+            bg_color = random_bg if random.randint(0, 1) and random_bg is not None else np.array([[[r, g, b]]])
             img = alpha * bg_color + (1 - alpha) * img
 
             processed_images = np.append(processed_images, [img], axis=0)

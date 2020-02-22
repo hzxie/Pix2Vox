@@ -51,21 +51,19 @@ def train_net(cfg):
     # Set up data loader
     train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](cfg)
     val_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
-    train_data_loader = torch.utils.data.DataLoader(
-        dataset=train_dataset_loader.get_dataset(utils.data_loaders.DatasetType.TRAIN,
-                                                 cfg.CONST.N_VIEWS_RENDERING, train_transforms),
-        batch_size=cfg.CONST.BATCH_SIZE,
-        num_workers=cfg.TRAIN.NUM_WORKER,
-        pin_memory=True,
-        shuffle=True,
-        drop_last=True)
-    val_data_loader = torch.utils.data.DataLoader(
-        dataset=val_dataset_loader.get_dataset(utils.data_loaders.DatasetType.VAL,
-                                               cfg.CONST.N_VIEWS_RENDERING, val_transforms),
-        batch_size=1,
-        num_workers=1,
-        pin_memory=True,
-        shuffle=False)
+    train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset_loader.get_dataset(
+        utils.data_loaders.DatasetType.TRAIN, cfg.CONST.N_VIEWS_RENDERING, train_transforms),
+                                                    batch_size=cfg.CONST.BATCH_SIZE,
+                                                    num_workers=cfg.TRAIN.NUM_WORKER,
+                                                    pin_memory=True,
+                                                    shuffle=True,
+                                                    drop_last=True)
+    val_data_loader = torch.utils.data.DataLoader(dataset=val_dataset_loader.get_dataset(
+        utils.data_loaders.DatasetType.VAL, cfg.CONST.N_VIEWS_RENDERING, val_transforms),
+                                                  batch_size=1,
+                                                  num_workers=1,
+                                                  pin_memory=True,
+                                                  shuffle=False)
 
     # Set up networks
     encoder = Encoder(cfg)
@@ -85,38 +83,45 @@ def train_net(cfg):
 
     # Set up solver
     if cfg.TRAIN.POLICY == 'adam':
-        encoder_solver = torch.optim.Adam(
-            filter(lambda p: p.requires_grad, encoder.parameters()),
-            lr=cfg.TRAIN.ENCODER_LEARNING_RATE,
-            betas=cfg.TRAIN.BETAS)
-        decoder_solver = torch.optim.Adam(
-            decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
-        refiner_solver = torch.optim.Adam(
-            refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
+        encoder_solver = torch.optim.Adam(filter(lambda p: p.requires_grad, encoder.parameters()),
+                                          lr=cfg.TRAIN.ENCODER_LEARNING_RATE,
+                                          betas=cfg.TRAIN.BETAS)
+        decoder_solver = torch.optim.Adam(decoder.parameters(),
+                                          lr=cfg.TRAIN.DECODER_LEARNING_RATE,
+                                          betas=cfg.TRAIN.BETAS)
+        refiner_solver = torch.optim.Adam(refiner.parameters(),
+                                          lr=cfg.TRAIN.REFINER_LEARNING_RATE,
+                                          betas=cfg.TRAIN.BETAS)
         merger_solver = torch.optim.Adam(merger.parameters(), lr=cfg.TRAIN.MERGER_LEARNING_RATE, betas=cfg.TRAIN.BETAS)
     elif cfg.TRAIN.POLICY == 'sgd':
-        encoder_solver = torch.optim.SGD(
-            filter(lambda p: p.requires_grad, encoder.parameters()),
-            lr=cfg.TRAIN.ENCODER_LEARNING_RATE,
-            momentum=cfg.TRAIN.MOMENTUM)
-        decoder_solver = torch.optim.SGD(
-            decoder.parameters(), lr=cfg.TRAIN.DECODER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
-        refiner_solver = torch.optim.SGD(
-            refiner.parameters(), lr=cfg.TRAIN.REFINER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
-        merger_solver = torch.optim.SGD(
-            merger.parameters(), lr=cfg.TRAIN.MERGER_LEARNING_RATE, momentum=cfg.TRAIN.MOMENTUM)
+        encoder_solver = torch.optim.SGD(filter(lambda p: p.requires_grad, encoder.parameters()),
+                                         lr=cfg.TRAIN.ENCODER_LEARNING_RATE,
+                                         momentum=cfg.TRAIN.MOMENTUM)
+        decoder_solver = torch.optim.SGD(decoder.parameters(),
+                                         lr=cfg.TRAIN.DECODER_LEARNING_RATE,
+                                         momentum=cfg.TRAIN.MOMENTUM)
+        refiner_solver = torch.optim.SGD(refiner.parameters(),
+                                         lr=cfg.TRAIN.REFINER_LEARNING_RATE,
+                                         momentum=cfg.TRAIN.MOMENTUM)
+        merger_solver = torch.optim.SGD(merger.parameters(),
+                                        lr=cfg.TRAIN.MERGER_LEARNING_RATE,
+                                        momentum=cfg.TRAIN.MOMENTUM)
     else:
         raise Exception('[FATAL] %s Unknown optimizer %s.' % (dt.now(), cfg.TRAIN.POLICY))
 
     # Set up learning rate scheduler to decay learning rates dynamically
-    encoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        encoder_solver, milestones=cfg.TRAIN.ENCODER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
-    decoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        decoder_solver, milestones=cfg.TRAIN.DECODER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
-    refiner_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        refiner_solver, milestones=cfg.TRAIN.REFINER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
-    merger_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        merger_solver, milestones=cfg.TRAIN.MERGER_LR_MILESTONES, gamma=cfg.TRAIN.GAMMA)
+    encoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(encoder_solver,
+                                                                milestones=cfg.TRAIN.ENCODER_LR_MILESTONES,
+                                                                gamma=cfg.TRAIN.GAMMA)
+    decoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(decoder_solver,
+                                                                milestones=cfg.TRAIN.DECODER_LR_MILESTONES,
+                                                                gamma=cfg.TRAIN.GAMMA)
+    refiner_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(refiner_solver,
+                                                                milestones=cfg.TRAIN.REFINER_LR_MILESTONES,
+                                                                gamma=cfg.TRAIN.GAMMA)
+    merger_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(merger_solver,
+                                                               milestones=cfg.TRAIN.MERGER_LR_MILESTONES,
+                                                               gamma=cfg.TRAIN.GAMMA)
 
     if torch.cuda.is_available():
         encoder = torch.nn.DataParallel(encoder).cuda()
@@ -145,8 +150,8 @@ def train_net(cfg):
         if cfg.NETWORK.USE_MERGER:
             merger.load_state_dict(checkpoint['merger_state_dict'])
 
-        print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' \
-                 % (dt.now(), init_epoch, best_iou, best_epoch))
+        print('[INFO] %s Recover complete. Current epoch #%d, Best IoU = %.4f at epoch #%d.' %
+              (dt.now(), init_epoch, best_iou, best_epoch))
 
     # Summary writer for TensorBoard
     output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
@@ -227,9 +232,10 @@ def train_net(cfg):
             # Tick / tock
             batch_time.update(time() - batch_end_time)
             batch_end_time = time()
-            print('[INFO] %s [Epoch %d/%d][Batch %d/%d] BatchTime = %.3f (s) DataTime = %.3f (s) EDLoss = %.4f RLoss = %.4f' % \
-                (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, \
-                    batch_time.val, data_time.val, encoder_loss.item(), refiner_loss.item()))
+            print(
+                '[INFO] %s [Epoch %d/%d][Batch %d/%d] BatchTime = %.3f (s) DataTime = %.3f (s) EDLoss = %.4f RLoss = %.4f'
+                % (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, n_batches, batch_time.val,
+                   data_time.val, encoder_loss.item(), refiner_loss.item()))
 
         # Append epoch loss to TensorBoard
         train_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx + 1)
@@ -244,15 +250,15 @@ def train_net(cfg):
         # Tick / tock
         epoch_end_time = time()
         print('[INFO] %s Epoch [%d/%d] EpochTime = %.3f (s) EDLoss = %.4f RLoss = %.4f' %
-            (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, \
-                encoder_losses.avg, refiner_losses.avg))
+              (dt.now(), epoch_idx + 1, cfg.TRAIN.NUM_EPOCHES, epoch_end_time - epoch_start_time, encoder_losses.avg,
+               refiner_losses.avg))
 
         # Update Rendering Views
         if cfg.TRAIN.UPDATE_N_VIEWS_RENDERING:
             n_views_rendering = random.randint(1, cfg.CONST.N_VIEWS_RENDERING)
             train_data_loader.dataset.set_n_views_rendering(n_views_rendering)
-            print('[INFO] %s Epoch [%d/%d] Update #RenderingViews to %d' % \
-                (dt.now(), epoch_idx + 2, cfg.TRAIN.NUM_EPOCHES, n_views_rendering))
+            print('[INFO] %s Epoch [%d/%d] Update #RenderingViews to %d' %
+                  (dt.now(), epoch_idx + 2, cfg.TRAIN.NUM_EPOCHES, n_views_rendering))
 
         # Validate the training models
         iou = test_net(cfg, epoch_idx + 1, output_dir, val_data_loader, val_writer, encoder, decoder, refiner, merger)
@@ -262,20 +268,18 @@ def train_net(cfg):
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
 
-            utils.network_utils.save_checkpoints(cfg, \
-                    os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth' % (epoch_idx + 1)), \
-                    epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
-                    refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
+            utils.network_utils.save_checkpoints(cfg, os.path.join(ckpt_dir, 'ckpt-epoch-%04d.pth' % (epoch_idx + 1)),
+                                                 epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver,
+                                                 refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
         if iou > best_iou:
             if not os.path.exists(ckpt_dir):
                 os.makedirs(ckpt_dir)
 
             best_iou = iou
             best_epoch = epoch_idx + 1
-            utils.network_utils.save_checkpoints(cfg, \
-                    os.path.join(ckpt_dir, 'best-ckpt.pth'), \
-                    epoch_idx + 1, encoder, encoder_solver, decoder, decoder_solver, \
-                    refiner, refiner_solver, merger, merger_solver, best_iou, best_epoch)
+            utils.network_utils.save_checkpoints(cfg, os.path.join(ckpt_dir, 'best-ckpt.pth'), epoch_idx + 1, encoder,
+                                                 encoder_solver, decoder, decoder_solver, refiner, refiner_solver,
+                                                 merger, merger_solver, best_iou, best_epoch)
 
     # Close SummaryWriter for TensorBoard
     train_writer.close()
