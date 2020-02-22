@@ -166,12 +166,6 @@ def train_net(cfg):
         encoder_losses = utils.network_utils.AverageMeter()
         refiner_losses = utils.network_utils.AverageMeter()
 
-        # Adjust learning rate
-        encoder_lr_scheduler.step()
-        decoder_lr_scheduler.step()
-        refiner_lr_scheduler.step()
-        merger_lr_scheduler.step()
-
         # switch models to training mode
         encoder.train()
         decoder.train()
@@ -240,6 +234,12 @@ def train_net(cfg):
         # Append epoch loss to TensorBoard
         train_writer.add_scalar('EncoderDecoder/EpochLoss', encoder_losses.avg, epoch_idx + 1)
         train_writer.add_scalar('Refiner/EpochLoss', refiner_losses.avg, epoch_idx + 1)
+
+        # Adjust learning rate
+        encoder_lr_scheduler.step()
+        decoder_lr_scheduler.step()
+        refiner_lr_scheduler.step()
+        merger_lr_scheduler.step()
 
         # Tick / tock
         epoch_end_time = time()
