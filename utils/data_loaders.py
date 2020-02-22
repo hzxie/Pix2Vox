@@ -30,7 +30,6 @@ class DatasetType(Enum):
 
 class ShapeNetDataset(torch.utils.data.dataset.Dataset):
     """ShapeNetDataset class used for PyTorch DataLoader"""
-
     def __init__(self, dataset_type, file_list, n_views_rendering, transforms=None):
         self.dataset_type = dataset_type
         self.file_list = file_list
@@ -71,7 +70,7 @@ class ShapeNetDataset(torch.utils.data.dataset.Dataset):
             rendering_image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 255.
             if len(rendering_image.shape) < 3:
                 print('[FATAL] %s It seems that there is something wrong with the image file %s' %
-                      (dt.now(), rendering_image_path))
+                      (dt.now(), image_path))
                 sys.exit(2)
 
             rendering_images.append(rendering_image)
@@ -109,8 +108,8 @@ class ShapeNetDataLoader:
         # Load data for each category
         for taxonomy in self.dataset_taxonomy:
             taxonomy_folder_name = taxonomy['taxonomy_id']
-            print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' % (dt.now(), taxonomy['taxonomy_id'],
-                                                                              taxonomy['taxonomy_name']))
+            print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' %
+                  (dt.now(), taxonomy['taxonomy_id'], taxonomy['taxonomy_name']))
             samples = []
             if dataset_type == DatasetType.TRAIN:
                 samples = taxonomy['train']
@@ -131,8 +130,8 @@ class ShapeNetDataLoader:
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_folder_name, sample_name)
             if not os.path.exists(volume_file_path):
-                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_folder_name,
-                                                                                       sample_name))
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' %
+                      (dt.now(), taxonomy_folder_name, sample_name))
                 continue
 
             # Get file list of rendering images
@@ -149,8 +148,8 @@ class ShapeNetDataLoader:
                 rendering_images_file_path.append(img_file_path)
 
             if len(rendering_images_file_path) == 0:
-                print('[WARN] %s Ignore sample %s/%s since image files not exists.' % (dt.now(), taxonomy_folder_name,
-                                                                                       sample_name))
+                print('[WARN] %s Ignore sample %s/%s since image files not exists.' %
+                      (dt.now(), taxonomy_folder_name, sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -173,7 +172,6 @@ class ShapeNetDataLoader:
 
 class Pascal3dDataset(torch.utils.data.dataset.Dataset):
     """Pascal3D class used for PyTorch DataLoader"""
-
     def __init__(self, file_list, transforms=None):
         self.file_list = file_list
         self.transforms = transforms
@@ -289,8 +287,8 @@ class Pascal3dDataLoader:
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_name, cad_index)
             if not os.path.exists(volume_file_path):
-                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name,
-                                                                                       sample_name))
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' %
+                      (dt.now(), taxonomy_name, sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -310,7 +308,6 @@ class Pascal3dDataLoader:
 
 class Pix3dDataset(torch.utils.data.dataset.Dataset):
     """Pix3D class used for PyTorch DataLoader"""
-
     def __init__(self, file_list, transforms=None):
         self.file_list = file_list
         self.transforms = transforms
@@ -413,7 +410,7 @@ class Pix3dDataLoader:
                 annotations['bbox'][1] / img_height,
                 annotations['bbox'][2] / img_width,
                 annotations['bbox'][3] / img_height
-            ] # yapf: disable
+            ]  # yapf: disable
             model_name_parts = annotations['voxel'].split('/')
             model_name = model_name_parts[2]
             volume_file_name = model_name_parts[3][:-4].replace('voxel', 'model')
@@ -421,8 +418,8 @@ class Pix3dDataLoader:
             # Get file path of volumes
             volume_file_path = self.volume_path_template % (taxonomy_name, model_name, volume_file_name)
             if not os.path.exists(volume_file_path):
-                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' % (dt.now(), taxonomy_name,
-                                                                                       sample_name))
+                print('[WARN] %s Ignore sample %s/%s since volume file not exists.' %
+                      (dt.now(), taxonomy_name, sample_name))
                 continue
 
             # Append to the list of rendering images
@@ -443,4 +440,4 @@ DATASET_LOADER_MAPPING = {
     'ShapeNet': ShapeNetDataLoader,
     'Pascal3D': Pascal3dDataLoader,
     'Pix3D': Pix3dDataLoader
-} # yapf: disable
+}  # yapf: disable
