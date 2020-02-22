@@ -23,7 +23,6 @@ def main():
         print('[ERROR] Input folder not exists!')
         sys.exit(2)
 
-    N_CHANNELS = 3
     FILE_NAME_PATTERN = '*.JPEG'
     folders_to_explore = Queue()
     folders_to_explore.put(input_file_folder)

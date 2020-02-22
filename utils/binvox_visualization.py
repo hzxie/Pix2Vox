@@ -3,7 +3,6 @@
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
 import os
 
@@ -16,7 +15,7 @@ def get_volume_views(volume, save_dir, n_itr):
 
     volume = volume.squeeze().__ge__(0.5)
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = fig.gca(projection=Axes3D.name)
     ax.set_aspect('equal')
     ax.voxels(volume, edgecolor="k")
 
