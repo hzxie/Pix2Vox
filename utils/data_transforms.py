@@ -5,8 +5,8 @@
 # - https://github.com/xiumingzhang/GenRe-ShapeHD
 
 import cv2
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+# import matplotlib.pyplot as plt
+# import matplotlib.patches as patches
 import numpy as np
 import os
 import random
@@ -108,8 +108,6 @@ class CenterCrop(object):
 
                 # Make the crop area as a square
                 square_object_size = max(bbox_width, bbox_height)
-                square_object_size = square_object_size
-
                 x_left = int(bbox_x_mid - square_object_size * .5)
                 x_right = int(bbox_x_mid + square_object_size * .5)
                 y_top = int(bbox_y_mid - square_object_size * .5)

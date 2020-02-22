@@ -112,7 +112,7 @@ def read_header(fp):
     dims = list(map(int, fp.readline().strip().split(b' ')[1:]))
     translate = list(map(float, fp.readline().strip().split(b' ')[1:]))
     scale = list(map(float, fp.readline().strip().split(b' ')[1:]))[0]
-    line = fp.readline()
+    fp.readline()
     return dims, translate, scale
 
 
@@ -172,8 +172,8 @@ def read_as_coord_array(fp, fix_coords=True):
 
     values, counts = raw_data[::2], raw_data[1::2]
 
-    sz = np.prod(dims)
-    index, end_index = 0, 0
+    # sz = np.prod(dims)
+    # index, end_index = 0, 0
     end_indices = np.cumsum(counts)
     indices = np.concatenate(([0], end_indices[:-1])).astype(end_indices.dtype)
 

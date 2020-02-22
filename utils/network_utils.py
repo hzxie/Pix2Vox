@@ -2,7 +2,6 @@
 #
 # Developed by Haozhe Xie <cshzxie@gmail.com>
 
-import os
 import torch
 
 from datetime import datetime as dt

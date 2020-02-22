@@ -126,7 +126,6 @@ class ShapeNetDataLoader:
 
     def get_files_of_taxonomy(self, taxonomy_folder_name, samples):
         files_of_taxonomy = []
-        n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
             # Get file path of volumes
@@ -249,7 +248,6 @@ class Pascal3dDataLoader:
 
     def get_files_of_taxonomy(self, taxonomy_name, samples):
         files_of_taxonomy = []
-        n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
             # Get file list of rendering images
@@ -397,7 +395,6 @@ class Pix3dDataLoader:
 
     def get_files_of_taxonomy(self, taxonomy_name, samples):
         files_of_taxonomy = []
-        n_samples = len(samples)
 
         for sample_idx, sample_name in enumerate(samples):
             # Get image annotations
