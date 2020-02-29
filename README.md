@@ -6,8 +6,11 @@ The slides of this project can be found at the following link [Insight Artificia
 
 ### Project Demo
 This project takes in any 3-Channel RGB image and converts it into 3D-voxelated objects.
+  
+</figure>
 <img src="https://i.ibb.co/CMN03Ld/pixels.jpg" alt="drawing" width="200"/>
-3-channel RGB image
+<figcaption>3-channel RGB Image. </figcaption>
+</figure>
 
 <img src="https://i.ibb.co/921YCJs/Voxels-svg.png" alt="drawing" width="200"/>
 3D voxels
