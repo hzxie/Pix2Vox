@@ -4,7 +4,7 @@ This is an open source package for generating 3D voxelized objaect from 2D image
   
 The slides of this project can be found at the following link [Insight Artificial Intelligence Project  MVP](http://bit.ly/2dto3Dpresentation).
 
-<img src="https://i.ibb.co/CMN03Ld/pixels.jpg" alt="drawing" style="width:50px;"/>
+<img src="https://i.ibb.co/CMN03Ld/pixels.jpg" alt="drawing" width="200"/>
 
 ### Project Demo
 This project takes in any 3-Channel RGB image and converts it into 3D-voxelated objects.
