@@ -1,8 +1,14 @@
 # 3D Reconstruction from 2D Views
 
-This is an open source package for generating 3D voxelized objaect from 2D images. The slides of this project can be found at the following link [Insight Artificial Intelligence Project  MVP](http://bit.ly/2dto3Dpresentation).
+This is an open source package for generating 3D voxelized objaect from 2D images. 
+  
+The slides of this project can be found at the following link [Insight Artificial Intelligence Project  MVP](http://bit.ly/2dto3Dpresentation).
 
-![Generated Voxels](https://i.ibb.co/6gvfK8D/ezgif-com-video-to-gif.gif)
+### Project Demo
+This project takes in any 3-Channel RGB image and converts it into 3D-voxelated objects.
+[3-channel RGB Image](https://i.ibb.co/CMN03Ld/pixels.jpg)
+[3D Voxels](https://i.ibb.co/921YCJs/Voxels-svg.png)
+![Demo Link](https://i.ibb.co/gJzSvzB/ezgif-com-video-to-gif-4.gif)
 
 ## Datasets
 
