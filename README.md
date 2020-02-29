@@ -1,8 +1,8 @@
-# Pix2Vox
+# 3D Reconstruction from 2D Views
 
-This repository contains an implementation of the model from the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153).
+This is an open source package for generating 3D voxelized objaect from 2D images. The slides of this project can be found at the following link [Insight Artificial Intelligence Project  MVP] (http://bit.ly/2dto3Dpresentation).
 
-![Overview](https://infinitescript.com/wordpress/wp-content/uploads/2019/04/Pix2Vox-Overview.jpg)
+![Generated Voxels](https://ibb.co/J5xMYqr)
 
 ## Datasets
 

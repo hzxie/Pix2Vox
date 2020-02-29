@@ -92,7 +92,7 @@ if img_file_buffer is not None:
     segment = None
     SEG_CFG = {}
     config_segmentation(SEG_CFG)
-    SEG_CFG['padding'] = st.selectbox("View Distance", [0, 10, 20, 30, 40])
+    SEG_CFG['padding'] = st.sidebar.selectbox("View Distance", [0, 10, 20, 30, 40])
     # SEG_CFG['folder name'] = img_file_buffer
     segment = seg.Segmentation(SEG_CFG)
     segment.run()
@@ -103,8 +103,8 @@ volume = generate_data()
 
 # TODO : not sure that's the most optimized way to rotate axis but well, demo purpose
 description = st.sidebar.markdown('Control Your View Angle Here')
-azim = st.sidebar.slider("azimuth angle", 0, 360, 30, 1)
-elev = st.sidebar.slider("elevation angle", 0, 360, 240, 1)
+azim = st.sidebar.slider("azimuth angle", -180, 180, -64, 1)
+elev = st.sidebar.slider("elevation angle", -180, 180, 111, 1)
 
 # and plot everything
 threshold = st.sidebar.selectbox("Threshold: Controls the voxel threshold levels", [0.2, 0.3, 0.4, 0.5, 0.6])
