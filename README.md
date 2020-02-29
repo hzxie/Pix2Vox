@@ -4,18 +4,24 @@ This is an open source package for generating 3D voxelized objaect from 2D image
   
 The slides of this project can be found at the following link [Insight Artificial Intelligence Project  MVP](http://bit.ly/2dto3Dpresentation).
 
-### Project Demo
-This project takes in any 3-Channel RGB image and converts it into 3D-voxelated objects.
+This code takes in any 3-Channel RGB image and converts it into 3D-voxelated objects.
   
 </figure>
 <img src="https://i.ibb.co/CMN03Ld/pixels.jpg" alt="drawing" width="200"/>
 <figcaption>3-channel RGB Image. </figcaption>
 </figure>
 
+</figure>
 <img src="https://i.ibb.co/921YCJs/Voxels-svg.png" alt="drawing" width="200"/>
-3D voxels
-
+<figcaption>3D voxels</figcaption>
+</figure>
+  
+## Project Demo
 ![Demo Link](https://i.ibb.co/gJzSvzB/ezgif-com-video-to-gif-4.gif)
+
+## Models
+### 1. DeepLabV3+ for semantic segmentation
+
 
 ## Datasets
 
