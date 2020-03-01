@@ -19,10 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all the files from the project’s root to the working directory
 COPY models/ models/
-RUN ls -la /models/*
+RUN ls -la models/*
 
 COPY core/ core/
-RUN ls -la /core/*
+RUN ls -la core/*
 
 COPY utils. utils/
-RUN ls -ls /utils/*
+RUN ls -ls utils/*

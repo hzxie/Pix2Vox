@@ -20,7 +20,19 @@ This code takes in any 3-Channel RGB image and converts it into 3D-voxelated obj
 ![Demo Link](https://i.ibb.co/gJzSvzB/ezgif-com-video-to-gif-4.gif)
 
 ## Models
-### 1. DeepLabV3+ for semantic segmentation
+### 1. Semantic Segmentation
+The [DeepLab V3+ model](https://arxiv.org/pdf/1802.02611.pdf) is used for the semantic segmentation process. The semantic segmentation seperates out the object in the image from the background and converts the 3-channel RGB image to 4-channel RGBA image. The RGBA image is fed to the 3D reconstruction architecture.
+</figure>
+<img src="https://i.ibb.co/RbCpmkt/deeplabv3.png" alt="drawing" width="400"/>
+<figcaption>DeepLab V3+ Architecture</figcaption>
+</figure>
+
+### 2. 3D reconstruction
+The 3D reconstruction model is based on the [pix2vox architecture](http://openaccess.thecvf.com/content_ICCV_2019/papers/Xie_Pix2Vox_Context-Aware_3D_Reconstruction_From_Single_and_Multi-View_Images_ICCV_2019_paper.pdf). 
+</figure>
+<img src="https://i.ibb.co/bJjNgPR/ezgif-com-video-to-gif-2.gif" alt="drawing" width="400"/>
+<figcaption>DeepLab V3+ Architecture</figcaption>
+</figure>
 
 
 ## Datasets
