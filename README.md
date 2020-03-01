@@ -19,6 +19,10 @@ This code takes in any 3-Channel RGB image and converts it into 3D-voxelated obj
 ## Project Demo
 ![Demo Link](https://i.ibb.co/gJzSvzB/ezgif-com-video-to-gif-4.gif)
 
+## ML Pipeline
+https://i.ibb.co/NZ4xVb5/Screenshot-from-2020-02-29-16-47-51.png
+![ML Pipeline](https://i.ibb.co/NZ4xVb5/Screenshot-from-2020-02-29-16-47-51.png)
+
 ## Models
 ### 1. Semantic Segmentation
 The [DeepLab V3+ model](https://arxiv.org/pdf/1802.02611.pdf) is used for the semantic segmentation process. The semantic segmentation seperates out the object in the image from the background and converts the 3-channel RGB image to 4-channel RGBA image. The RGBA image is fed to the 3D reconstruction architecture.
