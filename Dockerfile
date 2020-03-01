@@ -24,5 +24,5 @@ RUN ls -la models/*
 COPY core/ core/
 RUN ls -la core/*
 
-COPY utils. utils/
+COPY utils/ utils/
 RUN ls -ls utils/*

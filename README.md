@@ -30,8 +30,8 @@ The [DeepLab V3+ model](https://arxiv.org/pdf/1802.02611.pdf) is used for the se
 ### 2. 3D reconstruction
 The 3D reconstruction model is based on the [pix2vox architecture](http://openaccess.thecvf.com/content_ICCV_2019/papers/Xie_Pix2Vox_Context-Aware_3D_Reconstruction_From_Single_and_Multi-View_Images_ICCV_2019_paper.pdf). 
 </figure>
-<img src="https://i.ibb.co/bJjNgPR/ezgif-com-video-to-gif-2.gif" alt="drawing" width="400"/>
-<figcaption>DeepLab V3+ Architecture</figcaption>
+<img src="https://i.ibb.co/vdHv5cd/ezgif-com-crop.gif" alt="drawing" width="800"/>
+<figcaption>3D Reconstruction Architecture</figcaption>
 </figure>
 
 
