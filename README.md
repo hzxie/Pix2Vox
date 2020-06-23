@@ -1,9 +1,9 @@
 # Pix2Vox
 
-This repository contains the source code for the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153).
-
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/hzxie/Pix2Vox.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/hzxie/Pix2Vox/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/hzxie/Pix2Vox.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/hzxie/Pix2Vox/alerts/)
+
+This repository contains the source code for the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153). The follow-up work [Pix2Vox++: Multi-scale Context-aware 3D Object Reconstruction from Single and Multiple Images](https://arxiv.org/abs/2006.12250) has been published in *International Journal of Computer Vision (IJCV)*.
 
 ![Overview](https://infinitescript.com/wordpress/wp-content/uploads/2019/04/Pix2Vox-Overview.jpg)
 
@@ -12,7 +12,11 @@ This repository contains the source code for the paper [Pix2Vox: Context-aware 3
 ```
 @inproceedings{xie2019pix2vox,
   title={Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images},
-  author={Xie, Haozhe and Yao, Hongxun and Sun, Xiaoshuai and Zhou, Shangchen and Zhang, Shengping},
+  author={Xie, Haozhe and 
+          Yao, Hongxun and 
+          Sun, Xiaoshuai and 
+          Zhou, Shangchen and 
+          Zhang, Shengping},
   booktitle={ICCV},
   year={2019}
 }
@@ -20,7 +24,7 @@ This repository contains the source code for the paper [Pix2Vox: Context-aware 3
 
 ## Datasets
 
-We use the [ShapeNet](https://www.shapenet.org/) and [Pix3D](http://pix3d.csail.mit.edu/) in our experiments, which are available below:
+We use the [ShapeNet](https://www.shapenet.org/) and [Pix3D](http://pix3d.csail.mit.edu/) datasets in our experiments, which are available below:
 
 - ShapeNet rendering images: http://cvgl.stanford.edu/data2/ShapeNetRendering.tgz
 - ShapeNet voxelized models: http://cvgl.stanford.edu/data2/ShapeNetVox32.tgz
