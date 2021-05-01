@@ -87,6 +87,14 @@ If you want to train/test Pix2Vox-F, you need to checkout to `Pix2Vox-F` branch 
 git checkout -b Pix2Vox-F origin/Pix2Vox-F
 ```
 
+## My Try as a project forker:
+
+Trying to run it on the colab page at [this link](http://colab.research.google.com/github/So-AI-love/Pix2Vox/blob/master/Pix2Vox.ipynb) :
+
+![enter image description here](https://i.stack.imgur.com/hsxde.png)
+
+
+
 ## License
 
 This project is open sourced under MIT license.
