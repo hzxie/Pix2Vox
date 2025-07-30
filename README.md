@@ -1,6 +1,7 @@
 # Pix2Vox
 
-[![codebeat badge](https://codebeat.co/badges/4ca31f8b-4b83-432d-8de8-1956ad48eeaa)](https://codebeat.co/projects/github-com-hzxie-pix2vox-master)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hzxie_Pix2Vox&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=hzxie_Pix2Vox)
+[![codefactor badge](https://www.codefactor.io/repository/github/hzxie/Pix2Vox/badge)](https://www.codefactor.io/repository/github/hzxie/Pix2Vox)
 
 This repository contains the source code for the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153). The follow-up work [Pix2Vox++: Multi-scale Context-aware 3D Object Reconstruction from Single and Multiple Images](https://arxiv.org/abs/2006.12250) has been published in *International Journal of Computer Vision (IJCV)*.
 
